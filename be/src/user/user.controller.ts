@@ -4,17 +4,18 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { ApiBody, ApiOkResponse, ApiResponse } from '@nestjs/swagger';
 import { ApiResponseWrapper } from 'src/common/decorator/api-response-swapper.decorator';
+import { Public } from 'src/common/decorator/public.decorator';
 
-@Controller('User')
+@Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
+  @Public()
   @ApiResponseWrapper(UserResponseDto)
   async create(@Body() dto: CreateUserDto) {
-    const user = await this.userService.create(dto); // chắc chắn có return
+    const user = await this.userService.create(dto);
     console.log(user);
-
-    return user; // trả DTO thật sự, không phải Promise<void>
+    return user;
   }
 }

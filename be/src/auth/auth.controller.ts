@@ -19,7 +19,6 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Public()
-  @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(@Request() req) {
     return this.authService.login(req.user);
@@ -29,11 +28,5 @@ export class AuthController {
   @Get('profile')
   getProfile(@Request() req) {
     return req.user;
-  }
-
-  @Public()
-  @Get('test')
-  test() {
-    return { message: 'Test endpoint is working!' };
   }
 }
