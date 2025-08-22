@@ -12,6 +12,7 @@ import {
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './local-auth.guard';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { AuthGuard } from '@nestjs/passport';
 import { Public } from 'src/common/decorator/public.decorator';
 
 @Controller('auth')
@@ -20,6 +21,7 @@ export class AuthController {
 
   @Public()
   @Post('login')
+  @UseGuards(LocalAuthGuard)
   async login(@Request() req) {
     return this.authService.login(req.user);
   }
@@ -28,5 +30,11 @@ export class AuthController {
   @Get('profile')
   getProfile(@Request() req) {
     return req.user;
+  }
+
+  @Public()
+  @Get('test')
+  testApo() {
+    return 'Heehh';
   }
 }

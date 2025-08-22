@@ -4,14 +4,14 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { ApiBody, ApiOkResponse, ApiResponse } from '@nestjs/swagger';
 import { ApiResponseWrapper } from 'src/common/decorator/api-response-swapper.decorator';
-import { Public } from 'src/common/decorator/public.decorator';
+// import { Public } from 'src/common/decorator/public.decorator';
 
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
-  @Public()
+  // @Public()
   @ApiResponseWrapper(UserResponseDto)
   async create(@Body() dto: CreateUserDto) {
     const user = await this.userService.create(dto);
