@@ -6,10 +6,10 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigServiceModule } from './config/config-service.module';
 import { DatabaseConfigModule } from './config/database.config.module';
 import { APP_GUARD } from '@nestjs/core';
-import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { JwtAuthGuard } from './auth/guard/jwt-auth.guard';
 import { RoleModule } from './role/role.module';
 import { PermissionModule } from './permission/permission.module';
-import { PermissionsGuard } from './permission/permission.guard';
+import { PermissionsGuard } from './auth/guard/permission.guard';
 
 @Module({
   imports: [
