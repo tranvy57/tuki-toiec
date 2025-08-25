@@ -14,6 +14,7 @@ import { LocalAuthGuard } from './local-auth.guard';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { AuthGuard } from '@nestjs/passport';
 import { Public } from 'src/common/decorator/public.decorator';
+import { Roles } from 'src/common/decorator/roles.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -32,8 +33,8 @@ export class AuthController {
     return req.user;
   }
 
-  @Public()
   @Get('test')
+  @Roles(['admin'])
   testApo() {
     return 'Heehh';
   }
