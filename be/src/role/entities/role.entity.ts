@@ -8,13 +8,13 @@ import {
 import { User } from '../../user/entities/user.entity';
 import { Permission } from 'src/permission/entities/permission.entity';
 
-@Entity()
+@Entity('roles')
 export class Role {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column({ unique: true })
-  name: string; // e.g. 'admin', 'user'
+  name: string;
 
   @ManyToMany(() => User, (user) => user.roles)
   users: User[];

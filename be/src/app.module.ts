@@ -11,6 +11,10 @@ import { RoleModule } from './role/role.module';
 import { PermissionModule } from './permission/permission.module';
 import { PermissionsGuard } from './auth/guard/permission.guard';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { VocabularyModule } from './vocabulary/vocabulary.module';
+import { TestModule } from './test/test.module';
+import { AttemptModule } from './attempt/attempt.module';
+import { PartModule } from './part/part.module';
 
 @Module({
   imports: [
@@ -20,6 +24,10 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     AuthModule,
     RoleModule,
     PermissionModule,
+    VocabularyModule,
+    TestModule,
+    AttemptModule,
+    PartModule,
   ],
   controllers: [AppController],
   providers: [
