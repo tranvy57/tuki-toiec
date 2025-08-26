@@ -1,7 +1,17 @@
+import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { BaseEntity } from 'src/common/entities/base.entity';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Role } from 'src/role/entities/role.entity';
+import { Vocabulary } from 'src/vocabulary/entities/vocabulary.entity';
+import {
+  Column,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
-@Entity()
+@Entity('users')
 export class User extends BaseEntity {
   @Column({ unique: true })
   username: string;
@@ -14,4 +24,35 @@ export class User extends BaseEntity {
 
   @Column()
   email: string;
+
+  @ManyToMany(() => Role, (role) => role.users)
+  @JoinTable({
+    name: 'user_roles',
+    joinColumn: {
+      name: 'user_id',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'role_id',
+      referencedColumnName: 'id',
+    },
+  })
+  roles: Role[];
+
+  @ManyToMany(() => User, (user) => user.vocabularies)
+  @JoinTable({
+    name: 'user_vocabularies',
+    joinColumn: {
+      name: 'user_id',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'vocabulary_id',
+      referencedColumnName: 'id',
+    },
+  })
+  vocabularies: Vocabulary[];
+
+  @OneToMany(() => Attempt, (attempt) => attempt.user)
+  attempts: Attempt[];
 }

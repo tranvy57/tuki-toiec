@@ -5,9 +5,8 @@ import { UserResponseDto } from './dto/user-response.dto';
 import { ApiBody, ApiOkResponse, ApiResponse } from '@nestjs/swagger';
 import { ApiResponseWrapper } from 'src/common/decorator/api-response-swapper.decorator';
 import { Public } from 'src/common/decorator/public.decorator';
-// import { Public } from 'src/common/decorator/public.decorator';
+import { Roles } from 'src/common/decorator/roles.decorator';
 @Public()
-
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}

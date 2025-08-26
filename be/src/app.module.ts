@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
@@ -6,10 +6,29 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigServiceModule } from './config/config-service.module';
 import { DatabaseConfigModule } from './config/database.config.module';
 import { APP_GUARD } from '@nestjs/core';
-import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { JwtAuthGuard } from './auth/guard/jwt-auth.guard';
+import { RoleModule } from './role/role.module';
+import { PermissionModule } from './permission/permission.module';
+import { PermissionsGuard } from './auth/guard/permission.guard';
+import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { VocabularyModule } from './vocabulary/vocabulary.module';
+import { TestModule } from './test/test.module';
+import { AttemptModule } from './attempt/attempt.module';
+import { PartModule } from './part/part.module';
 
 @Module({
-  imports: [ConfigServiceModule, DatabaseConfigModule, UserModule, AuthModule],
+  imports: [
+    ConfigServiceModule,
+    DatabaseConfigModule,
+    UserModule,
+    AuthModule,
+    RoleModule,
+    PermissionModule,
+    VocabularyModule,
+    TestModule,
+    AttemptModule,
+    PartModule,
+  ],
   controllers: [AppController],
   providers: [
     AppService,
@@ -17,6 +36,14 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
     },
+    {
+      provide: APP_GUARD,
+      useClass: PermissionsGuard,
+    },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}
