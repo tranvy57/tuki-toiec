@@ -6,12 +6,15 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { plainToInstance } from 'class-transformer';
 import * as bcrypt from 'bcrypt';
+import { Role } from 'src/role/entities/role.entity';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
   ) {}
 
   private toResponseDto(user: User): UserResponseDto {
@@ -28,9 +31,19 @@ export class UserService {
 
     const hashedPassword = await bcrypt.hash(createUserDto.password, 12);
 
+    const defaultRole = await this.roleRepository.findOne({
+      where: { name: 'user' },
+    });
+    if (!defaultRole) {
+      throw new Error(
+        'Default role "user" not found in database. Seed it first!',
+      );
+    }
+
     const user = this.userRepository.create({
       ...createUserDto,
       password: hashedPassword,
+      roles: [defaultRole],
     });
 
     const savedUser = await this.userRepository.save(user);

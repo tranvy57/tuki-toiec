@@ -10,10 +10,11 @@ import {
   Request,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LocalAuthGuard } from './local-auth.guard';
-import { JwtAuthGuard } from './jwt-auth.guard';
-import { AuthGuard } from '@nestjs/passport';
+import { LocalAuthGuard } from './guard/local-auth.guard';
+import { JwtAuthGuard } from './guard/jwt-auth.guard';
 import { Public } from 'src/common/decorator/public.decorator';
+import { Roles } from 'src/common/decorator/roles.decorator';
+import { Permissions } from 'src/common/decorator/permission.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -32,9 +33,15 @@ export class AuthController {
     return req.user;
   }
 
-  @Public()
   @Get('test')
-  testApo() {
+  @Roles(['admin'])
+  testRole() {
+    return 'Heehh';
+  }
+
+  @Get('test-per')
+  @Permissions(['delete-user'])
+  testPer() {
     return 'Heehh';
   }
 }
