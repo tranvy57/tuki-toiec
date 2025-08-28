@@ -1,0 +1,13 @@
+ Thiết kế JSON PlanResponse, map từ DB hiện có.
+
+ Thuật toán layoutNodes + Connector.
+
+ Node component (status, badge, pulse).
+
+ PlanScreen (FlashList + overlay).
+
+ API hoàn thành bài & sinh lịch SRS.
+
+ Header mục tiêu ngày, streak, XP.
+
+ Telemetry: tap node, complete, abandon.

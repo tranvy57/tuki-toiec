@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "Smart TOEIC Learner",
+    "slug": "smart-toeic-learner",
+    "version": "1.0.0",
+    "scheme": "smart-toeic-learner",
+    "orientation": "portrait",
+    "icon": "./assets/splash.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FF776F"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": { "supportsTablet": true },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/splash.png",
+        "backgroundColor": "#FF776F"
+      }
+    },
+    "plugins": ["expo-router", "expo-web-browser"]
+  }
+}
