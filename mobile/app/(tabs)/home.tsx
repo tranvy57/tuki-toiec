@@ -1,26 +1,33 @@
-import React, { useState, useCallback, memo } from 'react';
-import { View, Button, Text } from 'react-native';
-
-const Child = memo(({ onInc }: { onInc: () => void }) => {
-  console.log('Child render'); // xem log
-  return <Button title="Tăng" onPress={onInc} />;
-});
+'use client';
+import { View, ScrollView } from 'react-native';
+import { colors } from '~/constants/Color';
+import { Header } from '~/components/home/Header';
+import { PromoBanner } from '~/components/home/PromoBanner';
+import { PracticeSection } from '~/components/home/PracticeSection';
+import { ExamSection } from '~/components/home/ExamSection';
+import { ProgressSection } from '~/components/home/ProgressSection';
+import { AnimationDurations } from '~/constants/Animation';
 
 export default function Home() {
-  const [count, setCount] = useState(0);
-  const [other, setOther] = useState(0);
-
-  // ❌ KHÔNG ổn định: mỗi render tạo hàm mới → Child re-render
-  // const onInc = () => setCount((c) => c + 1);
-
-  // ✅ Ổn định: chỉ tạo lại khi deps đổi (ở đây là [])
-  const onInc = useCallback(() => setCount((c) => c + 1), []);
-
+  for (const [key, value] of Object.entries(AnimationDurations)) {
+    console.log(key);
+  }
   return (
-    <View>
-      <Text>count: {count}</Text>
-      <Child onInc={onInc} />
-      <Button title="Đổi state khác" onPress={() => setOther((x) => x + 1)} />
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
+      <Header />
+      
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ padding: 16 }}
+        showsVerticalScrollIndicator={false}>
+        
+        <PromoBanner />
+        <PracticeSection />
+        <ExamSection />
+        <ProgressSection />
+
+        <View className="h-20" />
+      </ScrollView>
     </View>
   );
 }

@@ -10,7 +10,7 @@ export default function TabLayout() {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <Tabs
-        initialRouteName='study-plan'
+        initialRouteName='home'
         screenOptions={({ route }) => ({
           tabBarActiveTintColor: colors.primary,
           tabBarShowLabel: true,
