@@ -3,8 +3,13 @@ import TestStartScreen from "~/components/practice/StartTest";
 
 export default function TestStartPage() {
   const handleStartTest = () => {
-    console.log('[v0] Starting test...');
-    // Navigate to test screen
+    router.push({
+      pathname: '/(tabs)/(tests)/[id]/[q]',
+      params: {
+        id: 'TEST001',
+        q: 1
+      }
+    });
   };
 
   const handleGoBack = () => {

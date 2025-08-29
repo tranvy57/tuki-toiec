@@ -1,15 +1,14 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { View, Text, Button } from 'react-native';
+import { useState } from 'react';
+import { View, Text, Button, TouchableOpacity, ScrollView } from 'react-native';
+import { QuestionScreen } from '~/components/practice/QuestionScreen';
+import { questionsData } from '~/constants/data_questions';
 
 export default function QuestionPage() {
   const { id, q } = useLocalSearchParams(); // id = test_id, q = số câu
+  // console.log(id, q);
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>
-        Test {id} - Question {q}
-      </Text>
-      <Button title="Next" onPress={() => router.push(`/tests/${id}/${Number(q) + 1}`)} />
-    </View>
+    <QuestionScreen />
   );
 }

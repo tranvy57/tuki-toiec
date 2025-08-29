@@ -1,7 +1,4 @@
-import React from 'react';
-import { ScrollView, View, Text, StyleSheet } from 'react-native';
-import { PhaseNodeComponent } from './PhaseNodeComponent';
-import { Phase } from '~/types/studyPlan';
+import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '~/constants/Color';
 
 export const StudyHeader = () => {

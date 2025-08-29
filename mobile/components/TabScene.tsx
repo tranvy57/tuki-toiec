@@ -1,6 +1,6 @@
 // components/TabScene.tsx
-import React, { useEffect } from 'react';
 import { useIsFocused } from '@react-navigation/native';
+import React, { useEffect } from 'react';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 export default function TabScene({ children }: { children: React.ReactNode }) {

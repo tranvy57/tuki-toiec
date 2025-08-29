@@ -29,7 +29,6 @@ export default function StudyPlan() {
       // if (item.type === 'unit') {
       //   return <UnitSeparator unit={item.unit} />;
       // }
-      console.log(item)
       return (
         <PhaseNodeComponent
           key={item.phase_id}
