@@ -1,6 +1,6 @@
 import { Expose } from 'class-transformer';
 
-export class CreateVocabularyDto {
+export class VocabularyDto {
   @Expose()
   word: string;
 

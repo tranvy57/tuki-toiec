@@ -6,24 +6,29 @@ import {
   Patch,
   Param,
   Delete,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { VocabularyService } from './vocabulary.service';
 import { CreateVocabularyDto } from './dto/create-vocabulary.dto';
 import { UpdateVocabularyDto } from './dto/update-vocabulary.dto';
 import { Roles } from 'src/common/decorator/roles.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Public } from 'src/common/decorator/public.decorator';
 
-@Controller('vocabulary')
+@Controller('vocabularies')
 export class VocabularyController {
   constructor(private readonly vocabularyService: VocabularyService) {}
 
-  @Post()
-  @Roles(['admin'])
-  create(@Body() createVocabularyDto: CreateVocabularyDto) {
-    return this.vocabularyService.create(createVocabularyDto);
-  }
+  // async create(dto: CreateVocabularyDto) {
+  //   const entity = VocabularyMapper.fromCreateDto(dto);
+  //   const saved = await this.vocabularyRepo.save(entity);
+  //   return VocabularyMapper.toDto(saved);
+  // }
 
   @Get()
-  findAll() {
+  @Public()
+  async findAll() {
     return this.vocabularyService.findAll();
   }
 
@@ -43,5 +48,12 @@ export class VocabularyController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.vocabularyService.remove(+id);
+  }
+
+  @Post('import')
+  @UseInterceptors(FileInterceptor('file'))
+  async importExcel(@UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new Error('File not found!');
+    return await this.vocabularyService.importFromExcel(file);
   }
 }

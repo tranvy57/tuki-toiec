@@ -31,10 +31,10 @@ export class AuthController {
     return this.authService.login(req.user);
   }
 
-  @Get('profile')
-  getProfile(@User() user: JwtPayload) {
-    return user;
-  }
+  // @Get('profile')
+  // getProfile(@User() user: JwtPayload) {
+  //   return user;
+  // }
 
   @Get('test')
   @Roles(['admin'])
