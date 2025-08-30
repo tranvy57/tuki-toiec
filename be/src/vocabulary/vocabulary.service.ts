@@ -20,7 +20,7 @@ export class VocabularyService {
   }
 
   async findAll() {
-    const entities = await this.vocabularyRepo.find();
+    const entities = await this.vocabularyRepo.find({ take: 50 });
     return VocabularyMapper.toDtoList(entities);
   }
 
