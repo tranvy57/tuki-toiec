@@ -1,34 +1,31 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { TestService } from './test.service';
-import { CreateTestDto } from './dto/create-test.dto';
-import { UpdateTestDto } from './dto/update-test.dto';
+import { TestDto } from './dto/create-test.dto';
+import { Public } from 'src/common/decorator/public.decorator';
+import { Test } from '@nestjs/testing';
 
-@Controller('test')
+@Controller('tests')
 export class TestController {
   constructor(private readonly testService: TestService) {}
 
   @Post()
-  create(@Body() createTestDto: CreateTestDto) {
-    return this.testService.create(createTestDto);
+  @Public()
+  create(@Body() dto: TestDto) {
+    console.log('DTO:', dto);
+
+    return this.testService.create(dto);
   }
 
   @Get()
   findAll() {
     return this.testService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.testService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTestDto: UpdateTestDto) {
-    return this.testService.update(+id, updateTestDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.testService.remove(+id);
   }
 }

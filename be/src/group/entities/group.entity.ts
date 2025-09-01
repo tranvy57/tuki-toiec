@@ -1,6 +1,7 @@
 import { BaseEntity } from 'src/common/entities/base.entity';
+import { Part } from 'src/part/entities/part.entity';
 import { Question } from 'src/question/entities/question.entity';
-import { Column, Entity, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity('groups')
 export class Group extends BaseEntity {
@@ -21,4 +22,7 @@ export class Group extends BaseEntity {
 
   @OneToMany(() => Question, (question) => question.group)
   questions: Question[];
+
+  @ManyToOne(() => Part, (part) => part.groups)
+  part: Part;
 }

@@ -5,6 +5,7 @@ import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity('answers')
 export class Answer extends BaseEntity {
+  @Column()
   content: string;
   @Column({ name: 'is_correct' })
   isCorrect: boolean;
@@ -16,5 +17,5 @@ export class Answer extends BaseEntity {
   question: Question;
 
   @OneToMany(() => AttemptAnswer, (attemptAnswer) => attemptAnswer.answer)
-  attemptAnswers: AttemptAnswer[];
+  attemptAnswers?: AttemptAnswer[];
 }
