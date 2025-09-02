@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { Part } from 'src/part/entities/part.entity';
@@ -110,8 +110,21 @@ export class TestService {
     });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} test`;
+  async findOneById(id: string): Promise<TestDto> {
+    const test = await this.testRepo.findOne({
+      where: { id },
+      relations: {
+        parts: {
+          groups: {
+            questions: {
+              answers: true,
+            },
+          },
+        },
+      },
+    });
+    if (!test) throw new NotFoundException('Test not found!');
+    return plainToInstance(TestDto, test, { excludeExtraneousValues: true });
   }
 
   remove(id: number) {

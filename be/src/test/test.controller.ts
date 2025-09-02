@@ -8,6 +8,7 @@ import {
   Delete,
   UseInterceptors,
   UploadedFile,
+  NotFoundException,
 } from '@nestjs/common';
 import { TestService } from './test.service';
 import { TestDto } from './dto/test.dto';
@@ -33,6 +34,13 @@ export class TestController {
   @Public()
   async findAll() {
     return await this.testService.findAll();
+  }
+
+  @Get(':id')
+  @Public()
+  async findById(@Param('id') id: string): Promise<TestDto> {
+    const test = await this.testService.findOneById(id);
+    return test;
   }
 
   @Post('import')
