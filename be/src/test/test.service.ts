@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { Test } from './entities/test.entity';
 import { Part } from 'src/part/entities/part.entity';
 import { Group } from 'src/group/entities/group.entity';
 
 import { Answer } from 'src/answers/entities/answer.entity';
-import { TestDto } from './dto/create-test.dto';
+import { TestDto } from './dto/test.dto';
 import { PartDto } from 'src/part/dto/part.dto';
 import { GroupDto } from 'src/group/dto/group.dto';
 import { plainToInstance } from 'class-transformer';
 import { Question } from 'src/question/entities/question.entity';
+import { Test } from './entities/test.entity';
 
 @Injectable()
 export class TestService {
@@ -103,8 +103,11 @@ export class TestService {
     });
   }
 
-  findAll() {
-    return `This action returns all test`;
+  async findAll() {
+    const tests = await this.testRepo.find();
+    return plainToInstance(TestDto, tests, {
+      excludeExtraneousValues: true,
+    });
   }
 
   findOne(id: number) {

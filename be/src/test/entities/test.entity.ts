@@ -4,6 +4,7 @@ import { Column, Entity, OneToMany } from 'typeorm';
 
 @Entity('tests')
 export class Test extends BaseEntity {
+  @Column()
   title: string;
   @Column({ name: 'audio_url', nullable: true })
   audioUrl: string;
