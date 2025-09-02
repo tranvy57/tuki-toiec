@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { colors } from '~/constants/Color';
 import { BlurView } from 'expo-blur';
+import { useSegments } from 'expo-router';
 
 const INDICATOR_H = 2;
 // constants "compact"
@@ -15,6 +16,11 @@ const ICON_BOX_H = 28; // vùng cao dành cho icon (không tính label)
 
 export const EnhancedTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigation }) => {
   const progress = useSharedValue(state.index);
+  const segments = useSegments();
+  const page = segments[segments.length - 1];
+  const pagesToHideTabBar = ['[q]', 'result'];
+  const isHidden = pagesToHideTabBar.includes(page);
+
 
   // cập nhật animation khi index đổi
   React.useEffect(() => {
@@ -25,7 +31,15 @@ export const EnhancedTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors
   const [width, setWidth] = React.useState(0);
 
   return (
-    <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)} style={[styles.container]}>
+    <View
+      onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
+      style={[
+        styles.container,
+        {
+          opacity: isHidden ? 0 : 1,
+          height: isHidden ? 0 : BAR_H + 8,
+        }
+      ]}>
       {/* Nền blur + overlay màu */}
       <View style={styles.tabBarBackground}>
         <BlurView intensity={25} tint="light" style={StyleSheet.absoluteFill} />
@@ -113,7 +127,11 @@ export const EnhancedTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors
 };
 
 const styles = StyleSheet.create({
-  container: { position: 'relative', backgroundColor: 'transparent', paddingTop: 8 },
+  container: {
+    position: 'relative',
+    backgroundColor: 'transparent',
+    paddingTop: 8,
+  },
   tabBarBackground: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: '#FF8A80CC',
@@ -143,7 +161,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    overflow: 'visible', 
+    overflow: 'visible',
   },
   label: { fontSize: 11, fontWeight: '500', marginTop: 2 },
 });

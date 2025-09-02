@@ -67,7 +67,6 @@ export const QuestionScreen: React.FC = () => {
         className="flex-row items-center justify-between px-4 py-3"
         style={{ 
           backgroundColor: colors.primary,
-          paddingTop: 50, // Account for status bar
         }}>
         {/* Left side - Back button */}
         <TouchableOpacity 
@@ -103,18 +102,18 @@ export const QuestionScreen: React.FC = () => {
   const renderQuestionContent = () => {
     if (!questionGroup) return null;
 
-    const { part_id, image_url, audio_url } = questionGroup;
+    const { part_id, image_url, audio_url, paragraph } = questionGroup;
 
     return (
       <View className="px-4 pt-4">
-        {/* Audio Player - Simple and clean */}
+        {/* Audio Player */}
         {audio_url && (
           <View className="mb-4">
             <AudioPlayer audioUrl={audio_url} />
           </View>
         )}
 
-        {/* Question Number - Simple indicator */}
+        {/* Question Number */}
         <View className="mb-4 flex-row items-center justify-between">
           <Text className="text-lg font-medium" style={{ color: colors.foreground }}>
             {questionGroup.questions[0] || '1'}.
@@ -124,15 +123,26 @@ export const QuestionScreen: React.FC = () => {
           </Text>
         </View>
 
-        {/* Image - Large and prominent like reference */}
-        {image_url && (
+        {/* Image */}
+        {image_url && image_url?.length > 0 && (
           <View className="mb-6">
             <Image
               source={{ uri: Array.isArray(image_url) ? image_url[0] : image_url }}
               className="w-full rounded-lg"
-              style={{ height: 300, backgroundColor: colors.warmGray100 }}
+              style={{ height: 240, backgroundColor: colors.warmGray100 }}
               resizeMode="cover"
             />
+          </View>
+        )}
+
+        {/* Paragraph / Reading passage */}
+        {paragraph && (
+          <View
+            className="mb-6 rounded-lg p-4"
+            style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }}>
+            <Text className="text-base leading-6" style={{ color: colors.foreground }}>
+              {paragraph}
+            </Text>
           </View>
         )}
       </View>
@@ -158,7 +168,7 @@ export const QuestionScreen: React.FC = () => {
         </View>
 
         {/* Simple answer options like in reference */}
-        <View className="flex-row flex-wrap justify-start">
+        <View className="flex-col  justify-start">
           {['A', 'B', 'C', 'D'].map((letter) => {
             const isSelected = selectedAnswers[questionGroup.questions[0]] === letter;
             

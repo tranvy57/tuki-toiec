@@ -1,5 +1,4 @@
 import { Tabs } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
 
 import { AnimatedTabBarIcon } from '../../components/AnimatedTabBarIcon';
 import { colors } from '../../constants/Color';
@@ -7,10 +6,12 @@ import { EnhancedTabBar } from '~/components/EnhancedTabBar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
+
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <Tabs
-        initialRouteName='home'
+        initialRouteName="home"
         screenOptions={({ route }) => ({
           tabBarActiveTintColor: colors.primary,
           tabBarShowLabel: true,
@@ -43,6 +44,7 @@ export default function TabLayout() {
           animation: 'shift',
           lazy: false,
           tabBarHideOnKeyboard: true,
+          
         })}
         tabBar={(props) => <EnhancedTabBar {...props} />}>
         <Tabs.Screen
@@ -61,6 +63,18 @@ export default function TabLayout() {
             title: 'Thi thử',
             tabBarIcon: ({ color, focused }) => (
               <AnimatedTabBarIcon name="file-text" color={color} focused={focused} />
+            ),
+
+            headerShown: false,
+          }}
+          
+        />
+        <Tabs.Screen
+          name="vocabulary"
+          options={{
+            title: 'Từ vựng',
+            tabBarIcon: ({ color, focused }) => (
+              <AnimatedTabBarIcon name="book" color={color} focused={focused} />
             ),
             headerShown: false,
           }}

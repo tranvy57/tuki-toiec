@@ -4,6 +4,9 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import '../helpers/fetchLogger';  // patch fetch trước khi render app
+
 
 import '../global.css';
 
@@ -13,6 +16,7 @@ export const unstable_settings = {
   initialRouteName: '(tabs)',
   screenOptions: { headerShown: false },
 };
+const queryClient = new QueryClient();
 
 export default function RootLayout() {
   const [ready, setReady] = useState(false);

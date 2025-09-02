@@ -12,14 +12,22 @@
       "resizeMode": "contain",
       "backgroundColor": "#FF776F"
     },
-    "assetBundlePatterns": ["**/*"],
-    "ios": { "supportsTablet": true },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/splash.png",
         "backgroundColor": "#FF776F"
       }
     },
-    "plugins": ["expo-router", "expo-web-browser"]
+    "plugins": [
+      "expo-router",
+      "expo-web-browser",
+      "expo-secure-store"
+    ]
   }
 }

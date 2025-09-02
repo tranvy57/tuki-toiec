@@ -1,8 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { Audio } from 'expo-av';
+import { Feather } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
-import { Feather, AntDesign } from '@expo/vector-icons';
+import { Audio, AVPlaybackStatus } from 'expo-av';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+
+const { width: SCREEN_W } = Dimensions.get('window');
 
 interface AudioPlayerProps {
   audioUrl: string;
@@ -15,15 +24,22 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
+  const [seekValue, setSeekValue] = useState(0);
+  const [showTooltip, setShowTooltip] = useState(false);
 
-  const formatTime = (millis: number) => {
-    const totalSeconds = Math.floor(millis / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  const formatTime = (ms: number) =>
+    `${Math.floor(ms / 60000)}:${Math.floor((ms % 60000) / 1000)
+      .toString()
+      .padStart(2, '0')}`;
+
+  const updateStatus = (status: AVPlaybackStatus) => {
+    if (!status.isLoaded || isSeeking) return;
+    setPosition(status.positionMillis ?? 0);
+    setDuration(status.durationMillis ?? 0);
+    if (status.didJustFinish) setIsPlaying(false);
   };
 
-  async function togglePlay() {
+  const togglePlay = async () => {
     try {
       if (!sound) {
         setIsLoading(true);
@@ -36,54 +52,45 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
         setIsPlaying(true);
       } else {
         const status = await sound.getStatusAsync();
-        if (status.isLoaded && status.isPlaying) {
-          await sound.pauseAsync();
-          setIsPlaying(false);
-        } else {
-          await sound.playAsync();
-          setIsPlaying(true);
-        }
+        if (!status.isLoaded) return;
+        status.isPlaying ? await sound.pauseAsync() : await sound.playAsync();
+        setIsPlaying(!status.isPlaying);
       }
-    } catch (error) {
-      console.error('Error playing audio:', error);
+    } catch (e) {
+      console.error('Audio error:', e);
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
-  async function resetAudio() {
-    if (sound) {
-      await sound.stopAsync();
-      await sound.setPositionAsync(0);
-      setIsPlaying(false);
-    }
-  }
+  const onSlidingStart = () => {
+    setIsSeeking(true);
+    setShowTooltip(true);
+  };
 
-  function updateStatus(status: any) {
-    if (status.isLoaded && !isSeeking) {
-      setPosition(status.positionMillis || 0);
-      setDuration(status.durationMillis || 0);
-      if (status.didJustFinish) {
-        setIsPlaying(false);
-      }
-    }
-  }
+  const onValueChange = (val: number) => {
+    setSeekValue(val);
+  };
 
-  async function onSlidingComplete(value: number) {
-    if (sound) {
-      await sound.setPositionAsync(value);
-      setIsSeeking(false);
-    }
-  }
+  const onSlidingComplete = async (val: number) => {
+    if (sound) await sound.setPositionAsync(val);
+    setPosition(val);
+    setIsSeeking(false);
+    setShowTooltip(false);
+  };
 
   useEffect(() => {
     return () => {
-      if (sound) sound.unloadAsync();
+      sound?.unloadAsync();
     };
   }, [sound]);
 
+  // tính vị trí bubble
+  const thumbPosition = duration > 0 ? (isSeeking ? seekValue : position) / duration : 0;
+  const bubbleLeft = thumbPosition * (SCREEN_W - 120); // 120 ~ padding + thumb width
+
   return (
-    <View className="rounded-2xl bg-white p-4 shadow-md">
+    <View className="rounded-xl bg-white p-4 shadow-sm">
       <View className="flex-row items-center">
         {/* Play/Pause */}
         <TouchableOpacity
@@ -93,48 +100,55 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
           style={{ opacity: isLoading ? 0.5 : 1 }}>
           {isLoading ? (
             <ActivityIndicator color="white" />
-          ) : isPlaying ? (
-            <Feather name="pause" size={24} color="white" />
           ) : (
-            <Feather name="play" size={24} color="white" />
+            <Feather name={isPlaying ? 'pause' : 'play'} size={24} color="white" />
           )}
         </TouchableOpacity>
 
-        {/* Reset */}
-        <TouchableOpacity
-          onPress={resetAudio}
-          className="mr-3 h-12 w-12 items-center justify-center rounded-full bg-gray-400">
-          <AntDesign name="reload1" size={22} color="white" />
-        </TouchableOpacity>
+        {/* Slider + Tooltip */}
+        {duration > 0 && (
+          <View style={{ flex: 1 }}>
+            <View>
+              <View style={{ height: 12, justifyContent: 'center' }}>
+                <Slider
+                  style={{ width: '100%', height: 20 }} // container cao hơn 1 chút
+                  minimumValue={0}
+                  maximumValue={duration}
+                  value={isSeeking ? seekValue : position}
+                  onSlidingStart={onSlidingStart}
+                  onValueChange={onValueChange}
+                  onSlidingComplete={onSlidingComplete}
+                  minimumTrackTintColor="#2563eb"
+                  maximumTrackTintColor="#e5e7eb" // màu track xám nhạt hơn
+                  thumbTintColor="#2563eb" // màu nút trùng màu track
+                />
+              </View>
 
-        {/* Status text */}
-        <View className="flex-1">
-          <Text className="font-medium text-gray-800">
-            {isLoading ? 'Loading...' : isPlaying ? 'Playing...' : 'Tap play to start'}
-          </Text>
-        </View>
-      </View>
-
-      {/* Progress slider */}
-      {duration > 0 && (
-        <View className="mt-4">
-          <Slider
-            style={{ width: '100%', height: 40 }}
-            minimumValue={0}
-            maximumValue={duration}
-            value={position}
-            onValueChange={() => setIsSeeking(true)}
-            onSlidingComplete={onSlidingComplete}
-            minimumTrackTintColor="#2563eb"
-            maximumTrackTintColor="#d1d5db"
-            thumbTintColor="#2563eb"
-          />
-          <View className="mt-1 flex-row justify-between">
-            <Text className="text-xs text-gray-600">{formatTime(position)}</Text>
-            <Text className="text-xs text-gray-600">{formatTime(duration)}</Text>
+              {/* Tooltip popup nổi */}
+              <View style={[styles.tooltip, { left: bubbleLeft }]}>
+                <Text style={styles.tooltipText}>{formatTime(seekValue)}</Text>
+              </View>
+            </View>
           </View>
-        </View>
-      )}
+        )}
+      </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  tooltip: {
+    position: 'absolute',
+    bottom: 30, // nằm trên slider
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    backgroundColor: 'black',
+    borderRadius: 6,
+    alignSelf: 'center',
+  },
+  tooltipText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+});
