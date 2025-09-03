@@ -16,5 +16,5 @@ export class QuestionDto {
 
   @Expose()
   @Type(() => AnswerDto)
-  answers: AnswerDto[];
+  answers?: AnswerDto[];
 }

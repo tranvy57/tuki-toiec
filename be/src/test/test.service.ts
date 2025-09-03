@@ -69,14 +69,16 @@ export class TestService {
             });
             const savedQuestion = await manager.save(question);
 
-            for (const a of q.answers) {
-              const answer = manager.create(Answer, {
-                content: a.content,
-                isCorrect: a.isCorrect,
-                answerKey: a.answerKey,
-                question: savedQuestion,
-              });
-              await manager.save(answer);
+            if (q.answers) {
+              for (const a of q.answers) {
+                const answer = manager.create(Answer, {
+                  content: a.content,
+                  isCorrect: a.isCorrect,
+                  answerKey: a.answerKey,
+                  question: savedQuestion,
+                });
+                await manager.save(answer);
+              }
             }
           }
         }
