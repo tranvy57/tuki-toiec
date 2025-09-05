@@ -23,12 +23,12 @@ if (__DEV__) {
       body = '<non-JSON body>';
     }
 
-    console.log('[Fetch]', {
-      request: { uri, options },
-      status: response.status,
-      duration: `${duration}ms`,
-      body,
-    });
+    // console.log('[Fetch]', {
+    //   request: { uri, options },
+    //   status: response.status,
+    //   duration: `${duration}ms`,
+    //   body,
+    // });
 
     return response;
   };

@@ -7,7 +7,7 @@ export default function TestStartPage() {
       pathname: '/(tabs)/(tests)/[id]/[q]',
       params: {
         id: 'TEST001',
-        q: 1,
+        q: 25,
       },
     });
   };

@@ -38,6 +38,7 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider style={{ flex: 1 }}>
+
       <Animated.View style={styles.loading} entering={FadeIn.duration(800)}>
         <Text style={styles.text}>Smart TOEIC Learner 🚀</Text>
       </Animated.View>

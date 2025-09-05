@@ -1,35 +1,68 @@
 'use client';
 
+import { useRouter } from 'expo-router';
 import type React from 'react';
-import { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, Alert } from 'react-native';
-import { findQuestionGroup, QuestionGroup } from '~/constants/data_questions';
-import { AudioPlayer } from './AudioPlayer';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import {
+  Alert,
+  Dimensions,
+  Image,
+  View
+} from 'react-native';
+import { Gesture, GestureHandlerRootView } from 'react-native-gesture-handler';
+import {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { colors } from '~/constants/Color';
-import { AntDesign } from '@expo/vector-icons';
+import { findQuestionGroup, QuestionGroup } from '~/constants/data_questions';
 
+// New Components
+import { AnswerOptions } from './AnswerOptions';
+import { GestureWrapper } from './GestureWrapper';
+import { LoadingScreen } from './LoadingScreen';
+import { QuestionContent } from './QuestionContent';
+import { QuestionHeader } from './QuestionHeader';
+
+const { width } = Dimensions.get('window');
 
 export const QuestionScreen: React.FC = () => {
   const router = useRouter();
-  const { q } = useLocalSearchParams<{ q: string }>(); // id = test_id, q = số câu
+  const translateX = useSharedValue(0);
+  const opacity = useSharedValue(1);
 
   const [questionGroup, setQuestionGroup] = useState<QuestionGroup | null>(null);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
-  
-  const currentQuestionNumber = parseInt(q) || 1;
+  const [currentQuestionNumber, setCurrentQuestionNumber] = useState(1);
+  const [isChangingQuestion, setIsChangingQuestion] = useState(false);
 
   useEffect(() => {
-    const group = findQuestionGroup(parseInt(q) || 1);
-    console.log(group)
-    setQuestionGroup(group);
-
-    // if (!group) {
-    //   Alert.alert('Error', 'Question not found', [
-    //     { text: 'OK', onPress: () => router.back() },
-    //   ]);
-    // }
-  }, [q]);
+    const loadQuestion = async () => {
+      // Fade out animation
+      opacity.value = withTiming(0, { duration: 150 });
+      // Simulate loading time for better UX
+      // await new Promise((resolve) => setTimeout(resolve, 200));
+      const group = findQuestionGroup(currentQuestionNumber);
+      setQuestionGroup(group);
+      // Preload next question image
+      const nextGroup = findQuestionGroup(currentQuestionNumber + 1);
+      if (nextGroup?.image_url) {
+        const url = Array.isArray(nextGroup.image_url)
+          ? nextGroup.image_url[0]
+          : nextGroup.image_url;
+        if (url) {
+          Image.prefetch(url);
+        }
+      }
+      // Fade in animation
+      opacity.value = withTiming(1, { duration: 200 });
+      setIsChangingQuestion(false);
+    };
+    loadQuestion();
+  }, [currentQuestionNumber]);
 
   const handleAnswerSelect = (questionId: string, answer: string) => {
     setSelectedAnswers((prev) => ({
@@ -40,11 +73,9 @@ export const QuestionScreen: React.FC = () => {
 
   const handleSubmit = () => {
     const currentQuestion = questionGroup?.questions[0];
-    
+
     if (!currentQuestion || !selectedAnswers[currentQuestion]) {
-      Alert.alert('Incomplete', 'Please select an answer before submitting.', [
-        { text: 'OK' },
-      ]);
+      Alert.alert('Incomplete', 'Please select an answer before submitting.', [{ text: 'OK' }]);
       return;
     }
 
@@ -60,166 +91,116 @@ export const QuestionScreen: React.FC = () => {
       },
     ]);
   };
+  const goNext = () => {
+    const next = currentQuestionNumber + 1;
+    const nextGroup = findQuestionGroup(next);
 
-  const renderHeader = () => {
-    return (
-      <View 
-        className="flex-row items-center justify-between px-4 py-3"
-        style={{ 
-          backgroundColor: colors.primary,
-        }}>
-        {/* Left side - Back button */}
-        <TouchableOpacity 
-          onPress={() => router.back()}
-          className="p-2">
-          <AntDesign name="arrowleft" size={24} color={colors.primaryForeground} />
-        </TouchableOpacity>
-
-        {/* Center - Question counter */}
-        <View className="flex-1 items-center">
-          <Text 
-            className="text-lg font-medium"
-            style={{ color: colors.primaryForeground }}>
-            Câu {currentQuestionNumber}/200
-          </Text>
-        </View>
-
-        {/* Right side - Nộp bài button */}
-        <TouchableOpacity 
-          onPress={handleSubmit}
-          className="rounded-lg px-3 py-1"
-          style={{ backgroundColor: colors.primaryForeground }}>
-          <Text 
-            className="text-sm font-medium"
-            style={{ color: colors.primary }}>
-            Nộp bài
-          </Text>
-        </TouchableOpacity>
-      </View>
-    );
+    if (nextGroup) {
+      setCurrentQuestionNumber(next);
+    } else {
+      Alert.alert('Submit Test', 'You have reached the last question. Submit now?', [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Submit',
+          onPress: () => {
+            console.log('Submitted answers:', selectedAnswers);
+            // TODO: Navigate to results
+          },
+        },
+      ]);
+    }
   };
 
-  const renderQuestionContent = () => {
-    if (!questionGroup) return null;
-
-    const { part_id, image_url, audio_url, paragraph } = questionGroup;
-
-    return (
-      <View className="px-4 pt-4">
-        {/* Audio Player */}
-        {audio_url && (
-          <View className="mb-4">
-            <AudioPlayer audioUrl={audio_url} />
-          </View>
-        )}
-
-        {/* Question Number */}
-        <View className="mb-4 flex-row items-center justify-between">
-          <Text className="text-lg font-medium" style={{ color: colors.foreground }}>
-            {questionGroup.questions[0] || '1'}.
-          </Text>
-          <Text className="text-sm" style={{ color: colors.mutedForeground }}>
-            Part {part_id}
-          </Text>
-        </View>
-
-        {/* Image */}
-        {image_url && image_url?.length > 0 && (
-          <View className="mb-6">
-            <Image
-              source={{ uri: Array.isArray(image_url) ? image_url[0] : image_url }}
-              className="w-full rounded-lg"
-              style={{ height: 240, backgroundColor: colors.warmGray100 }}
-              resizeMode="cover"
-            />
-          </View>
-        )}
-
-        {/* Paragraph / Reading passage */}
-        {paragraph && (
-          <View
-            className="mb-6 rounded-lg p-4"
-            style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }}>
-            <Text className="text-base leading-6" style={{ color: colors.foreground }}>
-              {paragraph}
-            </Text>
-          </View>
-        )}
-      </View>
-    );
+  const goPrev = () => {
+    if (currentQuestionNumber > 1) {
+      setCurrentQuestionNumber((prev) => prev - 1);
+    }
   };
 
-  const renderAnswerOptions = () => {
-    if (!questionGroup) return null;
+  const panGesture = Gesture.Pan()
+    .onUpdate((event) => {
+      translateX.value = event.translationX;
+    })
+    .onEnd((event) => {
+      runOnJS(setIsChangingQuestion)(true);
+      if (event.translationX < -80) {
+        // Swipe left -> next
+        translateX.value = withSpring(-width, {}, (finished) => {
+          if (finished) {
+            runOnJS(goNext)();
+            translateX.value = 0;
+          }
+        });
+      } else if (event.translationX > 80) {
+        // Swipe right -> previous
+        translateX.value = withSpring(width, {}, (finished) => {
+          if (finished) {
+            runOnJS(goPrev)();
+            translateX.value = 0;
+          }
+        });
+      } else {
+        // Snap back to center
+        translateX.value = withSpring(0);
+      }
+    });
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
 
-    // Simple A, B, C, D options
+  const contentAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
 
-    return (
-      <View className="px-4 pb-4">
-        {/* Select the answer banner */}
-        <View 
-          className="mb-6 rounded-lg p-3"
-          style={{ backgroundColor: colors.warning }}>
-          <Text 
-            className="text-center font-medium"
-            style={{ color: colors.background }}>
-            Select the answer
-          </Text>
-        </View>
-
-        {/* Simple answer options like in reference */}
-        <View className="flex-col  justify-start">
-          {['A', 'B', 'C', 'D'].map((letter) => {
-            const isSelected = selectedAnswers[questionGroup.questions[0]] === letter;
-            
-            return (
-              <TouchableOpacity
-                key={letter}
-                onPress={() => handleAnswerSelect(questionGroup.questions[0], letter)}
-                className="mr-4 mb-4"
-                style={{
-                  width: 50,
-                  height: 50,
-                  borderRadius: 25,
-                  borderWidth: 2,
-                  borderColor: isSelected ? colors.brandCoral : colors.warmGray300,
-                  backgroundColor: isSelected ? colors.brandCoral : colors.background,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}>
-                <Text
-                  className="text-lg font-medium"
-                  style={{
-                    color: isSelected ? colors.primaryForeground : colors.foreground,
-                  }}>
-                  {letter}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </View>
-    );
+  // Helper function for answer selection
+  const handleSelectAnswer = (questionId: string, answer: string) => {
+    setSelectedAnswers((prev) => ({
+      ...prev,
+      [questionId]: answer,
+    }));
   };
 
-  if (!questionGroup) {
+  // Loading state
+  if (!questionGroup || isChangingQuestion) {
     return (
-      <View className="flex-1" style={{ backgroundColor: colors.background }}>
-        {renderHeader()}
-        <View className="flex-1 items-center justify-center">
-          <Text className="text-lg" style={{ color: colors.mutedForeground }}>Loading question...</Text>
-        </View>
-      </View>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <LoadingScreen
+          currentQuestionNumber={currentQuestionNumber}
+          isChangingQuestion={isChangingQuestion}
+          onGoBack={() => router.back()}
+        />
+      </GestureHandlerRootView>
     );
   }
 
+  // Main render
   return (
-    <View className="flex-1" style={{ backgroundColor: colors.background }}>
-      {renderHeader()}
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        {renderQuestionContent()}
-        {renderAnswerOptions()}
-      </ScrollView>
-    </View>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View className="flex-1" style={{ backgroundColor: colors.background }}>
+        <QuestionHeader
+          currentQuestionNumber={currentQuestionNumber}
+          totalQuestions={200}
+          onGoBack={() => router.back()}
+          onPrevious={goPrev}
+          onNext={goNext}
+          hasPrevious={currentQuestionNumber > 1}
+          hasNext={currentQuestionNumber < 200}
+        />
+        <GestureWrapper
+          panGesture={panGesture}
+          animatedStyle={animatedStyle}
+          contentAnimatedStyle={contentAnimatedStyle}>
+          <QuestionContent
+            questionGroup={questionGroup}
+            currentQuestionNumber={currentQuestionNumber}
+          />
+          <AnswerOptions
+            questionGroup={questionGroup}
+            selectedAnswers={selectedAnswers}
+            onSelectAnswer={handleSelectAnswer}
+          />
+        </GestureWrapper>
+      </View>
+    </GestureHandlerRootView>
   );
 };
