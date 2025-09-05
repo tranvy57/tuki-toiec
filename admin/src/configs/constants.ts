@@ -36,10 +36,11 @@ export const ROUTES = {
 } as const;
 
 export const SIDE_BAR_MENU = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, isActive: true, items: [] },
+  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, isActive: true },
   {
     title: "Quản lý đề thi",
     icon: FileText,
+    url: "/exams/list",
     items: [
       { title: "Danh sách đề thi", url: "/exams/list", icon: FileText },
       { title: "Tạo đề thi", url: "/exams/create", icon: Plus },
