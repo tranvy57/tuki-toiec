@@ -1,12 +1,18 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateAttemptDto } from './dto/create-attempt.dto';
-import { UpdateAttemptDto } from './dto/update-attempt.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Attempt } from './entities/attempt.entity';
 import { Group } from 'src/group/entities/group.entity';
 import { Question } from 'src/question/entities/question.entity';
 import { Test } from 'src/test/entities/test.entity';
+import { User } from 'src/user/entities/user.entity';
+import { plainToInstance } from 'class-transformer';
+import { AttemptDto } from './dto/attempt.dto';
 
 @Injectable()
 export class AttemptService {
@@ -17,61 +23,48 @@ export class AttemptService {
     @InjectRepository(Test) private testRepo: Repository<Test>,
   ) {}
 
-  // async createAttempt(userId: string, dto: CreateAttemptDto) {
-  //   let selectedGroups = [];
-  //   let questions = [];
+  private toResponseDto(attempt: Attempt): AttemptDto {
+    return plainToInstance(AttemptDto, attempt, {
+      excludeExtraneousValues: true,
+    });
+  }
 
-  //   // Tạo attempt mới
-  //   const attempt = this.attemptRepo.create({
-  //     userId,
-  //     mode: dto.mode,
-  //     partIds: dto.mode === 'practice' ? JSON.stringify(dto.partIds) : null,
-  //     testId: dto.mode === 'exam' ? dto.testId : null,
-  //     status: 'doing',
-  //     startedAt: new Date(),
-  //   });
-  //   await this.attemptRepo.save(attempt);
+  async createAttempt(dto: CreateAttemptDto, user: User) {
+    let selectedGroups = [];
+    const test = await this.testRepo.findOne({ where: { id: dto.testId } });
+    if (!test) throw new NotFoundException('Test was not found!');
+    // // Tạo attempt mới
+    const attempt = this.attemptRepo.create({
+      user,
+      mode: dto.mode,
+      test: test,
+      status: 'in_progress',
+      startedAt: new Date(),
+    });
 
-  //   // Gom group theo part (hoặc test)
-  //   const groupsByPart: Record<string, any[]> = {};
-  //   if (dto.mode === 'practice') {
-  //     dto.partIds.forEach((partId) => {
-  //       groupsByPart[partId] = selectedGroups
-  //         .filter((g) => g.partId === partId)
-  //         .map((g) => ({
-  //           groupId: g.groupId,
-  //           audioUrl: g.audioUrl,
-  //           imageUrl: g.imageUrl,
-  //           paragraphEn: g.paragraphEn,
-  //           questions: questions.filter((q) => q.groupId === g.groupId),
-  //         }));
-  //     });
-  //   } else if (dto.mode === 'exam') {
-  //     // Nếu muốn gom group theo part trong 1 test, bạn join thêm part table
-  //     // Hoặc đơn giản trả về list group/part luôn
-  //     selectedGroups.forEach((g) => {
-  //       const partId = g.partId;
-  //       if (!groupsByPart[partId]) groupsByPart[partId] = [];
-  //       groupsByPart[partId].push({
-  //         groupId: g.groupId,
-  //         audioUrl: g.audioUrl,
-  //         imageUrl: g.imageUrl,
-  //         paragraphEn: g.paragraphEn,
-  //         questions: questions.filter((q) => q.groupId === g.groupId),
-  //       });
-  //     });
-  //   }
+    const saved = await this.attemptRepo.save(attempt);
 
-  //   // Trả về response chung
-  //   return {
-  //     attemptId: attempt.attemptId,
-  //     mode: dto.mode,
-  //     parts: Object.keys(groupsByPart).map((partId) => ({
-  //       partId,
-  //       groups: groupsByPart[partId],
-  //     })),
-  //   };
-  // }
+    const savedAttempt = await this.attemptRepo.findOne({
+      where: { id: saved.id },
+      relations: {
+        test: {
+          parts: {
+            groups: {
+              questions: true,
+            },
+          },
+        },
+      },
+    });
+
+    console.log(savedAttempt);
+
+    if (!savedAttempt) {
+      throw new NotFoundException('Attempt was not found after saving!');
+    }
+
+    return this.toResponseDto(savedAttempt);
+  }
 
   findAll() {
     return `This action returns all attempt`;
@@ -79,10 +72,6 @@ export class AttemptService {
 
   findOne(id: number) {
     return `This action returns a #${id} attempt`;
-  }
-
-  update(id: number, updateAttemptDto: UpdateAttemptDto) {
-    return `This action updates a #${id} attempt`;
   }
 
   remove(id: number) {
