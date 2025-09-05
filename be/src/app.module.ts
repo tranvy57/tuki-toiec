@@ -31,6 +31,7 @@ import { TargetSkillsModule } from './target_skills/target_skills.module';
 import { SkillModule } from './skill/skill.module';
 import { UserProgressModule } from './user_progress/user_progress.module';
 import { SeedService } from './seeder/seed.service';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { SeedService } from './seeder/seed.service';
     TargetSkillsModule,
     SkillModule,
     UserProgressModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [

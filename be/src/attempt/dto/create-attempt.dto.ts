@@ -1,1 +1,6 @@
-export class CreateAttemptDto {}
+export class CreateAttemptDto {
+  mode: 'practice' | 'test';
+
+  partIds: string[];
+  testId?: string;
+}

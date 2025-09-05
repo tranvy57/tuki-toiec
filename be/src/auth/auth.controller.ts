@@ -17,7 +17,7 @@ import { Public } from 'src/common/decorator/public.decorator';
 import { Roles } from 'src/common/decorator/roles.decorator';
 import { Permissions } from 'src/common/decorator/permission.decorator';
 import { CurrentUserInterceptor } from 'src/common/interceptor.ts/current-user.interceptor';
-import { User } from 'src/common/decorator/user.decorator';
+
 import type { JwtPayload } from './dto/jwt-payload';
 
 @Controller('auth')

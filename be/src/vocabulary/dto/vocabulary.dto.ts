@@ -2,6 +2,9 @@ import { Expose } from 'class-transformer';
 
 export class VocabularyDto {
   @Expose()
+  id: string;
+
+  @Expose()
   word: string;
 
   @Expose()

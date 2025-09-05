@@ -3,9 +3,13 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { ResponseWrapperInterceptor } from './common/interceptor.ts/response-swapper.interceptor';
+import { InformationServerLog } from './common/utils/information-server.util';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  const port = process.env.PORT ?? 3000;
+  const host = 'localhost';
 
   app.useGlobalInterceptors(new ResponseWrapperInterceptor());
 
@@ -16,16 +20,20 @@ async function bootstrap() {
     .addTag('cats')
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, documentFactory);
+  SwaggerModule.setup('api', app, documentFactory, {
+    jsonDocumentUrl: 'swagger/json',
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // loại bỏ các property không có trong DTO
+      whitelist: false, // loại bỏ các property không có trong DTO
       transform: true, // tự động map payload sang class DTO
-      forbidNonWhitelisted: true, // báo lỗi nếu có extra field
+      forbidNonWhitelisted: false, // báo lỗi nếu có property không có trong DTO
     }),
   );
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 3000, 'localhost', () => {
+    InformationServerLog(port as number, host);
+  });
 }
 bootstrap();

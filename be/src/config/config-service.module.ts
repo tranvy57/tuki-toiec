@@ -18,6 +18,10 @@ import * as Joi from 'joi';
         JWT_EXPIRES_IN: Joi.string().default('1h'),
         JWT_REFRESH_SECRET: Joi.string().required(),
         JWT_REFRESH_EXPIRES_IN: Joi.string().default('7d'),
+
+        CLOUDINARY_CLOUD_NAME: Joi.string().required(),
+        CLOUDINARY_API_KEY: Joi.string().required(),
+        CLOUDINARY_API_SECRET: Joi.string().required(),
       }),
     }),
   ],
