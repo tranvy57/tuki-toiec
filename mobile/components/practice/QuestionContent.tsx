@@ -3,10 +3,10 @@ import { View, Text } from 'react-native';
 import { colors } from '~/constants/Color';
 import { AudioPlayer } from './AudioPlayer';
 import { QuestionImage } from './QuestionImage';
-import { QuestionGroup } from '~/constants/data_questions';
+import { Group, Question } from '~/api/attempts/useStartAttempt';
 
 interface QuestionContentProps {
-  questionGroup: QuestionGroup;
+  questionGroup?: Group | null;
   currentQuestionNumber: number;
 }
 
@@ -21,28 +21,28 @@ export const QuestionContent: React.FC<QuestionContentProps> = ({
           Question {currentQuestionNumber}
         </Text>
 
-        {questionGroup.audio_url && (
+        {questionGroup?.audioUrl && (
           <View className="mb-4">
-            <AudioPlayer audioUrl={questionGroup.audio_url} />
+            <AudioPlayer audioUrl={questionGroup?.audioUrl} />
           </View>
         )}
 
-        {questionGroup.image_url && (
+        {questionGroup?.imageUrl && (
           <View className="mb-4">
             <QuestionImage
               uri={
-                Array.isArray(questionGroup.image_url)
-                  ? questionGroup.image_url[0]
-                  : questionGroup.image_url
+                Array.isArray(questionGroup.imageUrl)
+                  ? questionGroup.imageUrl[0]
+                  : questionGroup.imageUrl
               }
             />
           </View>
         )}
 
-        {questionGroup.paragraph && (
+        {questionGroup?.paragraphEn && (
           <View className="mb-4 rounded-lg p-4" style={{ backgroundColor: colors.muted }}>
             <Text className="text-base leading-6" style={{ color: colors.foreground }}>
-              {questionGroup.paragraph}
+              {questionGroup.paragraphEn}
             </Text>
           </View>
         )}

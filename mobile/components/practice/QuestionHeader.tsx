@@ -5,7 +5,7 @@ import { Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '~/constants/Color';
 
 interface QuestionHeaderProps {
-  currentQuestionNumber: number;
+  currentQuestionNumber?: number;
   totalQuestions: number;
   onGoBack: () => void;
   onPrevious: () => void;
@@ -40,7 +40,7 @@ export const QuestionHeader: React.FC<QuestionHeaderProps> = ({
           
           <Text className="text-lg font-medium" style={{ color: colors.primaryForeground }}>
             
-            Câu {currentQuestionNumber}/200
+            Câu {currentQuestionNumber}
           </Text>
         </View>
       </View>

@@ -35,19 +35,19 @@ export default function RootLayout() {
     // Trong lúc chờ -> vẫn hiển thị splash mặc định
     return null;
   }
-
+  const queryClient = new QueryClient();
   return (
     <SafeAreaProvider style={{ flex: 1 }}>
-
-      <Animated.View style={styles.loading} entering={FadeIn.duration(800)}>
-        <Text style={styles.text}>Smart TOEIC Learner 🚀</Text>
-      </Animated.View>
-
-      <Stack {...unstable_settings}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
+      <QueryClientProvider client={queryClient}>
+        <Animated.View style={styles.loading} entering={FadeIn.duration(800)}>
+          <Text style={styles.text}>Smart TOEIC Learner 🚀</Text>
+        </Animated.View>
+        <Stack {...unstable_settings}>
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        </Stack>
+      </QueryClientProvider>
     </SafeAreaProvider>
   );
 }

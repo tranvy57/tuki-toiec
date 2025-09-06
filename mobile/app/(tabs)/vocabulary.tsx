@@ -4,8 +4,8 @@ import { VocabularyList, VocabularySearch, VocabularyDetail, VocabularyCategorie
 import { Vocabulary } from '../../types/vocabulary';
 import { colors } from '../../constants/Color';
 import { StatusBar } from 'expo-status-bar';
-import { getVocabularies, getWordAudioUrl } from '~/api/vocabularies';
 import { Audio } from 'expo-av';
+import { getVocabularies, getWordAudioUrl } from '~/api/vocabularies/useVocabularies';
 
 export default function VocabularyScreen() {
   const [searchQuery, setSearchQuery] = useState('');

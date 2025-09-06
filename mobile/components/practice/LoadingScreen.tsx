@@ -4,7 +4,7 @@ import { colors } from '~/constants/Color';
 import { QuestionHeader } from './QuestionHeader';
 
 interface LoadingScreenProps {
-  currentQuestionNumber: number;
+  currentQuestionNumber?: number;
   isChangingQuestion: boolean;
   onGoBack: () => void;
 }

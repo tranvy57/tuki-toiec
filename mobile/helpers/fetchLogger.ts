@@ -1,7 +1,5 @@
-// src/helper/fetchLogger.ts
 
 if (__DEV__) {
-  // Cho phép debug XHR trong Chrome DevTools
   (global as any).XMLHttpRequest = (global as any).originalXMLHttpRequest
     ? (global as any).originalXMLHttpRequest
     : (global as any).XMLHttpRequest;

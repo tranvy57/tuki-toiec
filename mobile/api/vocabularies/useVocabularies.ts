@@ -1,5 +1,6 @@
-import { api } from '../libs/axios';
-import { Vocabulary } from '../types/vocabulary';
+import { api } from "~/libs/axios";
+import { Vocabulary } from "~/types/vocabulary";
+
 
 // Response interfaces
 export interface VocabulariesResponse {

@@ -19,43 +19,34 @@ export const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Interceptor trước khi gửi request
 api.interceptors.request.use(
-  async (config) => {
-    // check network
-    if (navigator.onLine === false) {
-      // addToast({
-      // 	title: "Mất kết nối mạng",
-      // 	description: "Vui lòng kiểm tra lại kết nối mạng",
-      // 	color: "danger",
-      // });
-      return Promise.reject(new Error('Network is offline'));
-    }
-
+  (config) => {
+    console.log('➡️ [Request]', config);
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.log('❌ [Request Error]', error);
+    return Promise.reject(error);
+  }
 );
 
-// // Interceptor xử lý lỗi
-// api.interceptors.response.use(
-//   (response) => response,
-//   (error) => {
-//     if (!error.response) {
-//       return Promise.reject(error);
-//     }
-
-//     const errorResponse: ErrorResponse = error.response.data;
-
-//     if (errorResponse.statusCode === 401) {
-//       // addToast({
-//       // 	title: "Phiên đăng nhập đã hết hạn",
-//       // 	description: "Vui lòng đăng nhập lại",
-//       // 	color: "danger",
-//       // });
-//       window.location.href = '/admin/login';
-//     }
-
-//     return Promise.reject(errorResponse);
-//   }
-// );
+api.interceptors.response.use(
+  (response) => {
+    console.log('✅ [Response]', {
+      url: response.config.url,
+      status: response.status,
+      data: response.data,
+    });
+    return response;
+  },
+  (error) => {
+    if (error.response) {
+      console.log('❌ [Response Error]', error);
+    } else if (error.request) {
+      console.log('❌ [Network Error]', error.message);
+    } else {
+      console.log('❌ [Axios Error]', error.message);
+    }
+    return Promise.reject(error);
+  }
+);

@@ -7,13 +7,21 @@ export default function TestLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen
-          name="[q]"
+          name="question"
+          options={{
+            // có thể thêm animation
+            presentation: 'modal',
+          }}
+        />
+        <Stack.Screen
+          name="review-part"
           options={{
             // có thể thêm animation
             presentation: 'modal',
           }}
         />
       </Stack>
+      
     </GestureHandlerRootView>
   );
 }
