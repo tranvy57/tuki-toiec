@@ -24,8 +24,7 @@ export class Attempt extends BaseEntity {
   totalScore: number;
   @Column()
   status: 'in_progress' | 'submitted';
-  @Column({ nullable: true })
-  score: number;
+
   @Column()
   mode: 'practice' | 'test';
 

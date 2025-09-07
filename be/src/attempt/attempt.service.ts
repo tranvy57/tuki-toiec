@@ -30,16 +30,45 @@ export class AttemptService {
   }
 
   async createAttempt(dto: CreateAttemptDto, user: User) {
-    let selectedGroups = [];
-    const test = await this.testRepo.findOne({ where: { id: dto.testId } });
+    const test = await this.testRepo.findOne({
+      where: { id: dto.testId },
+      relations: {
+        parts: {
+          groups: {
+            questions: {
+              answers: true,
+            },
+          },
+        },
+      },
+    });
     if (!test) throw new NotFoundException('Test was not found!');
-    // // Tạo attempt mới
+
+    let selectedParts = test.parts;
+
+    console.log(selectedParts);
+
+    if (dto.mode === 'practice') {
+      if (!dto.partIds || dto.partIds.length === 0) {
+        throw new BadRequestException(
+          'Must select at least one part for practice',
+        );
+      }
+
+      selectedParts = test.parts.filter((p) => dto.partIds.includes(p.id));
+      if (selectedParts.length === 0) {
+        throw new BadRequestException('No valid parts selected for practice');
+      }
+    }
+
+    // Tạo attempt mới
     const attempt = this.attemptRepo.create({
       user,
       mode: dto.mode,
       test: test,
       status: 'in_progress',
       startedAt: new Date(),
+      parts: selectedParts,
     });
 
     const saved = await this.attemptRepo.save(attempt);
@@ -47,19 +76,16 @@ export class AttemptService {
     const savedAttempt = await this.attemptRepo.findOne({
       where: { id: saved.id },
       relations: {
-        test: {
-          parts: {
-            groups: {
-              questions: {
-                answers: true,
-              },
+        test: true,
+        parts: {
+          groups: {
+            questions: {
+              answers: true,
             },
           },
         },
       },
     });
-
-    console.log(savedAttempt);
 
     if (!savedAttempt) {
       throw new NotFoundException('Attempt was not found after saving!');
