@@ -19,6 +19,7 @@ import { Permissions } from 'src/common/decorator/permission.decorator';
 import { CurrentUserInterceptor } from 'src/common/interceptor.ts/current-user.interceptor';
 
 import type { JwtPayload } from './dto/jwt-payload';
+import { authResponse } from './dto/auth-response.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -27,7 +28,7 @@ export class AuthController {
   @Public()
   @Post('login')
   @UseGuards(LocalAuthGuard)
-  async login(@Request() req) {
+  async login(@Request() req): Promise<authResponse> {
     return this.authService.login(req.user);
   }
 

@@ -1,0 +1,35 @@
+{
+  "home": {
+    "title": "Climping Rose アートショップ",
+    "menu": {
+      "home": "ホーム",
+      "products": "作品",
+      "feedbacks": "レビュー",
+      "blog": "シェアのひとこと",
+      "cart": "カート",
+      "account": "アカウント"
+    },
+    "size": "サイズを選ぶ",
+    "options": {
+      "size2020": "20×20 キャンバス",
+      "size3040": "30×40 キャンバス",
+      "size4050": "40×50 キャンバス",
+      "custom": "オーダー印刷"
+    },
+    "categories": "作品カテゴリ ",
+    "seemore": "もっと見る",
+    "coupon": {
+      "desc": {
+        "disc300": "{minOrder}以上のご注文で{discount}が適用されます",
+        "disc500": "{minOrder}以上のご注文で{discount}が適用されます",
+        "freeship": "{minOrder}以上のご注文で送料無料になります"
+      },
+      "enterCode": "クーポンコード: {code}",
+      "conditionTitle": "利用条件",
+      "conditionDesc": "クーポンのご利用について：",
+      "close": "閉じる",
+      "copy": "コピー",
+      "conditionLink": "詳細"
+    }
+  }
+}

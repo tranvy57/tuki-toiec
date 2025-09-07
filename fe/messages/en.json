@@ -1,0 +1,35 @@
+{
+  "home": {
+    "title": "Climping Rose Art Shop",
+    "menu": {
+      "home": "Home",
+      "products": "Products",
+      "feedbacks": "Feedbacks",
+      "blog": "Blog",
+      "cart": "Shopping Cart",
+      "account": "Shopping Cart"
+    },
+    "size": "Product Size",
+    "options": {
+      "size2020": "20x20 Print",
+      "size3040": "30x40 Print",
+      "size4050": "40x50 Print",
+      "custom": "Custom"
+    },
+    "categories": "Categories",
+    "seemore": "See more",
+    "coupon": {
+      "desc": {
+        "disc300": "You will get {discount} off for orders over {minOrder}",
+        "disc500": "You will get {discount} off for orders over {minOrder}",
+        "freeship": "Free shipping for orders over {minOrder}"
+      },
+      "enterCode": "USE CODE: {code}",
+      "conditionTitle": "Terms & Conditions",
+      "conditionDesc": "To use this coupon:",
+      "close": "Close",
+      "copy": "Copy",
+      "conditionLink": "Details"
+    }
+  }
+}
