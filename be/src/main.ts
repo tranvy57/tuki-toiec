@@ -11,6 +11,12 @@ async function bootstrap() {
   const port = process.env.PORT ?? 3000;
   const host = 'localhost';
 
+  app.enableCors({
+    origin: '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: '*',
+    credentials: true,
+  });
   app.useGlobalInterceptors(new ResponseWrapperInterceptor());
 
   const config = new DocumentBuilder()
