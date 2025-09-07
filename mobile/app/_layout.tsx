@@ -4,6 +4,9 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import '../helpers/fetchLogger';  // patch fetch trước khi render app
+
 
 import '../global.css';
 
@@ -13,6 +16,7 @@ export const unstable_settings = {
   initialRouteName: '(tabs)',
   screenOptions: { headerShown: false },
 };
+const queryClient = new QueryClient();
 
 export default function RootLayout() {
   const [ready, setReady] = useState(false);
@@ -31,18 +35,19 @@ export default function RootLayout() {
     // Trong lúc chờ -> vẫn hiển thị splash mặc định
     return null;
   }
-
+  const queryClient = new QueryClient();
   return (
     <SafeAreaProvider style={{ flex: 1 }}>
-      <Animated.View style={styles.loading} entering={FadeIn.duration(800)}>
-        <Text style={styles.text}>Smart TOEIC Learner 🚀</Text>
-      </Animated.View>
-
-      <Stack {...unstable_settings}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
+      <QueryClientProvider client={queryClient}>
+        <Animated.View style={styles.loading} entering={FadeIn.duration(800)}>
+          <Text style={styles.text}>Smart TOEIC Learner 🚀</Text>
+        </Animated.View>
+        <Stack {...unstable_settings}>
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        </Stack>
+      </QueryClientProvider>
     </SafeAreaProvider>
   );
 }

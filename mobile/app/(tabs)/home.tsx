@@ -10,7 +10,6 @@ import { AnimationDurations } from '~/constants/Animation';
 
 export default function Home() {
   for (const [key, value] of Object.entries(AnimationDurations)) {
-    console.log(key);
   }
   return (
     <View className="flex-1" style={{ backgroundColor: colors.background }}>
