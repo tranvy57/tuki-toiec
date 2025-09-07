@@ -1,6 +1,7 @@
 import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { BaseEntity } from 'src/common/entities/base.entity';
 import { Role } from 'src/role/entities/role.entity';
+import { UserVocabulary } from 'src/user_vocabularies/entities/user_vocabulary.entity';
 import { Vocabulary } from 'src/vocabulary/entities/vocabulary.entity';
 import {
   Column,
@@ -39,19 +40,8 @@ export class User extends BaseEntity {
   })
   roles: Role[];
 
-  @ManyToMany(() => Vocabulary, (vocabulary) => vocabulary.users)
-  @JoinTable({
-    name: 'user_vocabularies',
-    joinColumn: {
-      name: 'user_id',
-      referencedColumnName: 'id',
-    },
-    inverseJoinColumn: {
-      name: 'vocabulary_id',
-      referencedColumnName: 'id',
-    },
-  })
-  vocabularies: Vocabulary[];
+  @OneToMany(() => UserVocabulary, (uv) => uv.user)
+  userVocabularies: UserVocabulary[];
 
   @OneToMany(() => Attempt, (attempt) => attempt.user)
   attempts: Attempt[];

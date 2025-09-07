@@ -23,6 +23,11 @@ export const QuestionHeader: React.FC<QuestionHeaderProps> = ({
   hasPrevious,
   hasNext,
 }) => {
+
+  const onSubmit = (() => {
+    router.replace('/(tabs)/(tests)/[id]/result');
+  })
+
   return (
     <View
       className="flex-row items-center justify-between px-4 py-3"
@@ -47,8 +52,8 @@ export const QuestionHeader: React.FC<QuestionHeaderProps> = ({
       {/* Right side - Nộp bài button */}
       <TouchableOpacity
         className="rounded-lg px-3 py-1"
+        onPress={() => onSubmit()}
         style={{ backgroundColor: colors.primaryForeground }}>
-        
         <Text className="text-sm font-medium" style={{ color: colors.primary }}>
           
           Nộp bài

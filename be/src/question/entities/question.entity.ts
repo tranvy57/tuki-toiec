@@ -4,6 +4,7 @@ import { AttemptAnswer } from 'src/attempt_answers/entities/attempt_answer.entit
 import { BaseEntity } from 'src/common/entities/base.entity';
 import { Grammar } from 'src/grammar/entities/grammar.entity';
 import { Group } from 'src/group/entities/group.entity';
+import { QuestionVocabulary } from 'src/question_vocabularies/entities/question_vocabulary.entity';
 import { Vocabulary } from 'src/vocabulary/entities/vocabulary.entity';
 import {
   Column,
@@ -43,6 +44,9 @@ export class Question extends BaseEntity {
     },
   })
   vocabularies: Vocabulary[];
+
+  @OneToMany(() => QuestionVocabulary, (qv) => qv.question)
+  questionVocabularies: QuestionVocabulary[];
 
   @OneToMany(() => AttemptAnswer, (attemptAnswer) => attemptAnswer.question)
   attemptAnswers: AttemptAnswer[];

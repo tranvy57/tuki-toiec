@@ -11,7 +11,6 @@ interface LoadingScreenProps {
 
 export const LoadingScreen: React.FC<LoadingScreenProps> = ({
   currentQuestionNumber,
-  isChangingQuestion,
   onGoBack,
 }) => {
   const renderHeader = () => (
@@ -32,9 +31,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
       <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="large" color={colors.primary} />
         <Text className="mt-4 text-lg" style={{ color: colors.mutedForeground }}>
-          {isChangingQuestion
-            ? `Loading question ${currentQuestionNumber}...`
-            : 'Loading question...'}
+          Loading question...
         </Text>
       </View>
     </View>

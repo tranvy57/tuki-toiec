@@ -7,6 +7,7 @@ interface PracticeTestState {
   currentPart: Part | null;
   currentGroup: Group | null;
   currentGroupQuestion: Question[] | null;
+  selectedAnswers: Record<string, string>;
 
   // actions
   setTest: (test: Test) => void;
@@ -15,6 +16,7 @@ interface PracticeTestState {
   nextPart: () => void;
   nextGroup: () => void;
   beforeGroup: () => void;
+  setAnswer: (questionId: string, answerKey: string) => void;
   reset: () => void;
 }
 
@@ -23,6 +25,14 @@ export const useCurrentTest = create<PracticeTestState>((set, get) => ({
   currentPart: null,
   currentGroup: null,
   currentGroupQuestion: null,
+  selectedAnswers: {},
+  setAnswer: (questionId, answerKey) =>
+    set((state) => ({
+      selectedAnswers: {
+        ...state.selectedAnswers,
+        [questionId]: answerKey,
+      },
+    })),
 
   setTest: (test) =>
     set({
@@ -116,5 +126,12 @@ export const useCurrentTest = create<PracticeTestState>((set, get) => ({
     }
   },
 
-  reset: () => set({ test: null, currentPart: null, currentGroup: null }),
+  reset: () =>
+    set({
+      test: null,
+      currentPart: null,
+      currentGroup: null,
+      currentGroupQuestion: null,
+      selectedAnswers: {},
+    }),
 }));

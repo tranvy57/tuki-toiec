@@ -6,8 +6,14 @@ export interface Question {
   id: string;
   numberLabel: number; // số câu
   content: string; // nội dung câu hỏi
+  answers: Answer[]; // các đáp án của câu hỏi
 }
-
+export interface Answer {
+  id: string;
+  content: string; // nội dung đáp án
+  answerKey: string; // 'A', 'B', 'C', 'D'
+  isCorrect: boolean; // true nếu đáp án đúng, false nếu sai
+}
 // Một group trong Part
 export interface Group {
   id: string;

@@ -1,6 +1,7 @@
 import { BaseEntity } from 'src/common/entities/base.entity';
-import { User } from 'src/user/entities/user.entity';
-import { Column, Entity, JoinTable, ManyToMany } from 'typeorm';
+import { QuestionVocabulary } from 'src/question_vocabularies/entities/question_vocabulary.entity';
+import { UserVocabulary } from 'src/user_vocabularies/entities/user_vocabulary.entity';
+import { Column, Entity, JoinTable, ManyToMany, OneToMany } from 'typeorm';
 
 @Entity('vocabularies')
 export class Vocabulary extends BaseEntity {
@@ -25,6 +26,9 @@ export class Vocabulary extends BaseEntity {
   @Column({ name: 'audio_url', nullable: true })
   audioUrl: string;
 
-  @ManyToMany(() => User, (user) => user.vocabularies)
-  users?: User[];
+  @OneToMany(() => UserVocabulary, (uv) => uv.vocabulary)
+  userVocabularies: UserVocabulary[];
+
+  @OneToMany(() => QuestionVocabulary, (qv) => qv.vocabulary)
+  questionVocabularies: QuestionVocabulary[];
 }
