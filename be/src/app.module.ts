@@ -15,6 +15,23 @@ import { VocabularyModule } from './vocabulary/vocabulary.module';
 import { TestModule } from './test/test.module';
 import { AttemptModule } from './attempt/attempt.module';
 import { PartModule } from './part/part.module';
+import { GroupModule } from './group/group.module';
+import { QuestionModule } from './question/question.module';
+import { AnswersModule } from './answers/answers.module';
+import { GrammarModule } from './grammar/grammar.module';
+import { AttemptAnswersModule } from './attempt_answers/attempt_answers.module';
+import { PlanModule } from './plan/plan.module';
+import { PhaseModule } from './phase/phase.module';
+import { PhaseLessonsModule } from './phase_lessons/phase_lessons.module';
+import { LessonModule } from './lesson/lesson.module';
+import { StudyTasksModule } from './study_tasks/study_tasks.module';
+import { LessonDepedenciesModule } from './lesson_depedencies/lesson_depedencies.module';
+import { UnitModule } from './unit/unit.module';
+import { TargetSkillsModule } from './target_skills/target_skills.module';
+import { SkillModule } from './skill/skill.module';
+import { UserProgressModule } from './user_progress/user_progress.module';
+import { SeedService } from './seeder/seed.service';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -28,10 +45,27 @@ import { PartModule } from './part/part.module';
     TestModule,
     AttemptModule,
     PartModule,
+    GroupModule,
+    QuestionModule,
+    AnswersModule,
+    GrammarModule,
+    AttemptAnswersModule,
+    PlanModule,
+    PhaseModule,
+    PhaseLessonsModule,
+    LessonModule,
+    StudyTasksModule,
+    LessonDepedenciesModule,
+    UnitModule,
+    TargetSkillsModule,
+    SkillModule,
+    UserProgressModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
+    SeedService,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

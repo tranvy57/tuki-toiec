@@ -1,0 +1,35 @@
+{
+  "home": {
+    "title": "Tiệm Vẽ Climping Rose",
+    "menu": {
+      "home": "Trang chủ",
+      "products": "Sản phẩm",
+      "feedbacks": "Đánh giá",
+      "blog": "Góc chia sẻ",
+      "cart": "Giỏ hàng",
+      "account": "Tài khoản"
+    },
+    "size": "Kích thước sản phẩm",
+    "options": {
+      "size2020": "Tranh 20x20",
+      "size3040": "Tranh 30x40",
+      "size4050": "Tranh 40x50",
+      "custom": "Theo yêu cầu"
+    },
+    "categories": "Danh mục sản phẩm",
+    "seemore": "Xem thêm",
+    "coupon": {
+      "desc": {
+        "disc300": "Bạn sẽ được giảm {discount} cho đơn hàng từ {minOrder}",
+        "disc500": "Bạn sẽ được giảm {discount} cho đơn hàng từ {minOrder}",
+        "freeship": "Miễn phí vận chuyển cho đơn hàng từ {minOrder}"
+      },
+      "enterCode": "NHẬP MÃ: {code}",
+      "conditionTitle": "Điều kiện áp dụng",
+      "conditionDesc": "Để sử dụng mã giảm giá:",
+      "close": "Đóng",
+      "copy": "Sao chép",
+      "conditionLink": "Điều kiện"
+    }
+  }
+}

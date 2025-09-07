@@ -39,7 +39,7 @@ export class User extends BaseEntity {
   })
   roles: Role[];
 
-  @ManyToMany(() => User, (user) => user.vocabularies)
+  @ManyToMany(() => Vocabulary, (vocabulary) => vocabulary.users)
   @JoinTable({
     name: 'user_vocabularies',
     joinColumn: {
