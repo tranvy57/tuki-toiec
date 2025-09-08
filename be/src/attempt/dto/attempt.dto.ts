@@ -6,6 +6,9 @@ import { TestDto } from 'src/test/dto/test.dto';
 
 export class AttemptDto {
   @Expose()
+  id: string;
+
+  @Expose()
   mode: 'practice' | 'test';
 
   @Expose()

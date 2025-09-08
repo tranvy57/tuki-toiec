@@ -12,20 +12,31 @@ import { CreateAttemptDto } from './dto/create-attempt.dto';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { User } from 'src/user/entities/user.entity';
 import { Public } from 'src/common/decorator/public.decorator';
+import { userInfo } from 'os';
+import { CreateAttemptAnswerDto } from 'src/attempt_answers/dto/create-attempt_answer.dto';
 
 @Controller('attempts')
 export class AttemptController {
   constructor(private readonly attemptService: AttemptService) {}
 
   @Post()
-  @Public()
   async createAttempt(
     @CurrentUser() user: User,
     @Body() dto: CreateAttemptDto,
   ) {
-    return this.attemptService.createAttempt(dto, user);
+    console.log('current user', user);
+
+    return await this.attemptService.createAttempt(dto, user);
   }
 
+  @Patch(':attemptId/answers')
+  async saveAttemptAnswer(
+    @CurrentUser() user: User,
+    @Body() dto: CreateAttemptAnswerDto,
+    @Param('attemptId') attemptId: string,
+  ) {
+    return this.attemptService.saveAttemptAnswer(attemptId, dto, user);
+  }
   @Get()
   findAll() {
     return this.attemptService.findAll();

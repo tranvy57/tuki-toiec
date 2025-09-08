@@ -6,6 +6,7 @@ import { Vocabulary } from 'src/vocabulary/entities/vocabulary.entity';
 import {
   Column,
   Entity,
+  JoinColumn,
   JoinTable,
   ManyToMany,
   OneToMany,
@@ -44,5 +45,6 @@ export class User extends BaseEntity {
   userVocabularies: UserVocabulary[];
 
   @OneToMany(() => Attempt, (attempt) => attempt.user)
+  @JoinColumn({ name: 'user_id' })
   attempts: Attempt[];
 }

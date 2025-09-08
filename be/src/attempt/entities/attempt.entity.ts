@@ -29,6 +29,7 @@ export class Attempt extends BaseEntity {
   mode: 'practice' | 'test';
 
   @ManyToOne(() => User, (user) => user.attempts)
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
   @ManyToMany(() => Part, (part) => part.attempts)

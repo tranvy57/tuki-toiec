@@ -1,7 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { AttemptAnswersService } from './attempt_answers.service';
-import { CreateAttemptAnswerDto } from './dto/create-attempt_answer.dto';
 import { UpdateAttemptAnswerDto } from './dto/update-attempt_answer.dto';
+import { CreateAttemptAnswerDto } from './dto/create-attempt_answer.dto';
 
 @Controller('attempt-answers')
 export class AttemptAnswersController {
@@ -23,7 +31,10 @@ export class AttemptAnswersController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAttemptAnswerDto: UpdateAttemptAnswerDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateAttemptAnswerDto: UpdateAttemptAnswerDto,
+  ) {
     return this.attemptAnswersService.update(+id, updateAttemptAnswerDto);
   }
 

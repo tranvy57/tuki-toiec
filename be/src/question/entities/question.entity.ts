@@ -23,8 +23,8 @@ export class Question extends BaseEntity {
   @Column({ name: 'content' })
   content: string;
 
-  @Column()
-  explanation: string;
+  @Column({ default: '' })
+  explanation?: string;
 
   @Column({ default: 5 })
   score: number;
