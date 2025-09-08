@@ -1,6 +1,7 @@
 """Base settings class with project, DB, JWT, CORS, and logging configs."""
 
 import os
+from dotenv import load_dotenv
 import secrets
 import ast
 from typing import List, Union, Dict, Optional, Any
@@ -9,6 +10,7 @@ from pydantic import AnyHttpUrl, field_validator, ValidationInfo
 from pydantic_settings import BaseSettings
 from ..utils.logging import StandardFormatter, ColorFormatter
 
+load_dotenv()
 
 class Settings(BaseSettings):
     # ------------------ Project ------------------

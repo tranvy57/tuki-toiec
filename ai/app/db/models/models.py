@@ -4,10 +4,22 @@ from sqlalchemy import Boolean, Column, Date, DateTime, Double, ForeignKeyConstr
 from sqlalchemy.orm import Mapped, declarative_base, mapped_column, relationship
 from sqlalchemy.orm.base import Mapped
 
-Base = declarative_base()
+
+
+from sqlalchemy.inspection import inspect
+
+class ReprMixin:
+    def __repr__(self):
+        # lấy danh sách cột từ mapper
+        mapper = inspect(self.__class__)
+        attrs = []
+        for column in mapper.columns:
+            value = getattr(self, column.key, None)
+            attrs.append(f"{column.key}={value!r}")
+        return f"<{self.__class__.__name__}({', '.join(attrs)})>"
+
+Base = declarative_base(cls=ReprMixin)
 metadata = Base.metadata
-
-
 class Grammars(Base):
     __tablename__ = 'grammars'
     __table_args__ = (
