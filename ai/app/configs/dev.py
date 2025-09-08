@@ -4,4 +4,4 @@ from .base import Settings
 
 
 class SettingsDev(Settings):
-    DEBUG = True
+    DEBUG: bool = True

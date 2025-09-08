@@ -5,7 +5,6 @@ import logging
 from functools import lru_cache
 from .base import Settings
 from .dev import SettingsDev
-from .test import SettingsTest
 from .prod import SettingsProd
 
 # name of the environment variable, used for defining the deployment environment
@@ -30,6 +29,4 @@ def get_settings():
         return base_settings
     elif mode_name == "DEV":
         return SettingsDev()
-    elif mode_name == "TEST":
-        return SettingsTest()
     return SettingsProd()
