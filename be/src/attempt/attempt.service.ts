@@ -122,7 +122,7 @@ export class AttemptService {
       },
     });
 
-    console.log('attempt user ', attempt?.user);
+    // console.log('attempt user ', attempt?.user);
 
     if (!attempt) {
       throw new NotFoundException('Attempt not found!');
@@ -171,6 +171,75 @@ export class AttemptService {
 
     const savedAttemptAnswer = await this.attemptAnserRepo.save(attemptAnswer);
     return this.toAttemptAnswerDto(savedAttemptAnswer);
+  }
+
+  async submitAttempt(attemptId: string, user: User) {
+    let attempt = await this.attemptRepo.findOne({
+      where: { id: attemptId },
+      relations: {
+        user: true,
+        test: true,
+        parts: {
+          groups: {
+            questions: {
+              answers: true,
+            },
+          },
+        },
+      },
+    });
+
+    const attemptAnswers = await this.attemptAnserRepo.find({
+      where: { attempt: { id: attemptId } },
+      relations: { answer: true, question: true },
+    });
+
+    const answerMap = new Map(attemptAnswers.map((aa) => [aa.question.id, aa]));
+
+    if (!attempt) {
+      throw new NotFoundException('Attempt not found!');
+    }
+    if (attempt?.user.id !== user.id)
+      throw new UnauthorizedException(
+        'You are not have permission to do this action!',
+      );
+
+    let totalScore = 0;
+    let correctCount = 0;
+    let totalQuestions = 0;
+
+    attempt.parts.forEach((p) =>
+      p.groups.forEach((g) =>
+        g.questions.forEach((q) => {
+          totalQuestions += 1;
+          const userAnswer = answerMap.get(q.id);
+          q['userAnswer'] = userAnswer ?? null;
+          if (userAnswer?.answer?.isCorrect) {
+            totalScore += q['score'] ?? 1;
+            correctCount += 1;
+          }
+        }),
+      ),
+    );
+
+    // for (const a of attemptAnswers) {
+    //   if (a.isCorrect === true) totalScore += a.question.score;
+    // }
+
+    attempt.status = 'submitted';
+    attempt.finishAt = new Date();
+    attempt.totalScore = totalScore;
+
+    const savedAttempt = await this.attemptRepo.save(attempt);
+
+    return {
+      ...savedAttempt,
+      parts: attempt.parts,
+      totalQuestions,
+      correctCount,
+      totalScore,
+      // accuracy,
+    };
   }
 
   findAll() {

@@ -15,7 +15,7 @@ export class AttemptAnswerDto {
 
   @Expose()
   @Type(() => QuestionDto)
-  question: Question;
+  question?: Question;
 
   @Expose()
   @Type(() => AnswerDto)

@@ -43,7 +43,7 @@ export class TestService {
       for (const p of dto.parts) {
         const part = manager.create(Part, {
           partNumber: p.partNumber,
-          directions: p.directions,
+          direction: p.direction,
           test: savedTest,
         });
         const savedPart = await manager.save(part);

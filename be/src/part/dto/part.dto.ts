@@ -9,7 +9,7 @@ export class PartDto {
   partNumber: number;
 
   @Expose()
-  directions: string;
+  direction: string;
 
   @Expose()
   @Type(() => GroupDto)

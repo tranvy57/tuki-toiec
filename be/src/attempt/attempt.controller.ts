@@ -37,6 +37,14 @@ export class AttemptController {
   ) {
     return this.attemptService.saveAttemptAnswer(attemptId, dto, user);
   }
+
+  @Patch(':attemptId/submit')
+  async submit(
+    @CurrentUser() user: User,
+    @Param('attemptId') attemptId: string,
+  ) {
+    return this.attemptService.submitAttempt(attemptId, user);
+  }
   @Get()
   findAll() {
     return this.attemptService.findAll();
