@@ -34,6 +34,9 @@ import { SeedService } from './seeder/seed.service';
 import { UploadModule } from './upload/upload.module';
 import { QuestionVocabulariesModule } from './question_vocabularies/question_vocabularies.module';
 import { UserVocabulariesModule } from './user_vocabularies/user_vocabularies.module';
+import { \src\questionTagsModule } from './src/question-tags/src/question-tags.module';
+import { QuestionTagsModule } from './question-tags/question-tags.module';
+import { QuestionTagsModule } from './question_tags/question_tags.module';
 
 @Module({
   imports: [
@@ -65,6 +68,7 @@ import { UserVocabulariesModule } from './user_vocabularies/user_vocabularies.mo
     UploadModule,
     UserVocabulariesModule,
     QuestionVocabulariesModule,
+    \src\questionTagsModule, QuestionTagsModule,
   ],
   controllers: [AppController],
   providers: [
