@@ -5,5 +5,6 @@ import { QuestionTagsController } from './question_tags.controller';
 @Module({
   controllers: [QuestionTagsController],
   providers: [QuestionTagsService],
+  exports: [QuestionTagsService],
 })
 export class QuestionTagsModule {}
