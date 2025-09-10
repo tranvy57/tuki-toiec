@@ -36,169 +36,66 @@ export class TestService {
     private dataSrc: DataSource,
   ) {}
 
-  // async create(dto: TestDto): Promise<TestDto> {
-  //   const skills = await this.skillsRepo.find();
-  //   return this.dataSrc.transaction(async (manager) => {
-  //     // Tạo test
-  //     const test = manager.create(Test, {
-  //       title: dto.title,
-  //       audioUrl: dto.audioUrl,
-  //     });
-  //     const savedTest = await manager.save(test);
-
-  //     // Lưu parts, groups, questions, answers
-  //     for (const p of dto.parts) {
-  //       const part = manager.create(Part, {
-  //         partNumber: p.partNumber,
-  //         directions: p.directions,
-  //         test: savedTest,
-  //       });
-  //       const savedPart = await manager.save(part);
-
-  //       for (const g of p.groups) {
-  //         const group = manager.create(Group, {
-  //           orderIndex: g.orderIndex,
-  //           paragraphEn: g.paragraphEn,
-  //           paragraphVn: g.paragraphVn,
-  //           imageUrl: g.imageUrl,
-  //           audioUrl: g.audioUrl,
-  //           part: savedPart,
-  //         });
-  //         const savedGroup = await manager.save(group);
-
-  //         for (const q of g.questions) {
-  //           const question = manager.create(Question, {
-  //             numberLabel: q.numberLabel,
-  //             content: q.content,
-  //             explanation: q.explanation,
-  //             // grammar_id: q.grammarId,
-  //             group: savedGroup,
-  //           });
-  //           const savedQuestion = await manager.save(question);
-
-  //           if (q.answers) {
-  //             // for (const a of q.answers) {
-  //             //   const answer = manager.create(Answer, {
-  //             //     content: a.content,
-  //             //     isCorrect: a.isCorrect,
-  //             //     answerKey: a.answerKey,
-  //             //     question: savedQuestion,
-  //             //   });
-  //             //   await manager.save(answer);
-  //             // }
-  //             await Promise.all(
-  //               q.answers.map((a) => {
-  //                 const answer = manager.create(Answer, {
-  //                   content: a.content,
-  //                   isCorrect: a.isCorrect,
-  //                   answerKey: a.answerKey,
-  //                   question: savedQuestion,
-  //                 });
-  //                 return manager.save(answer);
-  //               }),
-  //             );
-  //           }
-
-  //           await this.questionTagsService.addTagToQuestion(
-  //             savedQuestion,
-  //             skills,
-  //             manager, // truyền manager vào service
-  //           );
-  //         }
-  //       }
-  //     }
-
-  //     // Load lại entity với quan hệ đầy đủ
-  //     const fullTest = await manager.findOne(Test, {
-  //       where: { id: savedTest.id },
-  //       relations: {
-  //         parts: {
-  //           groups: {
-  //             questions: {
-  //               answers: true,
-  //             },
-  //           },
-  //         },
-  //       },
-  //     });
-
-  //     // Map entity → DTO tự động
-  //     return plainToInstance(TestDto, fullTest, {
-  //       excludeExtraneousValues: true,
-  //     });
-  //   });
-  // }
-
   async create(dto: TestDto): Promise<TestDto> {
     const skills = await this.skillsRepo.find();
     return this.dataSrc.transaction(async (manager) => {
       // Tạo test
-      const savedTest = await manager.save(
-        manager.create(Test, {
-          title: dto.title,
-          audioUrl: dto.audioUrl,
-        }),
-      );
+      const test = manager.create(Test, {
+        title: dto.title,
+        audioUrl: dto.audioUrl,
+      });
+      const savedTest = await manager.save(test);
 
-      await Promise.all(
-        dto.parts.map(async (p) => {
-          const savedPart = await manager.save(
-            manager.create(Part, {
-              partNumber: p.partNumber,
-              directions: p.directions,
-              test: savedTest,
-            }),
-          );
+      // Lưu parts, groups, questions, answers
+      for (const p of dto.parts) {
+        const part = manager.create(Part, {
+          partNumber: p.partNumber,
+          directions: p.directions,
+          test: savedTest,
+        });
+        const savedPart = await manager.save(part);
 
-          await Promise.all(
-            p.groups.map(async (g) => {
-              const savedGroup = await manager.save(
-                manager.create(Group, {
-                  orderIndex: g.orderIndex,
-                  paragraphEn: g.paragraphEn,
-                  paragraphVn: g.paragraphVn,
-                  imageUrl: g.imageUrl,
-                  audioUrl: g.audioUrl,
-                  part: savedPart,
-                }),
-              );
+        for (const g of p.groups) {
+          const group = manager.create(Group, {
+            orderIndex: g.orderIndex,
+            paragraphEn: g.paragraphEn,
+            paragraphVn: g.paragraphVn,
+            imageUrl: g.imageUrl,
+            audioUrl: g.audioUrl,
+            part: savedPart,
+          });
+          const savedGroup = await manager.save(group);
 
-              await Promise.all(
-                g.questions.map(async (q) => {
-                  const savedQuestion = await manager.save(
-                    manager.create(Question, {
-                      numberLabel: q.numberLabel,
-                      content: q.content,
-                      explanation: q.explanation,
-                      group: savedGroup,
-                    }),
-                  );
+          for (const q of g.questions) {
+            const question = manager.create(Question, {
+              numberLabel: q.numberLabel,
+              content: q.content,
+              explanation: q.explanation,
+              // grammar_id: q.grammarId,
+              group: savedGroup,
+            });
+            const savedQuestion = await manager.save(question);
 
-                  if (q.answers) {
-                    await Promise.all(
-                      q.answers.map((a) => {
-                        const answer = manager.create(Answer, {
-                          content: a.content,
-                          isCorrect: a.isCorrect,
-                          answerKey: a.answerKey,
-                          question: savedQuestion,
-                        });
-                        return manager.save(answer);
-                      }),
-                    );
-                  }
+            if (q.answers) {
+              for (const a of q.answers) {
+                const answer = manager.create(Answer, {
+                  content: a.content,
+                  isCorrect: a.isCorrect,
+                  answerKey: a.answerKey,
+                  question: savedQuestion,
+                });
+                await manager.save(answer);
+              }
+            }
 
-                  await this.questionTagsService.addTagToQuestion(
-                    savedQuestion,
-                    skills,
-                    manager, 
-                  );
-                }),
-              );
-            }),
-          );
+            await this.questionTagsService.addTagToQuestion(
+              savedQuestion,
+              skills,
+              manager, // truyền manager vào service
+            );
+          }
         }
-      ));
+      }
 
       // Load lại entity với quan hệ đầy đủ
       const fullTest = await manager.findOne(Test, {
