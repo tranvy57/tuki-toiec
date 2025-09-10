@@ -237,7 +237,7 @@
           "questions": [
             {
               "numberLabel": "7",
-              "content": "",
+              "content": "Where was the company picnic held?",
               "explanation": "Dịch đáp án: 7. Chuyến dã ngoại của công ty được tổ chức ở đâu? (A) Vào tháng 4. (B) Đồ uống giải khát sẽ được cung cấp. (C) Tại một công viên cạnh hồ.",
               "answers": [
                 {
@@ -268,7 +268,7 @@
           "questions": [
             {
               "numberLabel": "8",
-              "content": "",
+              "content": "Who's working at the front desk today?",
               "explanation": "Dịch đáp án: 8. Hôm nay ai làm việc ở quầy lễ tân? (A) Đó là một yêu cầu khó. (B) Đó là Katie Miller. (C) Hãy dọn chỗ trên bàn của bạn.",
               "answers": [
                 {
@@ -299,7 +299,7 @@
           "questions": [
             {
               "numberLabel": "9",
-              "content": "",
+              "content": "Would you like to work together or separately?",
               "explanation": "Dịch đáp án: 9. Bạn muốn làm việc cùng nhau hay riêng biệt? (A) Thực ra, tôi thích làm việc một mình hơn. (B) Hãy thu thập dữ liệu của công ty. (C) Trước thứ Sáu tới.",
               "answers": [
                 {
@@ -330,7 +330,7 @@
           "questions": [
             {
               "numberLabel": "10",
-              "content": "",
+              "content": "Have you introduced yourself to the new employee?",
               "explanation": "Dịch đáp án: 10. Bạn đã giới thiệu bản thân với nhân viên mới chưa? (A) Một hệ thống khen thưởng mới sẽ sớm được giới thiệu. (B) Chưa, hôm nay tôi quá bận. (C) Rất vui được gặp bạn.",
               "answers": [
                 {
@@ -361,7 +361,7 @@
           "questions": [
             {
               "numberLabel": "11",
-              "content": "",
+              "content": "Where does this bus go to?",
               "explanation": "Dịch đáp án: 11. Xe buýt này đi đến đâu? (A) Bạn cần thẻ chuyển tuyến. (B) Trạm xe buýt ở đằng kia. (C) Nó hướng về trung tâm thành phố.",
               "answers": [
                 {
@@ -392,7 +392,7 @@
           "questions": [
             {
               "numberLabel": "12",
-              "content": "",
+              "content": "The elevator has been repaired, right?",
               "explanation": "Dịch đáp án: 12. Thang máy đã được sửa rồi phải không? (A) Cô ấy làm việc ở tầng ba. (B) Vâng, nó đã hoạt động trở lại. (C) Đó không phải là những gì tôi thấy.",
               "answers": [
                 {
@@ -423,7 +423,7 @@
           "questions": [
             {
               "numberLabel": "13",
-              "content": "",
+              "content": "What was the cost of replacing the window?",
               "explanation": "Dịch đáp án: 13. Chi phí thay cửa sổ là bao nhiêu? (A) Tôi nghĩ nó chưa đến 60 đô la. (B) Trong một cửa hàng bách hóa. (C) Nó không khó chút nào.",
               "answers": [
                 {
@@ -454,7 +454,7 @@
           "questions": [
             {
               "numberLabel": "14",
-              "content": "",
+              "content": "Will you be checking your e-mail tomorrow?",
               "explanation": "Dịch đáp án: 14. Ngày mai bạn sẽ kiểm tra e-mail chứ? (A) Hãy xem tệp đính kèm. (B) Thực ra, tôi đang đi nghỉ. (C) Chúng tôi chấp nhận tiền mặt hoặc séc.",
               "answers": [
                 {
@@ -485,7 +485,7 @@
           "questions": [
             {
               "numberLabel": "15",
-              "content": "",
+              "content": "Have you considered building a fence?",
               "explanation": "Dịch đáp án: 15. Bạn đã cân nhắc việc xây một hàng rào chưa? (A) Ngôi nhà đang được rao bán. (B) Vâng, chúng tôi sẽ làm việc đó tiếp theo. (C) Nhận xét của anh ấy đã gây ra sự xúc phạm.",
               "answers": [
                 {
@@ -516,7 +516,7 @@
           "questions": [
             {
               "numberLabel": "16",
-              "content": "",
+              "content": "Why did the subway stop running early tonight?",
               "explanation": "Dịch đáp án: 16. Tại sao tối nay tàu điện ngầm ngừng chạy sớm? (A) Bởi vì hôm nay là ngày nghỉ lễ. (B) Hãy xuống ở ga tiếp theo. (C) Không, ngày mai tôi sẽ không chạy.",
               "answers": [
                 {
@@ -547,7 +547,7 @@
           "questions": [
             {
               "numberLabel": "17",
-              "content": "",
+              "content": "How was the museum tour?",
               "explanation": "Dịch đáp án: 17. Chuyến tham quan bảo tàng thế nào? (A) Cửa sổ hướng ra đường. (B) Giữa Phố Williams và Đại lộ Keller. (C) Nó rất nhiều thông tin.",
               "answers": [
                 {
@@ -578,7 +578,7 @@
           "questions": [
             {
               "numberLabel": "18",
-              "content": "",
+              "content": "Why weren't the flyers ready in time for the event?",
               "explanation": "Dịch đáp án: 18. Tại sao các tờ rơi không sẵn sàng kịp thời cho sự kiện? (A) Chúng không phải là những tờ rơi thường xuyên. (B) Máy photocopy bị trục trặc. (C) Đó là lễ kỷ niệm 40 năm thành lập công ty.",
               "answers": [
                 {
@@ -609,7 +609,7 @@
           "questions": [
             {
               "numberLabel": "19",
-              "content": "",
+              "content": "Who's speaking at tonight's opening ceremony?",
               "explanation": "Dịch đáp án: 19. Ai sẽ phát biểu tại lễ khai mạc tối nay? (A) Hàng ghế đầu. (B) Ông Gibson sẽ đóng cửa lại. (C) Một tiểu thuyết gia nổi tiếng.",
               "answers": [
                 {
@@ -640,7 +640,7 @@
           "questions": [
             {
               "numberLabel": "20",
-              "content": "",
+              "content": "When should I turn on the air conditioner?",
               "explanation": "Dịch đáp án: 20. Khi nào tôi nên bật điều hòa? (A) Khi nhiệt độ lên tới 25 độ. (B) Tôi đồng ý với bạn. (C) Chúng sẽ lên sóng trong khoảng một giờ nữa.",
               "answers": [
                 {
@@ -671,7 +671,7 @@
           "questions": [
             {
               "numberLabel": "21",
-              "content": "",
+              "content": "Which seat is mine?",
               "explanation": "Dịch đáp án: 21. Chỗ ngồi nào là của tôi? (A) Đó là một chiếc ghế thoải mái. (B) Vui lòng ngồi ở bất cứ đâu. (C) Hãy ghi nhớ điều đó.",
               "answers": [
                 {
@@ -702,7 +702,7 @@
           "questions": [
             {
               "numberLabel": "22",
-              "content": "",
+              "content": "I couldn't get a hold of George.",
               "explanation": "Dịch đáp án: 22. Tôi không thể gọi được cho George. (A) Vui lòng giữ máy. (B) Một số hộp trống. (C) Hãy thử gọi lại sau.",
               "answers": [
                 {
@@ -733,7 +733,7 @@
           "questions": [
             {
               "numberLabel": "23",
-              "content": "",
+              "content": "Shouldn't our food have been served by now?",
               "explanation": "Dịch đáp án: 23. Đáng lẽ bây giờ đồ ăn của chúng ta phải được phục vụ rồi chứ? (A) Nó rất ngon. (B) Vâng, tối nay dịch vụ khá chậm. (C) Tôi sẽ gọi mì ống cà chua.",
               "answers": [
                 {
@@ -764,7 +764,7 @@
           "questions": [
             {
               "numberLabel": "24",
-              "content": "",
+              "content": "Why don't we take a group picture?",
               "explanation": "Dịch đáp án: 24. Tại sao chúng ta không chụp một bức ảnh nhóm? (A) Chắc chắn rồi, chúng ta hãy làm điều đó trên các bậc thang. (B) Một chiếc máy ảnh kỹ thuật số. (C) Vâng, cô ấy trông hấp dẫn trong bức ảnh này.",
               "answers": [
                 {
@@ -795,7 +795,7 @@
           "questions": [
             {
               "numberLabel": "25",
-              "content": "",
+              "content": "This new coffee maker was very expensive.",
               "explanation": "Dịch đáp án: 25. Máy pha cà phê mới này rất đắt tiền. (A) Anh ấy có nhiều kinh nghiệm quản lý. (B) Có kẹt giấy trong máy photocopy. (C) Đó là lý do tại sao cà phê có vị rất ngon.",
               "answers": [
                 {
@@ -826,7 +826,7 @@
           "questions": [
             {
               "numberLabel": "26",
-              "content": "",
+              "content": "Are you going out for dinner or staying in?",
               "explanation": "Dịch đáp án: 26. Bạn định ra ngoài ăn tối hay ở nhà? (A) Tôi sẽ đặt hàng giao hàng. (B) Vui lòng mang theo hóa đơn. (C) Vào thời điểm thuận tiện.",
               "answers": [
                 {
@@ -857,7 +857,7 @@
           "questions": [
             {
               "numberLabel": "27",
-              "content": "",
+              "content": "Would you like to borrow this book when I finish reading it?",
               "explanation": "Dịch đáp án: 27. Bạn có muốn mượn cuốn sách này khi tôi đọc xong không? (A) Cô Watson sẽ dẫn đầu nhóm. (B) Tôi sẽ đặt bàn cho bữa tối. (C) Không, tôi sẽ lấy nó từ thư viện.",
               "answers": [
                 {
@@ -888,7 +888,7 @@
           "questions": [
             {
               "numberLabel": "28",
-              "content": "",
+              "content": "Didn't you receive a paycheck?",
               "explanation": "Dịch đáp án: 28. Bạn chưa nhận được phiếu trả lương phải không? (A) Không, chúng sẽ được phân phát vào tuần tới. (B) Chắc chắn rồi, tôi sẽ gửi cho anh ấy một e-mail. (C) Cô ấy muốn được thăng chức.",
               "answers": [
                 {
@@ -919,7 +919,7 @@
           "questions": [
             {
               "numberLabel": "29",
-              "content": "",
+              "content": "You set up chairs in the conference room, didn't you?",
               "explanation": "Dịch đáp án: 29. Bạn đã kê ghế trong phòng họp phải không? (A) Tôi cần một cuốn sách tham khảo. (B) Vâng, tổng cộng 200 chỗ ngồi. (C) Không, tôi không thể tìm thấy địa chỉ e-mail.",
               "answers": [
                 {
@@ -950,7 +950,7 @@
           "questions": [
             {
               "numberLabel": "30",
-              "content": "",
+              "content": "I was very impressed with Alex's singing.",
               "explanation": "Dịch đáp án: 30. Tôi rất ấn tượng với giọng hát của Alex. (A) Tôi quên tên ca sĩ. (B) Buổi hòa nhạc ở đâu? (C) Vâng, anh ấy có một giọng hát tuyệt vời.",
               "answers": [
                 {
@@ -981,7 +981,7 @@
           "questions": [
             {
               "numberLabel": "31",
-              "content": "",
+              "content": "How about renting a larger space for the party?",
               "explanation": "Dịch đáp án: 31. Thế còn việc thuê một không gian rộng hơn cho bữa tiệc thì sao? (A) Điều đó có thực sự cần thiết không? (B) Tôi đã trả lại thiết bị. (C) Tôi không phải là người thuê nhà.",
               "answers": [
                 {
