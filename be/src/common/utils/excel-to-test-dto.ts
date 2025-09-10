@@ -11,7 +11,7 @@ export function excelRowsToTestDto(
     if (!part) {
       part = {
         partNumber: row.partNumber,
-        directions: row.directions ?? '',
+        direction: row.direction ?? '',
         groups: [],
       };
       partMap.set(row.partNumber, part);
