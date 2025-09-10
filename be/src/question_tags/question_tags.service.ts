@@ -4,16 +4,14 @@ import { UpdateQuestionTagDto } from './dto/update-question_tag.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { QuestionTag } from './entities/question_tag.entity';
 import { Skill } from 'src/skill/entities/skill.entity';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { Question } from 'src/question/entities/question.entity';
 import { QuestionTagDto } from './dto/question_tag.dto';
 import { BASE_CEFR, CEFR_TO_DIFFICULTY } from 'src/common/constant/skill.constant';
 
 @Injectable()
 export class QuestionTagsService {
-  constructor(
-    private readonly dataSrc: DataSource,
-  ) {}
+  constructor(private readonly dataSrc: DataSource) {}
   create(createQuestionTagDto: CreateQuestionTagDto) {
     return 'This action adds a new questionTag';
   }
@@ -34,35 +32,40 @@ export class QuestionTagsService {
     return `This action removes a #${id} questionTag`;
   }
 
-  async addTagToQuestion(question: Question, skills: Skill[]): Promise<QuestionTag[]> {
+  async addTagToQuestion(
+    question: Question,
+    skills: Skill[],
+    manager?: EntityManager,
+  ): Promise<QuestionTag[]> {
     const tags = await this.ruleBasedTags(
       question.group?.part.partNumber,
       question.content,
     );
 
     const skillMap = new Map(skills.map((s) => [s.code, s]));
+    const repo = manager
+      ? manager.getRepository(QuestionTag)
+      : this.dataSrc.getRepository(QuestionTag);
 
-    return this.dataSrc.transaction(async (manager) => {
-      const savedTags: QuestionTag[] = [];
-      for (const tag of tags) {
-        const skill = skillMap.get(tag.skill?.code ?? 'UNK');
-        if (!skill) {
-          throw new NotFoundException(
-            `Skill with code ${tag?.skill?.code} not found`,
-          );
-        }
-
-        const questionTag = manager.create(QuestionTag, {
-          question,
-          skill,
-          confidence: tag.confidence,
-          difficulty: tag.difficulty,
-        });
-
-        savedTags.push(await manager.save(questionTag));
+    const savedTags: QuestionTag[] = [];
+    for (const tag of tags) {
+      const skill = skillMap.get(tag.skill?.code ?? 'UNK');
+      if (!skill) {
+        throw new NotFoundException(
+          `Skill with code ${tag?.skill?.code} not found`,
+        );
       }
-      return savedTags;
-    });
+
+      const questionTag = repo.create({
+        question,
+        skill,
+        confidence: tag.confidence,
+        difficulty: tag.difficulty,
+      });
+
+      savedTags.push(await repo.save(questionTag));
+    }
+    return savedTags;
   }
 
   async ruleBasedTags(
@@ -108,27 +111,6 @@ export class QuestionTagsService {
     } else if (partId === 7) {
       if (numPassages === 1) addTag('R3');
       else addTag('R4');
-
-      if (qLower.includes('according to') || qLower.includes('stated in'))
-        addTag('Q1');
-      else if (
-        qLower.includes('implies') ||
-        qLower.includes('infer') ||
-        qLower.includes('suggests')
-      )
-        addTag('Q2');
-      else if (
-        qLower.includes('closest in meaning to') ||
-        qLower.includes('refers to')
-      )
-        addTag('Q3');
-      else if (
-        qLower.includes('purpose') ||
-        qLower.includes('mainly about') ||
-        qLower.includes('intended')
-      )
-        addTag('Q4');
-      else addTag('QX', 0.6);
     }
 
     if (tags.length === 0) addTag('UNK', 0.5);
