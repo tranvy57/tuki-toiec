@@ -38,10 +38,13 @@ def sync_all_vocabularies(session: Session = None) -> None:
         session = SessionLocal()
     vocabularies = session.query(Vocabularies).all()
     for q in vocabularies:
-        if not q.content:  # tránh lỗi nếu content null
+        if not q.word:  # tránh lỗi nếu content null
             continue
-        doc = nlp(q.content)
-        q.lemmas = [tok.lemma_.lower() for tok in doc if tok.is_alpha]
+        doc = nlp(q.word)
+        tok = doc[0]  
+        if not tok.is_alpha:
+            continue
+        q.lemma = tok.lemma_.lower()
         session.add(q)
 
 if __name__ == "__main__":

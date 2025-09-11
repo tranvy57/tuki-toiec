@@ -1,5 +1,5 @@
 import { BaseEntity } from 'src/common/entities/base.entity';
-import { QuestionVocabulary } from 'src/question_vocabularies/entities/question_vocabulary.entity';
+import { Question } from 'src/question/entities/question.entity';
 import { UserVocabulary } from 'src/user_vocabularies/entities/user_vocabulary.entity';
 import { Column, Entity, JoinTable, ManyToMany, OneToMany } from 'typeorm';
 
@@ -32,6 +32,6 @@ export class Vocabulary extends BaseEntity {
   @OneToMany(() => UserVocabulary, (uv) => uv.vocabulary)
   userVocabularies: UserVocabulary[];
 
-  @OneToMany(() => QuestionVocabulary, (qv) => qv.vocabulary)
-  questionVocabularies: QuestionVocabulary[];
+  @ManyToMany(() => Question, (question) => question.vocabularies)
+  questions: Question[];
 }
