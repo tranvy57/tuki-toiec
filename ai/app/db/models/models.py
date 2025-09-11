@@ -1,13 +1,10 @@
 from typing import List, Optional
 
-from sqlalchemy import Boolean, Column, Date, DateTime, Double, ForeignKeyConstraint, Index, Integer, PrimaryKeyConstraint, String, Table, Text, UniqueConstraint, Uuid, text
+from sqlalchemy import ARRAY, Boolean, Column, Date, DateTime, Double, ForeignKeyConstraint, Index, Integer, Numeric, PrimaryKeyConstraint, String, Table, Text, UniqueConstraint, Uuid, text
 from sqlalchemy.orm import Mapped, declarative_base, mapped_column, relationship
 from sqlalchemy.orm.base import Mapped
 
-
-
 from sqlalchemy.inspection import inspect
-
 class ReprMixin:
     def __repr__(self):
         # lấy danh sách cột từ mapper
@@ -20,6 +17,7 @@ class ReprMixin:
 
 Base = declarative_base(cls=ReprMixin)
 metadata = Base.metadata
+
 class Grammars(Base):
     __tablename__ = 'grammars'
     __table_args__ = (
@@ -78,6 +76,7 @@ class Skills(Base):
 
     user_progress: Mapped[List['UserProgress']] = relationship('UserProgress', uselist=True, back_populates='skill')
     target_skills: Mapped[List['TargetSkills']] = relationship('TargetSkills', uselist=True, back_populates='skill')
+    question_tags: Mapped[List['QuestionTags']] = relationship('QuestionTags', uselist=True, back_populates='skill')
 
 
 class Tests(Base):
@@ -131,7 +130,7 @@ class Users(Base):
     email = mapped_column(String, nullable=False)
 
     role: Mapped['Roles'] = relationship('Roles', secondary='user_roles', back_populates='user')
-    attempts: Mapped[List['Attempts']] = relationship('Attempts', uselist=True, back_populates='users')
+    attempts: Mapped[List['Attempts']] = relationship('Attempts', uselist=True, back_populates='user')
     plans: Mapped[List['Plans']] = relationship('Plans', uselist=True, back_populates='user')
     user_progress: Mapped[List['UserProgress']] = relationship('UserProgress', uselist=True, back_populates='user')
     user_vocabularies: Mapped[List['UserVocabularies']] = relationship('UserVocabularies', uselist=True, back_populates='user')
@@ -154,6 +153,7 @@ class Vocabularies(Base):
     example_en = mapped_column(String, nullable=False)
     example_vn = mapped_column(String, nullable=False)
     audio_url = mapped_column(String)
+    lemma = mapped_column(String)
 
     user_vocabularies: Mapped[List['UserVocabularies']] = relationship('UserVocabularies', uselist=True, back_populates='vocabulary')
     question_vocabularies: Mapped[List['QuestionVocabularies']] = relationship('QuestionVocabularies', uselist=True, back_populates='vocabulary')
@@ -163,7 +163,7 @@ class Attempts(Base):
     __tablename__ = 'attempts'
     __table_args__ = (
         ForeignKeyConstraint(['test_id'], ['tests.id'], name='FK_a5e4bc5034f5ac069defae66d13'),
-        ForeignKeyConstraint(['userId'], ['users.id'], name='FK_a6abb83b4ea66267571e4315a9c'),
+        ForeignKeyConstraint(['user_id'], ['users.id'], name='FK_1f23e642cf6e009c61cc2c214e2'),
         PrimaryKeyConstraint('id', name='PK_295ca261e361fd2fd217754dcac')
     )
 
@@ -176,11 +176,11 @@ class Attempts(Base):
     mode = mapped_column(String, nullable=False)
     finish_at = mapped_column(DateTime)
     total_score = mapped_column(Integer)
-    userId = mapped_column(Uuid)
+    user_id = mapped_column(Uuid)
     test_id = mapped_column(Uuid)
 
     test: Mapped[Optional['Tests']] = relationship('Tests', back_populates='attempts')
-    users: Mapped[Optional['Users']] = relationship('Users', back_populates='attempts')
+    user: Mapped[Optional['Users']] = relationship('Users', back_populates='attempts')
     part: Mapped['Parts'] = relationship('Parts', secondary='attempt_parts', back_populates='attempt')
     attempt_answers: Mapped[List['AttemptAnswers']] = relationship('AttemptAnswers', uselist=True, back_populates='attempts')
 
@@ -221,6 +221,7 @@ class Parts(Base):
     updated_at = mapped_column(DateTime(True), nullable=False, server_default=text('now()'))
     is_active = mapped_column(Boolean, nullable=False, server_default=text('true'))
     part_number = mapped_column(Integer, nullable=False)
+    direction = mapped_column(String, nullable=False, server_default=text("''::character varying"))
     testId = mapped_column(Uuid)
 
     attempt: Mapped['Attempts'] = relationship('Attempts', secondary='attempt_parts', back_populates='part')
@@ -480,13 +481,15 @@ class Questions(Base):
     is_active = mapped_column(Boolean, nullable=False, server_default=text('true'))
     number_label = mapped_column(Integer, nullable=False)
     content = mapped_column(String, nullable=False)
-    explanation = mapped_column(String, nullable=False)
+    explanation = mapped_column(String, nullable=False, server_default=text("''::character varying"))
     score = mapped_column(Integer, nullable=False, server_default=text('5'))
     groupId = mapped_column(Uuid)
+    lemmas = mapped_column(ARRAY(Text()))
 
     grammar: Mapped['Grammars'] = relationship('Grammars', secondary='question_grammars', back_populates='question')
     groups: Mapped[Optional['Groups']] = relationship('Groups', back_populates='questions')
     answers: Mapped[List['Answers']] = relationship('Answers', uselist=True, back_populates='questions')
+    question_tags: Mapped[List['QuestionTags']] = relationship('QuestionTags', uselist=True, back_populates='question')
     question_vocabularies: Mapped[List['QuestionVocabularies']] = relationship('QuestionVocabularies', uselist=True, back_populates='question')
     attempt_answers: Mapped[List['AttemptAnswers']] = relationship('AttemptAnswers', uselist=True, back_populates='questions')
 
@@ -521,6 +524,27 @@ t_question_grammars = Table(
     Index('IDX_80c52eb2021d8dff6f731a6fcc', 'grammar_id'),
     Index('IDX_bf95cea3e1395dd8c03b275e8b', 'question_id')
 )
+
+
+class QuestionTags(Base):
+    __tablename__ = 'question_tags'
+    __table_args__ = (
+        ForeignKeyConstraint(['question_id'], ['questions.id'], ondelete='CASCADE', name='FK_da3d79ee83f674d9f5fc9cc88d0'),
+        ForeignKeyConstraint(['skill_id'], ['skills.id'], ondelete='CASCADE', name='FK_4151e7edb866f5f920db2d0f66b'),
+        PrimaryKeyConstraint('id', name='PK_81ec68fd0657209c2013c16ad3d')
+    )
+
+    id = mapped_column(Uuid, server_default=text('uuid_generate_v4()'))
+    created_at = mapped_column(DateTime(True), nullable=False, server_default=text('now()'))
+    updated_at = mapped_column(DateTime(True), nullable=False, server_default=text('now()'))
+    is_active = mapped_column(Boolean, nullable=False, server_default=text('true'))
+    difficulty = mapped_column(Numeric, nullable=False, server_default=text("'0'::numeric"))
+    confidence = mapped_column(Numeric, nullable=False, server_default=text("'0'::numeric"))
+    question_id = mapped_column(Uuid)
+    skill_id = mapped_column(Uuid)
+
+    question: Mapped[Optional['Questions']] = relationship('Questions', back_populates='question_tags')
+    skill: Mapped[Optional['Skills']] = relationship('Skills', back_populates='question_tags')
 
 
 class QuestionVocabularies(Base):

@@ -30,6 +30,9 @@ export class Question extends BaseEntity {
   @Column({ default: 5 })
   score: number;
 
+  @Column('text', { name: 'lemmas', array: true, nullable: true })
+  lemmas: string[];
+
   @ManyToOne(() => Group, (group) => group.questions)
   group: Group;
 
