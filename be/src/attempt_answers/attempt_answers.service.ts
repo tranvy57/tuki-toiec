@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { CreateAttemptAnswerDto } from './dto/create-attempt_answer.dto';
 import { UpdateAttemptAnswerDto } from './dto/update-attempt_answer.dto';
+import { CreateAttemptAnswerDto } from './dto/create-attempt_answer.dto';
 
 @Injectable()
 export class AttemptAnswersService {

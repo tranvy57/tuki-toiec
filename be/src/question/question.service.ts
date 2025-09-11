@@ -1,9 +1,25 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
+import { Question } from './entities/question.entity';
+import { DataSource, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Skill } from 'src/skill/entities/skill.entity';
+import { QuestionTagsService } from 'src/question_tags/question_tags.service';
 
 @Injectable()
 export class QuestionService {
+  constructor(
+    @InjectRepository(Skill)
+    private skillsRepo: Repository<Skill>,
+    @InjectRepository(Question)
+    private questionsRepo: Repository<Question>,
+    @Inject()
+    private readonly questionTagsService: QuestionTagsService, 
+    private dataSrc: DataSource,
+  ) {}
+
+
   create(createQuestionDto: CreateQuestionDto) {
     return 'This action adds a new question';
   }
@@ -23,4 +39,16 @@ export class QuestionService {
   remove(id: number) {
     return `This action removes a #${id} question`;
   }
+
+  async createWithTags(questionId: string) {
+    const question = await this.questionsRepo.findOne({
+      where: { id: questionId },
+      relations: ['group', 'group.part'],
+    });
+    const skills = await this.skillsRepo.find();
+    if (question){
+      return this.questionTagsService.addTagToQuestion(question, skills);
+    }
+  }
+
 }

@@ -1,5 +1,4 @@
 import { Expose, Type } from 'class-transformer';
-import { AttemptAnswerDto } from 'src/attempt_answers/dto/attempt_answer.dto';
 import { AttemptAnswer } from 'src/attempt_answers/entities/attempt_answer.entity';
 import { PartDto } from 'src/part/dto/part.dto';
 import { Part } from 'src/part/entities/part.entity';
@@ -13,20 +12,14 @@ export class AttemptDto {
   mode: 'practice' | 'test';
 
   @Expose()
-  partIds: string[];
-
-  @Expose()
-  testId?: string;
-
-  @Expose()
   @Type(() => TestDto)
   test: TestDto;
 
   @Expose()
-  startedAt?: Date;
+  startedAt: Date;
 
   @Expose()
-  finishAt?: Date;
+  finishAt: Date;
 
   @Expose()
   totalScore: number;
@@ -38,7 +31,7 @@ export class AttemptDto {
   @Type(() => PartDto)
   parts: PartDto[];
 
-  // @Expose()
-  // @Type(() => AttemptAnswerDto)
-  // attemptAnswers?: AttemptAnswerDto[];
+  @Expose()
+  @Type(() => AttemptAnswer)
+  attemptAnswers?: AttemptAnswer[];
 }

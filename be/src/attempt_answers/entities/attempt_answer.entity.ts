@@ -21,5 +21,5 @@ export class AttemptAnswer extends BaseEntity {
   answer?: Answer | null;
 
   @Column({ name: 'is_correct', type: 'boolean', nullable: true })
-  isCorrect?: boolean;
+  isCorrect?: boolean | null;
 }

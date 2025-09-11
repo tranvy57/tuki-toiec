@@ -9,6 +9,7 @@ export class QuestionController {
 
   @Post()
   create(@Body() createQuestionDto: CreateQuestionDto) {
+    
     return this.questionService.create(createQuestionDto);
   }
 
@@ -30,5 +31,10 @@ export class QuestionController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.questionService.remove(+id);
+  }
+
+  @Post('/create-with-tags/:id')
+  createWithTags(@Param('id') questionId: string) {
+    return this.questionService.createWithTags(questionId);
   }
 }

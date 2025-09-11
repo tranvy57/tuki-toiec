@@ -4,12 +4,15 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { ResponseWrapperInterceptor } from './common/interceptor.ts/response-swapper.interceptor';
 import { InformationServerLog } from './common/utils/information-server.util';
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const port = process.env.PORT ?? 3000;
   const host = 'localhost';
+
+  app.use(bodyParser.json({ limit: '10mb' }));
 
   app.enableCors({
     origin: '*',

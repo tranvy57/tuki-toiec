@@ -12,6 +12,9 @@ export class QuestionDto {
   content: string;
 
   @Expose()
+  score?: number;
+
+  @Expose()
   explanation: string;
 
   @Expose()

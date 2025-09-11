@@ -9,7 +9,8 @@ export class Part extends BaseEntity {
   @Column({ name: 'part_number' })
   partNumber: number;
 
-  direction: string;
+  @Column({ default: '' })
+  direction?: string;
 
   @ManyToOne(() => Test, (test) => test.parts)
   test: Test;

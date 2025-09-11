@@ -1,15 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
-import { Part } from 'src/part/entities/part.entity';
 import { Group } from 'src/group/entities/group.entity';
+import { Part } from 'src/part/entities/part.entity';
+import { QuestionTagsService } from 'src/question_tags/question_tags.service';
+import { DataSource, Repository } from 'typeorm';
 
-import { Answer } from 'src/answers/entities/answer.entity';
-import { TestDto } from './dto/test.dto';
-import { PartDto } from 'src/part/dto/part.dto';
-import { GroupDto } from 'src/group/dto/group.dto';
 import { plainToInstance } from 'class-transformer';
+import { Answer } from 'src/answers/entities/answer.entity';
 import { Question } from 'src/question/entities/question.entity';
+import { Skill } from 'src/skill/entities/skill.entity';
+import { TestDto } from './dto/test.dto';
 import { Test } from './entities/test.entity';
 
 @Injectable()
@@ -27,10 +27,17 @@ export class TestService {
     @InjectRepository(Question)
     private questionRepo: Repository<Question>,
 
+    @InjectRepository(Skill)
+    private skillsRepo: Repository<Skill>,
+
+    @Inject()
+    private readonly questionTagsService: QuestionTagsService,
+
     private dataSrc: DataSource,
   ) {}
 
   async create(dto: TestDto): Promise<TestDto> {
+    const skills = await this.skillsRepo.find();
     return this.dataSrc.transaction(async (manager) => {
       // Tạo test
       const test = manager.create(Test, {
@@ -43,7 +50,7 @@ export class TestService {
       for (const p of dto.parts) {
         const part = manager.create(Part, {
           partNumber: p.partNumber,
-          directions: p.directions,
+          direction: p.direction,
           test: savedTest,
         });
         const savedPart = await manager.save(part);
@@ -80,6 +87,12 @@ export class TestService {
                 await manager.save(answer);
               }
             }
+
+            await this.questionTagsService.addTagToQuestion(
+              savedQuestion,
+              skills,
+              manager, // truyền manager vào service
+            );
           }
         }
       }

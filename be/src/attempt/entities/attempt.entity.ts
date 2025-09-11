@@ -24,12 +24,12 @@ export class Attempt extends BaseEntity {
   totalScore: number;
   @Column()
   status: 'in_progress' | 'submitted';
-  @Column({ nullable: true })
-  score: number;
+
   @Column()
   mode: 'practice' | 'test';
 
   @ManyToOne(() => User, (user) => user.attempts)
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
   @ManyToMany(() => Part, (part) => part.attempts)

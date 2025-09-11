@@ -8,6 +8,6 @@ export class Grammar extends BaseEntity {
   content: string;
   example: string;
 
-  @ManyToMany(() => Question, (question) => question.vocabularies)
+  @ManyToMany(() => Question, (question) => question.grammars)
   questions: Question[];
 }

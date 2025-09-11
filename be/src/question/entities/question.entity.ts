@@ -4,6 +4,7 @@ import { AttemptAnswer } from 'src/attempt_answers/entities/attempt_answer.entit
 import { BaseEntity } from 'src/common/entities/base.entity';
 import { Grammar } from 'src/grammar/entities/grammar.entity';
 import { Group } from 'src/group/entities/group.entity';
+import { QuestionTag } from 'src/question_tags/entities/question_tag.entity';
 import { QuestionVocabulary } from 'src/question_vocabularies/entities/question_vocabulary.entity';
 import { Vocabulary } from 'src/vocabulary/entities/vocabulary.entity';
 import {
@@ -23,7 +24,11 @@ export class Question extends BaseEntity {
   @Column({ name: 'content' })
   content: string;
 
-  explanation: string;
+  @Column({ default: '' })
+  explanation?: string;
+
+  @Column({ default: 5 })
+  score: number;
 
   @ManyToOne(() => Group, (group) => group.questions)
   group: Group;
@@ -43,11 +48,14 @@ export class Question extends BaseEntity {
       referencedColumnName: 'id',
     },
   })
-  vocabularies: Vocabulary[];
+  grammars: Grammar[];
 
   @OneToMany(() => QuestionVocabulary, (qv) => qv.question)
   questionVocabularies: QuestionVocabulary[];
 
   @OneToMany(() => AttemptAnswer, (attemptAnswer) => attemptAnswer.question)
   attemptAnswers: AttemptAnswer[];
+
+  @OneToMany(() => QuestionTag, (questionTag) => questionTag.question)
+  questionTags: QuestionTag[];
 }
