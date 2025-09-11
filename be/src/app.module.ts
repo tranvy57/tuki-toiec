@@ -32,7 +32,6 @@ import { SkillModule } from './skill/skill.module';
 import { UserProgressModule } from './user_progress/user_progress.module';
 import { SeedService } from './seeder/seed.service';
 import { UploadModule } from './upload/upload.module';
-import { QuestionVocabulariesModule } from './question_vocabularies/question_vocabularies.module';
 import { UserVocabulariesModule } from './user_vocabularies/user_vocabularies.module';
 import { QuestionTagsModule } from './question_tags/question_tags.module';
 
@@ -65,7 +64,6 @@ import { QuestionTagsModule } from './question_tags/question_tags.module';
     UserProgressModule,
     UploadModule,
     UserVocabulariesModule,
-    QuestionVocabulariesModule,
     QuestionTagsModule,
   ],
   controllers: [AppController],
