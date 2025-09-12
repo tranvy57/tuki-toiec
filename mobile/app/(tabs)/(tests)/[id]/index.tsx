@@ -6,13 +6,13 @@ import { useCurrentTest } from '~/hooks/useCurrentTest';
 
 export default function TestStartPage() {
   const { mutate, data, isPending, isSuccess, isError } = useStartTestPractice();
-  const { setCurrentPart, setTest } = useCurrentTest();
+  const { setCurrentPart, setFullTest } = useCurrentTest();
 
   useEffect(() => {
     // Start the test when the component mounts
-    mutate('9d3258e6-0e03-4153-a99a-3bfb3daa8c67', {
+    mutate('ff0e150d-06b5-4177-93fb-8d0b18cdbea7', {
       onSuccess: (res) => {
-        setTest(res.test);
+        setFullTest(res);
       },
       onError: (err) => {
         console.error('Mutation failed:', err);

@@ -107,7 +107,7 @@ export default function TestResultPage() {
   const result = mockTestResult;
   const isLoading = false;
   const error = null;
-  
+
   // const { data: result, isLoading, error } = useTestResult(attemptId);
   const [expandedParts, setExpandedParts] = useState<number[]>([]);
   const [fadeAnim] = useState(new Animated.Value(0));

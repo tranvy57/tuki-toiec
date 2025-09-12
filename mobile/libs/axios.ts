@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
+import { getValueFor } from './secure-store';
 // import { addToast } from "@heroui/toast";
 
 export interface ErrorResponse {
@@ -20,7 +22,12 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use(
-  (config) => {
+  async (config) => {
+    const token = await getValueFor('token');
+    console.log(token)
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
     console.log('➡️ [Request]', config);
     return config;
   },
@@ -45,7 +52,7 @@ api.interceptors.response.use(
     } else if (error.request) {
       console.log('❌ [Network Error]', error.message);
     } else {
-      console.log('❌ [Axios Error]', error.message);
+      console.log('❌ [Axios Error]', error);
     }
     return Promise.reject(error);
   }
