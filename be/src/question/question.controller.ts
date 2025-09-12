@@ -37,4 +37,9 @@ export class QuestionController {
   createWithTags(@Param('id') questionId: string) {
     return this.questionService.createWithTags(questionId);
   }
+
+  @Post('/sync-questions-skills')
+  updateQuestionSkills() {
+    return this.questionService.updateQuestionSkills();
+  }
 }

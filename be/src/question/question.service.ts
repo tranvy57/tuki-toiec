@@ -51,4 +51,19 @@ export class QuestionService {
     }
   }
 
+  async updateQuestionSkills() {
+    const query = `
+          INSERT INTO question_vocabularies (question_id, vocabulary_id)
+          SELECT q.id, v.id
+          FROM questions q
+          JOIN vocabularies v
+            ON v.lemma = ANY(q.lemmas)
+          WHERE NOT EXISTS (
+            SELECT 1 FROM question_vocabularies qv
+            WHERE qv.question_id = q.id AND qv.vocabulary_id = v.id
+          )
+        `;
+    const result = await this.dataSrc.query(query);
+    return { message: 'Synced question_vocabularies' };
+  }
 }
