@@ -13,98 +13,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AntDesign, Feather } from '@expo/vector-icons';
 import { colors } from '~/constants/Color';
 import { useTestResult, TestResult } from '~/api/attempts/useTestResult';
+import { useCurrentTest } from '~/hooks/useCurrentTest';
+import { mapResult } from '~/types/response/ResultResponse';
 
 // Mock data for demonstration
-const mockTestResult: TestResult = {
-  attemptId: 'attempt-123',
-  testTitle: 'TOEIC Practice Test 1',
-  mode: 'practice',
-  startedAt: '2025-09-06T06:00:00.000Z',
-  finishedAt: '2025-09-06T08:00:00.000Z',
-  totalScore: 850,
-  listeningScore: 425,
-  readingScore: 425,
-  totalQuestions: 200,
-  totalCorrect: 170,
-  totalIncorrect: 25,
-  totalSkipped: 5,
-  accuracy: 85,
-  duration: '2h 0m',
-  status: 'submitted',
-  parts: [
-    {
-      partNumber: 1,
-      totalQuestions: 6,
-      correctAnswers: 5,
-      incorrectAnswers: 1,
-      skippedQuestions: 0,
-      accuracy: 83.3,
-      questions: [],
-    },
-    {
-      partNumber: 2,
-      totalQuestions: 25,
-      correctAnswers: 22,
-      incorrectAnswers: 2,
-      skippedQuestions: 1,
-      accuracy: 88,
-      questions: [],
-    },
-    {
-      partNumber: 3,
-      totalQuestions: 39,
-      correctAnswers: 35,
-      incorrectAnswers: 3,
-      skippedQuestions: 1,
-      accuracy: 89.7,
-      questions: [],
-    },
-    {
-      partNumber: 4,
-      totalQuestions: 30,
-      correctAnswers: 26,
-      incorrectAnswers: 4,
-      skippedQuestions: 0,
-      accuracy: 86.7,
-      questions: [],
-    },
-    {
-      partNumber: 5,
-      totalQuestions: 30,
-      correctAnswers: 25,
-      incorrectAnswers: 4,
-      skippedQuestions: 1,
-      accuracy: 83.3,
-      questions: [],
-    },
-    {
-      partNumber: 6,
-      totalQuestions: 16,
-      correctAnswers: 14,
-      incorrectAnswers: 2,
-      skippedQuestions: 0,
-      accuracy: 87.5,
-      questions: [],
-    },
-    {
-      partNumber: 7,
-      totalQuestions: 54,
-      correctAnswers: 43,
-      incorrectAnswers: 9,
-      skippedQuestions: 2,
-      accuracy: 79.6,
-      questions: [],
-    },
-  ],
-};
 
 export default function TestResultPage() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const attemptId = params.id as string;
+  const resultTest = useCurrentTest(state => state.resultTest);
+  const result = resultTest ? mapResult(resultTest) : null;
 
   // Sử dụng fake data thay vì API call
-  const result = mockTestResult;
   const isLoading = false;
   const error = null;
 

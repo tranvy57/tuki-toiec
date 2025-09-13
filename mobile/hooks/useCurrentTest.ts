@@ -1,9 +1,10 @@
 // stores/usePracticeTestStore.ts
 import { create } from 'zustand';
-import { Group, Part, PracticeTestResponse, Question, Test } from '~/types/response/TestResponse';
+import { Group, Part, PracticeTestResponse, Question, ResultTestResponse, Test } from '~/types/response/TestResponse';
 
 interface PracticeTestState {
   fullTest: PracticeTestResponse | null;
+  resultTest: ResultTestResponse | null;
   test: Test | null;
   currentPart: Part | null;
   currentGroup: Group | null;
@@ -17,6 +18,7 @@ interface PracticeTestState {
   // actions
   setTest: (test: Test) => void;
   setFullTest: (fullTest: PracticeTestResponse) => void;
+  setResultTest: (resultTest: ResultTestResponse) => void;  
   setCurrentPart: (partNumber: number) => void;
   setCurrentGroup: (groupId: string) => void;
   nextPart: () => void;
@@ -28,6 +30,7 @@ interface PracticeTestState {
 
 export const useCurrentTest = create<PracticeTestState>((set, get) => ({
   fullTest: null,
+  resultTest: null,
   test: null,
   currentPart: null,
   currentGroup: null,
@@ -69,7 +72,10 @@ export const useCurrentTest = create<PracticeTestState>((set, get) => ({
     set({
       test,
     }),
-
+  setResultTest: (resultTest) =>
+    set({
+      resultTest,
+    }),
   setCurrentPart: (partNumber) => {
     const { partCache } = get();
     const part = partCache.get(partNumber) || null;

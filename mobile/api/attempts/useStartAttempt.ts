@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { api } from '~/libs/axios';
+import { CreateAttemptAnswerReq } from '~/types/request/attemptAnswerReq';
 import { BaseResponseSchema } from '~/types/response/BaseResponse';
 import { BaseResponse, PracticeTestResponse, PracticeTestResponseSchema } from '~/types/response/TestResponse';
 
@@ -17,9 +18,21 @@ async function startTestPractice(
   return parsed;
 }
 
+async function addAttemptAnswer(attemptAnswer: CreateAttemptAnswerReq) {
+  const res = await api.patch(`/attempts/${attemptAnswer.attemptId}/answers`, attemptAnswer);
+  console.log(res)
+
+  return res;
+}
 
 export function useStartTestPractice() {
   return useMutation({
     mutationFn: (testId: string) => startTestPractice(testId),
+  });
+}
+
+export function useAddAttemptAnswer() {
+  return useMutation({
+    mutationFn: (attemptAnswer: CreateAttemptAnswerReq) => addAttemptAnswer(attemptAnswer),
   });
 }

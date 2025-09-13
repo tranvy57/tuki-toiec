@@ -14,6 +14,7 @@ import { useCurrentTest } from '~/hooks/useCurrentTest';
 import { AnswerOptions } from './AnswerOptions';
 import { QuestionContent } from './QuestionContent';
 import { QuestionHeader } from './QuestionHeader';
+import { useAddAttemptAnswer } from '~/api/attempts/useStartAttempt';
 
 const { width } = Dimensions.get('window');
 
@@ -25,6 +26,9 @@ export const OptimizedQuestionScreen: React.FC = () => {
   const nextGroup = useCurrentTest((state) => state.nextGroup);
   const beforeGroup = useCurrentTest((state) => state.beforeGroup);
   const setAnswer = useCurrentTest((state) => state.setAnswer);
+  const fullTest = useCurrentTest((state) => state.fullTest);
+
+  const {mutateAsync, isSuccess, isError} = useAddAttemptAnswer();
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -68,8 +72,17 @@ export const OptimizedQuestionScreen: React.FC = () => {
     });
 
   const handleSelectAnswer = useCallback(
-    (questionId: string, answer: string) => {
-      setAnswer(questionId, answer);
+    async (questionId: string, answerId: string) => {
+      const temp = selectedAnswers[questionId];
+      setAnswer(questionId, answerId);
+
+      await mutateAsync({ questionId, answerId, attemptId: fullTest?.id || '' });
+      if (isError) {
+        console.error('Failed to save answer');
+        alert('Failed to save answer. Please try again.');
+        setAnswer(questionId, temp);
+        return;
+      }
     },
     [setAnswer]
   );

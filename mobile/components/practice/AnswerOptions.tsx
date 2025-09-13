@@ -34,12 +34,12 @@ export const AnswerOptions = memo<AnswerOptionsProps>(
                 .slice()
                 .sort((a, b) => a.answerKey.localeCompare(b.answerKey))
                 .map((answer) => {
-                  const isSelected = selectedAnswers[question.id] === answer.answerKey;
+                  const isSelected = selectedAnswers[question.id] === answer.id;
 
                   return (
                     <TouchableOpacity
                       key={answer.id}
-                      onPress={() => onSelectAnswer(question.id, answer.answerKey)}
+                      onPress={() => onSelectAnswer(question.id, answer.id)}
                       className="mb-3 flex-row items-center rounded-lg border-2 p-4"
                       style={{
                         backgroundColor: isSelected ? colors.primary + '20' : colors.card,

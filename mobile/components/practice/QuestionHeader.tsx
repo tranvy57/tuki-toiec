@@ -2,7 +2,9 @@ import { AntDesign } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { memo } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
+import { useSubmitTestResult } from '~/api/attempts/useTestResult';
 import { colors } from '~/constants/Color';
+import { useCurrentTest } from '~/hooks/useCurrentTest';
 
 interface QuestionHeaderProps {
   currentQuestionNumber?: number;
@@ -24,7 +26,19 @@ export const QuestionHeader = memo<QuestionHeaderProps>(
     hasPrevious,
     hasNext,
   }) => {
-    const onSubmit = () => {
+    const fullTest = useCurrentTest((state) => state.fullTest);
+    const { setResultTest } = useCurrentTest();
+    const { mutateAsync: submitTest, isError, error } = useSubmitTestResult();
+
+    const onSubmit = async () => {
+      const result = await submitTest(fullTest?.id || "");
+      if (isError) {
+        console.error("Error submitting test:", error);
+        alert("There was an error submitting your test. Please try again.");
+        return;
+      }
+
+      setResultTest(result);
       router.replace('/(tabs)/(tests)/[id]/result');
     };
 
