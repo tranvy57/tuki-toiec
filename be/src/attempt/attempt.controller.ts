@@ -45,6 +45,14 @@ export class AttemptController {
   ) {
     return this.attemptService.submitAttempt(attemptId, user);
   }
+
+  @Patch(':attemptId/submit-review')
+  async submitReview(
+    @CurrentUser() user: User,
+    @Param('attemptId') attemptId: string,
+  ) {
+    return this.attemptService.submitAttemptReview(attemptId, user);
+  }
   @Get()
   findAll() {
     return this.attemptService.findAll();

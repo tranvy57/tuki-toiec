@@ -13,3 +13,8 @@ export const getValueFor = async (key: string) => {
   }
   return result;
 }
+
+export const remove = async (key: string) => {
+  await SecureStore.deleteItemAsync(key);
+  console.log('Removed value for key: ' + key);
+};

@@ -18,6 +18,9 @@ import { AttemptAnswerDto } from 'src/attempt_answers/dto/attempt_answer.dto';
 import { CreateAttemptAnswerDto } from 'src/attempt_answers/dto/create-attempt_answer.dto';
 import { AttemptAnswer } from 'src/attempt_answers/entities/attempt_answer.entity';
 import { Answer } from 'src/answers/entities/answer.entity';
+import { UserProgress } from 'src/user_progress/entities/user_progress.entity';
+import { Plan } from 'src/plan/entities/plan.entity';
+import { TargetSkill } from 'src/target_skills/entities/target_skill.entity';
 
 @Injectable()
 export class AttemptService {
@@ -27,9 +30,16 @@ export class AttemptService {
     @InjectRepository(Question) private questionRepo: Repository<Question>,
     @InjectRepository(Test) private testRepo: Repository<Test>,
     @InjectRepository(Answer) private answerRepo: Repository<Answer>,
+    @InjectRepository(Plan) private planRepo: Repository<Plan>,
+    @InjectRepository(TargetSkill)
+    private targetSkillRepo: Repository<TargetSkill>,
+    @InjectRepository(UserProgress)
+    private userProgressRepo: Repository<UserProgress>,
     @InjectRepository(AttemptAnswer)
     private attemptAnserRepo: Repository<AttemptAnswer>,
   ) {}
+
+  MAX_SCORE = 990;
 
   private toResponseDto(attempt: Attempt): AttemptDto {
     return plainToInstance(AttemptDto, attempt, {
@@ -240,6 +250,153 @@ export class AttemptService {
       totalScore,
       // accuracy,
     };
+  }
+
+  async submitAttemptReview(attemptId: string, user: User) {
+    let attempt = await this.attemptRepo.findOne({
+      where: { id: attemptId },
+      relations: {
+        user: true,
+        test: true,
+        parts: {
+          groups: {
+            questions: {
+              answers: true,
+              questionTags: { skill: true }, // thêm chỗ này để join skill
+            },
+          },
+        },
+      },
+    });
+
+    if (!attempt) {
+      throw new NotFoundException('Attempt not found!');
+    }
+    if (attempt.user.id !== user.id) {
+      throw new UnauthorizedException(
+        'You are not have permission to do this action!',
+      );
+    }
+
+    const attemptAnswers = await this.attemptAnserRepo.find({
+      where: { attempt: { id: attemptId } },
+      relations: { answer: true, question: true },
+    });
+
+    const answerMap = new Map(attemptAnswers.map((aa) => [aa.question.id, aa]));
+
+    let totalScore = 0;
+    let correctCount = 0;
+    let totalQuestions = 0;
+
+    // gom proficiency
+    const skillMap: Record<string, { totalScore: number; totalDiff: number }> =
+      {};
+
+    attempt.parts.forEach((p) =>
+      p.groups.forEach((g) =>
+        g.questions.forEach((q) => {
+          totalQuestions += 1;
+          const userAnswer = answerMap.get(q.id);
+          q['userAnswer'] = userAnswer ?? null;
+
+          const isCorrect = userAnswer?.answer?.isCorrect ?? false;
+          if (isCorrect) {
+            totalScore += q['score'] ?? 1;
+            correctCount += 1;
+          }
+
+          // cập nhật skillMap
+          for (const tag of q.questionTags || []) {
+            const skillId = tag.skill.id;
+            const diff = tag.difficulty ?? 1;
+            const score = isCorrect ? diff : 0;
+
+            if (!skillMap[skillId]) {
+              skillMap[skillId] = { totalScore: 0, totalDiff: 0 };
+            }
+            skillMap[skillId].totalScore += score;
+            skillMap[skillId].totalDiff += diff;
+          }
+        }),
+      ),
+    );
+
+    // tính proficiency mới cho từng skill
+    const alpha = 0.2;
+    const updates: UserProgress[] = [];
+    for (const [skillId, { totalScore: s, totalDiff: d }] of Object.entries(
+      skillMap,
+    )) {
+      const pLesson = d > 0 ? s / d : 0;
+
+      let up = await this.userProgressRepo.findOne({
+        where: { user: { id: user.id }, skill: { id: skillId } },
+        relations: ['user', 'skill'],
+      });
+
+      if (!up) {
+        up = this.userProgressRepo.create({
+          user: { id: user.id } as any,
+          skill: { id: skillId } as any,
+          proficiency: pLesson,
+        });
+      } else {
+        up.proficiency = (1 - alpha) * up.proficiency + alpha * pLesson;
+      }
+
+      updates.push(up);
+    }
+
+    await this.userProgressRepo.save(updates);
+
+    // cập nhật attempt
+    attempt.status = 'submitted';
+    attempt.finishAt = new Date();
+    attempt.totalScore = totalScore;
+    await this.attemptRepo.save(attempt);
+
+    return {
+      attemptId: attempt.id,
+      score: totalScore,
+      correctCount,
+      totalQuestions,
+      updatedSkills: updates.map((u) => ({
+        skillId: u.skill.id,
+        proficiency: u.proficiency,
+      })),
+      parts: attempt.parts, // trả về để review
+    };
+  }
+
+  async targetUserProficiency(user: User, userProgress: UserProgress[]) {
+    const plan = await this.planRepo.findOne({
+      where: { isActive: true, user: { id: user.id } },
+      relations: { targetSkills: true }, 
+    });
+
+    if (!plan) throw new NotFoundException('No active plan found!');
+
+    const targetProficiency = plan.targetScore
+      ? plan.targetScore / this.MAX_SCORE
+      : 0;
+
+
+    const targets: TargetSkill[] = [];
+
+    for (const up of userProgress) {
+          
+      const target = new TargetSkill();
+      target.plan = plan;
+      target.skill = up.skill;
+
+      target.proficiency = targetProficiency;
+
+      targets.push(target);
+    }
+
+    // Upsert theo cặp (planId, skillId) để không bị trùng
+    await this.targetSkillRepo.upsert(targets, ['plan', 'skill']);
   }
 
   findAll() {

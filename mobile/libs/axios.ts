@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
-import { getValueFor } from './secure-store';
-// import { addToast } from "@heroui/toast";
+import { getValueFor, remove } from './secure-store';
 
 export interface ErrorResponse {
   error: string;
@@ -48,7 +47,13 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response) {
-      console.log('❌ [Response Error]', error);
+      const { status, config } = error.response;
+      console.log('❌ [Response Error]', { url: config?.url, status, data: error.response.data });
+
+      // Check 401 Unauthorized
+      if (status === 401) {
+        remove('token'); // xoá token trong localStorage/cookie        
+      }
     } else if (error.request) {
       console.log('❌ [Network Error]', error.message);
     } else {
