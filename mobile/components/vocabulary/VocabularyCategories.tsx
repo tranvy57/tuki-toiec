@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { vocabularyCategories } from '../../constants/data_vocabulary';
 import { colors } from '../../constants/Color';
 
 interface VocabularyCategoriesProps {
@@ -63,7 +62,7 @@ export const VocabularyCategories: React.FC<VocabularyCategoriesProps> = ({
         </TouchableOpacity>
 
         {/* Category Options */}
-        {vocabularyCategories.map((category) => {
+        {/* {vocabularyCategories.map((category) => {
           const isSelected = selectedCategory === category.id;
           const categoryColor = getCategoryColor(category.color);
           
@@ -92,7 +91,7 @@ export const VocabularyCategories: React.FC<VocabularyCategoriesProps> = ({
               </Text>
             </TouchableOpacity>
           );
-        })}
+        })} */}
       </ScrollView>
     </View>
   );

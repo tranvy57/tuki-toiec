@@ -4,6 +4,8 @@ import { AnimatedTabBarIcon } from '../../components/AnimatedTabBarIcon';
 import { colors } from '../../constants/Color';
 import { EnhancedTabBar } from '~/components/EnhancedTabBar';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+
 
 export default function TabLayout() {
 
@@ -44,14 +46,13 @@ export default function TabLayout() {
           animation: 'shift',
           lazy: false,
           tabBarHideOnKeyboard: true,
-          
         })}
-        tabBar={(props) => <EnhancedTabBar {...props} />}>
+        tabBar={(props: BottomTabBarProps) => <EnhancedTabBar {...props} />}>
         <Tabs.Screen
           name="home"
           options={{
             title: 'Trang chủ',
-            tabBarIcon: ({ color, focused }) => (
+            tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
               <AnimatedTabBarIcon name="home" color={color} focused={focused} />
             ),
             headerShown: false,
@@ -61,19 +62,18 @@ export default function TabLayout() {
           name="(tests)"
           options={{
             title: 'Thi thử',
-            tabBarIcon: ({ color, focused }) => (
+            tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
               <AnimatedTabBarIcon name="file-text" color={color} focused={focused} />
             ),
 
             headerShown: false,
           }}
-          
         />
         <Tabs.Screen
           name="vocabulary"
           options={{
             title: 'Từ vựng',
-            tabBarIcon: ({ color, focused }) => (
+            tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
               <AnimatedTabBarIcon name="book" color={color} focused={focused} />
             ),
             headerShown: false,
@@ -83,7 +83,7 @@ export default function TabLayout() {
           name="study-plan"
           options={{
             title: 'Kế hoạch',
-            tabBarIcon: ({ color, focused }) => (
+            tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
               <AnimatedTabBarIcon name="calendar" color={color} focused={focused} />
             ),
             headerShown: false,
@@ -93,7 +93,7 @@ export default function TabLayout() {
           name="profile"
           options={{
             title: 'Hồ sơ',
-            tabBarIcon: ({ color, focused }) => (
+            tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
               <AnimatedTabBarIcon name="user" color={color} focused={focused} />
             ),
             headerShown: false,

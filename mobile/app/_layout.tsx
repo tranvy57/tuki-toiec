@@ -9,40 +9,38 @@ import '../helpers/fetchLogger';  // patch fetch trước khi render app
 
 
 import '../global.css';
+import { getValueFor } from '~/libs/secure-store';
 
 SplashScreen.preventAutoHideAsync();
 
-export const unstable_settings = {
-  initialRouteName: '(tabs)',
-  screenOptions: { headerShown: false },
-};
+
+
 const queryClient = new QueryClient();
 
 export default function RootLayout() {
+  const [token, setToken] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const prepare = async () => {
-      // giả lập load dữ liệu (vd: token, fonts, db…)
-      await new Promise((r) => setTimeout(r, 1200));
+      await Promise.all([
+        getValueFor('token').then(setToken),
+        new Promise((r) => setTimeout(r, 1200)),
+      ]);
       setReady(true);
       await SplashScreen.hideAsync();
     };
     prepare();
   }, []);
 
-  if (!ready) {
-    // Trong lúc chờ -> vẫn hiển thị splash mặc định
-    return null;
-  }
-  const queryClient = new QueryClient();
+  if (!ready) return null;
+
   return (
     <SafeAreaProvider style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
-        <Animated.View style={styles.loading} entering={FadeIn.duration(800)}>
-          <Text style={styles.text}>Smart TOEIC Learner 🚀</Text>
-        </Animated.View>
-        <Stack {...unstable_settings}>
+        <Stack
+          initialRouteName={token ? '(tabs)' : '(auth)'}
+          screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
@@ -51,6 +49,7 @@ export default function RootLayout() {
     </SafeAreaProvider>
   );
 }
+
 
 const styles = StyleSheet.create({
   loading: {

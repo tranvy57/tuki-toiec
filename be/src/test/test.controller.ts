@@ -62,4 +62,10 @@ export class TestController {
     // Gọi lại hàm create đã có
     return await this.testService.create(testDto);
   }
+
+  @Post('gen-review-test')
+  @Public()
+  async genReviewTest() {
+    return await this.testService.genReviewTest();
+  }
 }
