@@ -12,6 +12,7 @@ import { AttemptAnswer } from 'src/attempt_answers/entities/attempt_answer.entit
 import { Plan } from 'src/plan/entities/plan.entity';
 import { TargetSkill } from 'src/target_skills/entities/target_skill.entity';
 import { UserProgress } from 'src/user_progress/entities/user_progress.entity';
+import { UserVocabulary } from 'src/user_vocabularies/entities/user_vocabulary.entity';
 
 @Module({
   imports: [
@@ -25,7 +26,8 @@ import { UserProgress } from 'src/user_progress/entities/user_progress.entity';
       AttemptAnswer,
       Plan,
       TargetSkill,
-      UserProgress
+      UserProgress,
+      UserVocabulary,
     ]),
   ],
   controllers: [AttemptController],

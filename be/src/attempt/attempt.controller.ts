@@ -38,6 +38,15 @@ export class AttemptController {
     return this.attemptService.saveAttemptAnswer(attemptId, dto, user);
   }
 
+  @Patch(':attemptId/answers/bulk')
+  async saveAttemptAnswers(
+    @CurrentUser() user: User,
+    @Body() dtos: CreateAttemptAnswerDto[],
+    @Param('attemptId') attemptId: string,
+  ) {
+    return this.attemptService.saveAttemptAnswers(attemptId, dtos, user);
+  }
+
   @Patch(':attemptId/submit')
   async submit(
     @CurrentUser() user: User,
