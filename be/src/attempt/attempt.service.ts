@@ -330,7 +330,7 @@ export class AttemptService {
       const { totalScore, correctCount, totalQuestions, skillMap, allLemmas } =
         this.processQuestions(attempt, answerMap);
 
-      await this.updateUserVocabulary(manager, user.id, allLemmas, attempt);
+      // await this.updateUserVocabulary(manager, user.id, allLemmas, attempt);
       const updatedSkills = await this.updateUserProgress(
         manager,
         user.id,
@@ -351,7 +351,7 @@ export class AttemptService {
         parts: attempt.parts,
       };
     });
-  }
+  } 
 
   async targetUserProficiency(user: User, userProgress: UserProgress[]) {
     const plan = await this.planRepo.findOne({
@@ -459,73 +459,73 @@ export class AttemptService {
     return { totalScore, correctCount, totalQuestions, skillMap, allLemmas };
   }
 
-  private async updateUserVocabulary(
-    manager: EntityManager,
-    userId: string,
-    lemmas: Set<string>,
-    attempt: Attempt,
-  ) {
-    const uvRepo = manager.getRepository(UserVocabulary);
-    const vocabRepo = manager.getRepository(Vocabulary);
+  // private async updateUserVocabulary(
+  //   manager: EntityManager,
+  //   userId: string,
+  //   lemmas: Set<string>,
+  //   attempt: Attempt,
+  // ) {
+  //   const uvRepo = manager.getRepository(UserVocabulary);
+  //   const vocabRepo = manager.getRepository(Vocabulary);
 
-    const lemmaArr = Array.from(lemmas);
+  //   const lemmaArr = Array.from(lemmas);
 
-    const vocabs = await vocabRepo.find({
-      where: { lemma: In(lemmaArr) },
-      select: ['id', 'lemma'],
-    });
-    const vocabIdByLemma = new Map(vocabs.map((v) => [v.lemma, v.id]));
+  //   const vocabs = await vocabRepo.find({
+  //     where: { lemma: In(lemmaArr) },
+  //     select: ['id', 'lemma'],
+  //   });
+  //   const vocabIdByLemma = new Map(vocabs.map((v) => [v.lemma, v.id]));
 
-    const existing = await uvRepo.find({
-      where: {
-        user: { id: userId },
-        vocabulary: { id: In([...vocabIdByLemma.values()]) },
-      },
-      relations: ['user', 'vocabulary'],
-    });
-    const uvByLemma = new Map(existing.map((uv) => [uv.vocabulary.lemma, uv]));
+  //   const existing = await uvRepo.find({
+  //     where: {
+  //       user: { id: userId },
+  //       vocabulary: { id: In([...vocabIdByLemma.values()]) },
+  //     },
+  //     relations: ['user', 'vocabulary'],
+  //   });
+  //   const uvByLemma = new Map(existing.map((uv) => [uv.vocabulary.lemma, uv]));
 
-    const updates: UserVocabulary[] = [];
-    for (const lemma of lemmaArr) {
-      const vocabId = vocabIdByLemma.get(lemma);
-      if (!vocabId) {
-        continue;
-      }
+  //   const updates: UserVocabulary[] = [];
+  //   for (const lemma of lemmaArr) {
+  //     const vocabId = vocabIdByLemma.get(lemma);
+  //     if (!vocabId) {
+  //       continue;
+  //     }
 
-      let uv =
-        uvByLemma.get(lemma) ??
-        uvRepo.create({
-          user: { id: userId },
-          vocabulary: { id: vocabId },
-          wrongCount: 0,
-          correctCount: 0,
-          status: 'new',
-        });
+  //     let uv =
+  //       uvByLemma.get(lemma) ??
+  //       uvRepo.create({
+  //         user: { id: userId },
+  //         vocabulary: { id: vocabId },
+  //         wrongCount: 0,
+  //         correctCount: 0,
+  //         status: 'new',
+  //       });
 
-      const relatedQuestions = attempt.parts.flatMap((p) =>
-        p.groups.flatMap((g) =>
-          g.questions.filter((q) => q.lemmas?.includes(lemma)),
-        ),
-      );
-      for (const q of relatedQuestions) {
-        const isCorrect = q['userAnswer']?.answer?.isCorrect ?? false;
-        uv.correctCount += isCorrect ? 1 : 0;
-        uv.wrongCount += isCorrect ? 0 : 1;
-      }
+  //     const relatedQuestions = attempt.parts.flatMap((p) =>
+  //       p.groups.flatMap((g) =>
+  //         g.questions.filter((q) => q.lemmas?.includes(lemma)),
+  //       ),
+  //     );
+  //     for (const q of relatedQuestions) {
+  //       const isCorrect = q['userAnswer']?.answer?.isCorrect ?? false;
+  //       uv.correctCount += isCorrect ? 1 : 0;
+  //       uv.wrongCount += isCorrect ? 0 : 1;
+  //     }
 
-      if (uv.correctCount === 0) {
-        uv.status = 'learning';
-      } else if (uv.wrongCount === 0) {
-        uv.status = 'mastered';
-      } else {
-        uv.status = 'review';
-      }
+  //     if (uv.correctCount === 0) {
+  //       uv.status = 'learning';
+  //     } else if (uv.wrongCount === 0) {
+  //       uv.status = 'mastered';
+  //     } else {
+  //       uv.status = 'review';
+  //     }
 
-      updates.push(uv);
-    }
+  //     updates.push(uv);
+  //   }
 
-    await uvRepo.save(updates);
-  }
+  //   await uvRepo.save(updates);
+  // }
 
   private async updateUserProgress(
     manager: EntityManager,

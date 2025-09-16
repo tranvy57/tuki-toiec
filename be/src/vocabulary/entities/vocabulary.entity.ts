@@ -26,8 +26,8 @@ export class Vocabulary extends BaseEntity {
   @Column({ name: 'audio_url', nullable: true })
   audioUrl: string;
 
-  @Column({ name: 'lemma', nullable: true })
-  lemma: string;
+  @Column('text', { name: 'lemmas', array: true, nullable: true })
+  lemmas: string[];
 
   @OneToMany(() => UserVocabulary, (uv) => uv.vocabulary)
   userVocabularies: UserVocabulary[];
