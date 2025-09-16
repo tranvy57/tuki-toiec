@@ -41,12 +41,13 @@ def sync_all_vocabularies(session: Session = None) -> None:
         if not q.word:  # tránh lỗi nếu content null
             continue
         doc = nlp(q.word)
-        tok = doc[0]  
-        if not tok.is_alpha:
-            continue
-        q.lemma = tok.lemma_.lower()
+        q.lemmas = [tok.lemma_.lower() for tok in doc if tok.is_alpha]
+        print(q.word, q.lemmas)
         session.add(q)
 
-if __name__ == "__main__":
+def main():
     with session_scope() as db:
         sync_all_vocabularies(db)
+
+if __name__ == "__main__":
+    main()
