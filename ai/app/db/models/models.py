@@ -153,7 +153,7 @@ class Vocabularies(Base):
     example_en = mapped_column(String, nullable=False)
     example_vn = mapped_column(String, nullable=False)
     audio_url = mapped_column(String)
-    lemma = mapped_column(String)
+    lemmas = mapped_column(ARRAY(Text()))
 
     user_vocabularies: Mapped[List['UserVocabularies']] = relationship('UserVocabularies', uselist=True, back_populates='vocabulary')
     question_vocabularies: Mapped[List['QuestionVocabularies']] = relationship('QuestionVocabularies', uselist=True, back_populates='vocabulary')

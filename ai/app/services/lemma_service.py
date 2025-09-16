@@ -44,10 +44,11 @@ def sync_all_vocabularies(session: Session = None) -> None:
         q.lemmas = [tok.lemma_.lower() for tok in doc if tok.is_alpha]
         print(q.word, q.lemmas)
         session.add(q)
+    session.commit()
 
 def main():
     with session_scope() as db:
-        sync_all_vocabularies(db)
+        sync_all_vocabularies(db)                       
 
 if __name__ == "__main__":
     main()
