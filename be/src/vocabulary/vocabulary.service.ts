@@ -27,13 +27,19 @@ export class VocabularyService {
   async findOne(id: string) {
     const vocabulary = await this.vocabularyRepo.findOne({ where: { id: id } });
     if (!vocabulary) {
-      throw new NotFoundException("Vocabulary not found!");
+      throw new NotFoundException('Vocabulary not found!');
     }
     return VocabularyMapper.toDto(vocabulary);
   }
 
-  update(id: number, updateVocabularyDto: UpdateVocabularyDto) {
-    return `This action updates a #${id} vocabulary`;
+  async update(id: string, updateVocabularyDto: UpdateVocabularyDto) {
+    const vocabulary = await this.vocabularyRepo.findOne({ where: { id } });
+    if (!vocabulary) {
+      throw new NotFoundException('Vocabulary not found!');
+    }
+    const updated = Object.assign(vocabulary, updateVocabularyDto);
+    const saved = await this.vocabularyRepo.save(updated);
+    return VocabularyMapper.toDto(saved);
   }
 
   remove(id: number) {

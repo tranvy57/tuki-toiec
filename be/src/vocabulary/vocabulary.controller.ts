@@ -43,7 +43,7 @@ export class VocabularyController {
     @Param('id') id: string,
     @Body() updateVocabularyDto: UpdateVocabularyDto,
   ) {
-    return this.vocabularyService.update(+id, updateVocabularyDto);
+    return this.vocabularyService.update(id, updateVocabularyDto);
   }
 
   @Delete(':id')
