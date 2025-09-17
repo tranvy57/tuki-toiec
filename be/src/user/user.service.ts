@@ -83,13 +83,15 @@ export class UserService {
       throw new NotFoundException('Vocabulary not found!');
     }
 
-    const userVocab = this.userVocabRepository.findOne({
+    const userVocab = await this.userVocabRepository.findOne({
       where: {
         vocabulary: {
           id: id,
         },
       },
     });
+
+    console.log('vocab find', userVocab);
 
     if (!userVocab) {
       const newUserVocab = this.userVocabRepository.create({
@@ -118,5 +120,24 @@ export class UserService {
     });
 
     return this.toVocabDtoList(uVocabList);
+  }
+
+  async deleteUserVocab(user: User, id: string) {
+    const uVocab = await this.userVocabRepository.findOne({
+      where: {
+        user: {
+          id: user.id,
+        },
+        vocabulary: {
+          id: id,
+        },
+      },
+    });
+
+    if (!uVocab) {
+      throw new NotFoundException('User Vocab not found!');
+    }
+    await this.userVocabRepository.remove(uVocab);
+    return;
   }
 }

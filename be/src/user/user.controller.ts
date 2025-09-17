@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -28,7 +29,7 @@ export class UserController {
     return user;
   }
 
-  @Post(':id/vocabularies')
+  @Post('/vocabularies/:id')
   async saveUserVocab(@CurrentUser() user: User, @Param('id') id: string) {
     return this.userService.saveUserVocab(id, user);
   }
@@ -36,5 +37,12 @@ export class UserController {
   @Get('/vocabularies')
   async getUserVocab(@CurrentUser() user: User) {
     return this.userService.getListUserVocab(user);
+  }
+
+  @Delete('/vocabularies/:id')
+  async deleteUserVocab(@CurrentUser() user: User, @Param('id') id: string) {
+    console.log('userrrr', user);
+
+    return this.userService.deleteUserVocab(user, id);
   }
 }
