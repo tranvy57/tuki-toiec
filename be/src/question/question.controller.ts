@@ -45,8 +45,8 @@ export class QuestionController {
     return await this.questionService.syncVocabsToQuestions();
   }
 
-  @Post('/sync-questions-skills')
-  updateQuestionSkills() {
-    return this.questionService.updateQuestionSkills();
-  }
+  // @Post('/sync-questions-skills')
+  // updateQuestionSkills() {
+  //   return this.questionService.updateQuestionSkills();
+  // }
 }
