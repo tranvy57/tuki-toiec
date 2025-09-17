@@ -13,22 +13,26 @@ import { Plan } from 'src/plan/entities/plan.entity';
 import { TargetSkill } from 'src/target_skills/entities/target_skill.entity';
 import { UserProgress } from 'src/user_progress/entities/user_progress.entity';
 import { UserVocabulary } from 'src/user_vocabularies/entities/user_vocabulary.entity';
+import { UserProgressModule } from 'src/user_progress/user_progress.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      Group,
-      Test,
-      Part,
-      Question,
-      Answer,
-      Attempt,
-      AttemptAnswer,
-      Plan,
-      TargetSkill,
-      UserProgress,
-      UserVocabulary,
-    ]),
+    TypeOrmModule.forFeature(
+      [
+        Group,
+        Test,
+        Part,
+        Question,
+        Answer,
+        Attempt,
+        AttemptAnswer,
+        Plan,
+        TargetSkill,
+        UserProgress,
+        UserVocabulary,
+      ],
+    ),
+    UserProgressModule,
   ],
   controllers: [AttemptController],
   providers: [AttemptService],

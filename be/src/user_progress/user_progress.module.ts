@@ -5,5 +5,6 @@ import { UserProgressController } from './user_progress.controller';
 @Module({
   controllers: [UserProgressController],
   providers: [UserProgressService],
+  exports: [UserProgressService],
 })
 export class UserProgressModule {}

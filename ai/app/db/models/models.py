@@ -153,7 +153,8 @@ class Vocabularies(Base):
     example_en = mapped_column(String, nullable=False)
     example_vn = mapped_column(String, nullable=False)
     audio_url = mapped_column(String)
-    lemmas = mapped_column(ARRAY(Text()))
+    lemma = mapped_column(String)
+    is_phrase = mapped_column(Boolean, nullable=False, server_default=text('false'))
 
     user_vocabularies: Mapped[List['UserVocabularies']] = relationship('UserVocabularies', uselist=True, back_populates='vocabulary')
     question_vocabularies: Mapped[List['QuestionVocabularies']] = relationship('QuestionVocabularies', uselist=True, back_populates='vocabulary')
@@ -485,6 +486,7 @@ class Questions(Base):
     score = mapped_column(Integer, nullable=False, server_default=text('5'))
     groupId = mapped_column(Uuid)
     lemmas = mapped_column(ARRAY(Text()))
+    phrases = mapped_column(ARRAY(Text()))
 
     grammar: Mapped['Grammars'] = relationship('Grammars', secondary='question_grammars', back_populates='question')
     groups: Mapped[Optional['Groups']] = relationship('Groups', back_populates='questions')

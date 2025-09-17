@@ -6,9 +6,10 @@ import { Skill } from 'src/skill/entities/skill.entity';
 import { QuestionTag } from 'src/question_tags/entities/question_tag.entity';
 import { Question } from './entities/question.entity';
 import { QuestionTagsModule } from 'src/question_tags/question_tags.module';
+import { Vocabulary } from 'src/vocabulary/entities/vocabulary.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Skill, QuestionTag, Question]), QuestionTagsModule],
+  imports: [TypeOrmModule.forFeature([Skill, QuestionTag, Question, Vocabulary]), QuestionTagsModule],
   controllers: [QuestionController],
   providers: [QuestionService],
 })

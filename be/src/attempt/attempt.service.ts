@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -23,6 +24,7 @@ import { Plan } from 'src/plan/entities/plan.entity';
 import { TargetSkill } from 'src/target_skills/entities/target_skill.entity';
 import { UserVocabulary } from 'src/user_vocabularies/entities/user_vocabulary.entity';
 import { Vocabulary } from 'src/vocabulary/entities/vocabulary.entity';
+import { UserProgressService } from 'src/user_progress/user_progress.service';
 
 @Injectable()
 export class AttemptService {
@@ -35,12 +37,10 @@ export class AttemptService {
     @InjectRepository(Plan) private planRepo: Repository<Plan>,
     @InjectRepository(TargetSkill)
     private targetSkillRepo: Repository<TargetSkill>,
-    @InjectRepository(UserProgress)
-    private userProgressRepo: Repository<UserProgress>,
-    @InjectRepository(UserVocabulary)
-    private userVocabRepo: Repository<UserVocabulary>,
     @InjectRepository(AttemptAnswer)
     private attemptAnswerRepo: Repository<AttemptAnswer>,
+    @Inject()
+    private readonly userProgressService: UserProgressService,
     private dataSrc: DataSource,
   ) {}
 
@@ -327,11 +327,11 @@ export class AttemptService {
       const attempt = await this.loadAttempt(manager, attemptId, user);
       const answerMap = await this.loadAttemptAnswers(manager, attemptId);
 
-      const { totalScore, correctCount, totalQuestions, skillMap, allLemmas } =
+      const { totalScore, correctCount, totalQuestions, skillMap, allKeys } =
         this.processQuestions(attempt, answerMap);
 
-      // await this.updateUserVocabulary(manager, user.id, allLemmas, attempt);
-      const updatedSkills = await this.updateUserProgress(
+      await this.updateUserVocabulary(manager, user.id, allKeys, attempt);
+      const updatedSkills = await this.userProgressService.updateUserProgress(
         manager,
         user.id,
         skillMap,
@@ -351,34 +351,6 @@ export class AttemptService {
         parts: attempt.parts,
       };
     });
-  } 
-
-  async targetUserProficiency(user: User, userProgress: UserProgress[]) {
-    const plan = await this.planRepo.findOne({
-      where: { isActive: true, user: { id: user.id } },
-      relations: { targetSkills: true },
-    });
-
-    if (!plan) throw new NotFoundException('No active plan found!');
-
-    const targetProficiency = plan.targetScore
-      ? plan.targetScore / this.MAX_SCORE
-      : 0;
-
-    const targets: TargetSkill[] = [];
-
-    for (const up of userProgress) {
-      const target = new TargetSkill();
-      target.plan = plan;
-      target.skill = up.skill;
-
-      target.proficiency = targetProficiency;
-
-      targets.push(target);
-    }
-
-    // Upsert theo cặp (planId, skillId) để không bị trùng
-    await this.targetSkillRepo.upsert(targets, ['plan', 'skill']);
   }
 
   private async loadAttempt(
@@ -407,7 +379,7 @@ export class AttemptService {
     return attempt;
   }
 
-  private async loadAttemptAnswers(manager: EntityManager, attemptId: string) {
+  async loadAttemptAnswers(manager: EntityManager, attemptId: string) {
     const repo = manager.getRepository(AttemptAnswer);
     const attemptAnswers = await repo.find({
       where: { attempt: { id: attemptId } },
@@ -415,7 +387,6 @@ export class AttemptService {
     });
     return new Map(attemptAnswers.map((aa) => [aa.question.id, aa]));
   }
-
   private processQuestions(
     attempt: Attempt,
     answerMap: Map<string, AttemptAnswer>,
@@ -426,7 +397,7 @@ export class AttemptService {
 
     const skillMap: Record<string, { totalScore: number; totalDiff: number }> =
       {};
-    const allLemmas = new Set<string>();
+    const allKeys = new Set<string>(); // gom cả word lẫn phrase
 
     for (const part of attempt.parts) {
       for (const group of part.groups) {
@@ -444,129 +415,106 @@ export class AttemptService {
           for (const tag of q.questionTags || []) {
             const skillId = tag.skill.id;
             const diff = Number(tag.difficulty ?? 1);
-            const score = isCorrect ? diff : 0;
+            const score = isCorrect ? 1 : 0;
             if (!skillMap[skillId])
               skillMap[skillId] = { totalScore: 0, totalDiff: 0 };
             skillMap[skillId].totalScore += score;
             skillMap[skillId].totalDiff += diff;
           }
 
-          (q.lemmas || []).forEach((l) => allLemmas.add(l));
+          (q.lemmas || []).forEach((l) => allKeys.add(l));
+          (q.phrases || []).forEach((p) => allKeys.add(p));
         }
       }
     }
 
-    return { totalScore, correctCount, totalQuestions, skillMap, allLemmas };
+    return { totalScore, correctCount, totalQuestions, skillMap, allKeys };
   }
 
-  // private async updateUserVocabulary(
-  //   manager: EntityManager,
-  //   userId: string,
-  //   lemmas: Set<string>,
-  //   attempt: Attempt,
-  // ) {
-  //   const uvRepo = manager.getRepository(UserVocabulary);
-  //   const vocabRepo = manager.getRepository(Vocabulary);
-
-  //   const lemmaArr = Array.from(lemmas);
-
-  //   const vocabs = await vocabRepo.find({
-  //     where: { lemma: In(lemmaArr) },
-  //     select: ['id', 'lemma'],
-  //   });
-  //   const vocabIdByLemma = new Map(vocabs.map((v) => [v.lemma, v.id]));
-
-  //   const existing = await uvRepo.find({
-  //     where: {
-  //       user: { id: userId },
-  //       vocabulary: { id: In([...vocabIdByLemma.values()]) },
-  //     },
-  //     relations: ['user', 'vocabulary'],
-  //   });
-  //   const uvByLemma = new Map(existing.map((uv) => [uv.vocabulary.lemma, uv]));
-
-  //   const updates: UserVocabulary[] = [];
-  //   for (const lemma of lemmaArr) {
-  //     const vocabId = vocabIdByLemma.get(lemma);
-  //     if (!vocabId) {
-  //       continue;
-  //     }
-
-  //     let uv =
-  //       uvByLemma.get(lemma) ??
-  //       uvRepo.create({
-  //         user: { id: userId },
-  //         vocabulary: { id: vocabId },
-  //         wrongCount: 0,
-  //         correctCount: 0,
-  //         status: 'new',
-  //       });
-
-  //     const relatedQuestions = attempt.parts.flatMap((p) =>
-  //       p.groups.flatMap((g) =>
-  //         g.questions.filter((q) => q.lemmas?.includes(lemma)),
-  //       ),
-  //     );
-  //     for (const q of relatedQuestions) {
-  //       const isCorrect = q['userAnswer']?.answer?.isCorrect ?? false;
-  //       uv.correctCount += isCorrect ? 1 : 0;
-  //       uv.wrongCount += isCorrect ? 0 : 1;
-  //     }
-
-  //     if (uv.correctCount === 0) {
-  //       uv.status = 'learning';
-  //     } else if (uv.wrongCount === 0) {
-  //       uv.status = 'mastered';
-  //     } else {
-  //       uv.status = 'review';
-  //     }
-
-  //     updates.push(uv);
-  //   }
-
-  //   await uvRepo.save(updates);
-  // }
-
-  private async updateUserProgress(
+  async updateUserVocabulary(
     manager: EntityManager,
     userId: string,
-    skillMap: Record<string, { totalScore: number; totalDiff: number }>,
+    lemmas: Set<string>,
+    attempt: Attempt,
   ) {
-    const repo = manager.getRepository(UserProgress);
-    const existing = await repo.find({
-      where: { user: { id: userId }, skill: { id: In(Object.keys(skillMap)) } },
-      relations: ['user', 'skill'],
+    const uvRepo = manager.getRepository(UserVocabulary);
+    const vocabRepo = manager.getRepository(Vocabulary);
+
+    const lemmaArr = Array.from(lemmas);
+
+    // 1. Lấy vocabularies match với các lemma/phrase đã detect
+    const vocabs = await vocabRepo.find({
+      where: { lemma: In(lemmaArr) },
+      select: ['id', 'lemma', 'isPhrase'],
     });
-    const progressMap = new Map(existing.map((up) => [up.skill.id, up]));
 
-    const alpha = 0.2;
-    const updates: UserProgress[] = [];
+    const vocabIdByKey = new Map(vocabs.map((v) => [v.lemma, v.id]));
 
-    for (const [skillId, { totalScore: s, totalDiff: d }] of Object.entries(
-      skillMap,
-    )) {
-      const pLesson = d > 0 ? s / d : 0;
-      const capped = Math.min(Math.max(pLesson, 0.15), 0.7); 
+    // 2. Lấy các UserVocabulary đã tồn tại
+    const existing = await uvRepo.find({
+      where: {
+        user: { id: userId },
+        vocabulary: { id: In([...vocabIdByKey.values()]) },
+      },
+      relations: ['user', 'vocabulary'],
+    });
 
-      const up =
-        progressMap.get(skillId) ??
-        repo.create({
-          user: { id: userId } as any,
-          skill: { id: skillId } as any,
-          proficiency: 0,
+    const uvByKey = new Map<string, UserVocabulary>();
+    for (const uv of existing) {
+      uvByKey.set(uv.vocabulary.lemma, uv);
+    }
+
+    // 3. Tính toán update
+    const updates: UserVocabulary[] = [];
+    for (const key of lemmaArr) {
+      const vocabId = vocabIdByKey.get(key);
+      if (!vocabId) continue;
+
+      let uv =
+        uvByKey.get(key) ??
+        uvRepo.create({
+          user: { id: userId },
+          vocabulary: { id: vocabId },
+          wrongCount: 0,
+          correctCount: 0,
+          status: 'new',
         });
 
-      up.proficiency = progressMap.has(skillId)
-        ? (1 - alpha) * up.proficiency + alpha * capped
-        : capped;
+      // Tìm các câu hỏi trong attempt có chứa key này
+      const relatedQuestions = attempt.parts.flatMap((p) =>
+        p.groups.flatMap((g) =>
+          g.questions.filter(
+            (q) =>
+              (!vocabs.find((v) => v.lemma === key)?.isPhrase &&
+                q.lemmas?.includes(key)) ||
+              (vocabs.find((v) => v.lemma === key)?.isPhrase &&
+                q.phrases?.includes(key)),
+          ),
+        ),
+      );
 
-      updates.push(up);
+      for (const q of relatedQuestions) {
+        const isCorrect = q['userAnswer']?.answer?.isCorrect ?? false;
+        uv.correctCount += isCorrect ? 1 : 0;
+        uv.wrongCount += isCorrect ? 0 : 1;
+      }
+
+      // Cập nhật status
+      if (uv.correctCount === 0) {
+        uv.status = 'learning';
+      } else if (uv.wrongCount === 0) {
+        uv.status = 'mastered';
+      } else {
+        uv.status = 'review';
+      }
+
+      updates.push(uv);
     }
-    await repo.save(updates);
-    return updates;
+
+    await uvRepo.save(updates);
   }
 
-  private async updateAttempt(
+  async updateAttempt(
     manager: EntityManager,
     attempt: Attempt,
     totalScore: number,
