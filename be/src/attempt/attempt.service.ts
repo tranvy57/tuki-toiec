@@ -606,7 +606,7 @@ export class AttemptService {
     if (!attempts.length) return [];
 
     const attemptIds = attempts.map((a) => a.id);
-    const attemptAnswers = await this.attemptAnserRepo.find({
+    const attemptAnswers = await this.attemptAnswerRepo.find({
       where: { attempt: { id: In(attemptIds) } },
       relations: { answer: true, question: true, attempt: true },
     });

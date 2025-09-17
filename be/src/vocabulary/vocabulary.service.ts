@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateVocabularyDto } from './dto/create-vocabulary.dto';
 import { UpdateVocabularyDto } from './dto/update-vocabulary.dto';
 import * as XLSX from 'xlsx';
@@ -24,8 +24,12 @@ export class VocabularyService {
     return VocabularyMapper.toDtoList(entities);
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} vocabulary`;
+  async findOne(id: string) {
+    const vocabulary = await this.vocabularyRepo.findOne({ where: { id: id } });
+    if (!vocabulary) {
+      throw new NotFoundException("Vocabulary not found!");
+    }
+    return VocabularyMapper.toDto(vocabulary);
   }
 
   update(id: number, updateVocabularyDto: UpdateVocabularyDto) {

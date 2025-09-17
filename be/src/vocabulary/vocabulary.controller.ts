@@ -33,8 +33,9 @@ export class VocabularyController {
   }
 
   @Get(':id')
+  @Public()
   findOne(@Param('id') id: string) {
-    return this.vocabularyService.findOne(+id);
+    return this.vocabularyService.findOne(id);
   }
 
   @Patch(':id')
