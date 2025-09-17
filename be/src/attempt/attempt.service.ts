@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { CreateAttemptDto } from './dto/create-attempt.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Attempt } from './entities/attempt.entity';
 import { Group } from 'src/group/entities/group.entity';
 import { Question } from 'src/question/entities/question.entity';
@@ -173,6 +173,53 @@ export class AttemptService {
     return this.toAttemptAnswerDto(savedAttemptAnswer);
   }
 
+  private evaluateAttempt(attempt: Attempt, attemptAnswers: AttemptAnswer[]) {
+    const answerMap = new Map(
+      attemptAnswers
+        .filter((aa) => aa.question) // tránh undefined
+        .map((aa) => [aa.question.id, aa]),
+    );
+
+    let totalScore = 0;
+    let correctCount = 0;
+    let wrongCount = 0;
+    let skippedCount = 0;
+    let totalQuestions = 0;
+
+    attempt.parts.forEach((p) =>
+      p.groups.forEach((g) =>
+        g.questions.forEach((q) => {
+          if (!q) return; // tránh lỗi null
+
+          totalQuestions += 1;
+          const userAnswer = answerMap.get(q.id);
+          q['userAnswer'] = userAnswer ?? null;
+
+          if (!userAnswer) {
+            skippedCount += 1;
+          } else if (userAnswer.answer?.isCorrect) {
+            totalScore += q['score'] ?? 1;
+            correctCount += 1;
+          } else {
+            wrongCount += 1;
+          }
+        }),
+      ),
+    );
+
+    const accuracy = totalQuestions > 0 ? correctCount / totalQuestions : 0;
+
+    return {
+      parts: attempt.parts,
+      totalQuestions,
+      correctCount,
+      wrongCount,
+      skippedCount,
+      totalScore,
+      accuracy,
+    };
+  }
+
   async submitAttempt(attemptId: string, user: User) {
     let attempt = await this.attemptRepo.findOne({
       where: { id: attemptId },
@@ -207,6 +254,8 @@ export class AttemptService {
     let totalScore = 0;
     let correctCount = 0;
     let totalQuestions = 0;
+    let wrongCount = 0;
+    let skippedCount = 0;
 
     attempt.parts.forEach((p) =>
       p.groups.forEach((g) =>
@@ -214,13 +263,22 @@ export class AttemptService {
           totalQuestions += 1;
           const userAnswer = answerMap.get(q.id);
           q['userAnswer'] = userAnswer ?? null;
-          if (userAnswer?.answer?.isCorrect) {
+          if (!userAnswer) {
+            // Câu bỏ qua
+            skippedCount += 1;
+          } else if (userAnswer.answer?.isCorrect) {
+            // Câu trả lời đúng
             totalScore += q['score'] ?? 1;
             correctCount += 1;
+          } else {
+            // Câu trả lời sai
+            wrongCount += 1;
           }
         }),
       ),
     );
+
+    const accuracy = correctCount / totalQuestions;
 
     // for (const a of attemptAnswers) {
     //   if (a.isCorrect === true) totalScore += a.question.score;
@@ -238,8 +296,51 @@ export class AttemptService {
       totalQuestions,
       correctCount,
       totalScore,
-      // accuracy,
+      accuracy,
+      skippedCount,
+      wrongCount,
     };
+  }
+
+  async historyAttempt(user: User) {
+    const attempts = await this.attemptRepo.find({
+      // where: { user: { id: user.id } },
+      relations: {
+        user: true,
+        test: true,
+        parts: {
+          groups: {
+            questions: true, // load question thôi
+          },
+        },
+      },
+      order: { createdAt: 'DESC' },
+    });
+
+    console.log('attempt', attempts);
+
+    if (!attempts.length) return [];
+
+    const attemptIds = attempts.map((a) => a.id);
+    const attemptAnswers = await this.attemptAnserRepo.find({
+      where: { attempt: { id: In(attemptIds) } },
+      relations: { answer: true, question: true, attempt: true },
+    });
+
+    // Gom answer theo attemptId
+    const answersByAttempt = new Map<string, AttemptAnswer[]>();
+    attemptAnswers.forEach((aa) => {
+      if (!answersByAttempt.has(aa.attempt.id)) {
+        answersByAttempt.set(aa.attempt.id, []);
+      }
+      answersByAttempt.get(aa.attempt.id)!.push(aa);
+    });
+
+    return attempts.map((attempt) => {
+      const answers = answersByAttempt.get(attempt.id) ?? [];
+      const stats = this.evaluateAttempt(attempt, answers);
+      return { ...attempt, ...stats };
+    });
   }
 
   findAll() {

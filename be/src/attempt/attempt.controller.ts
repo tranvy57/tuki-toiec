@@ -45,6 +45,14 @@ export class AttemptController {
   ) {
     return this.attemptService.submitAttempt(attemptId, user);
   }
+
+  @Get('history')
+  async historyAttempt(
+    @CurrentUser() user: User,
+    @Param('attemptId') attemptId: string,
+  ) {
+    return this.attemptService.historyAttempt(user);
+  }
   @Get()
   findAll() {
     return this.attemptService.findAll();
