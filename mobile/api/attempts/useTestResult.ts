@@ -1,5 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { api } from '~/libs/axios';
+import { ResultTestResponse, ResultTestResponseSchema } from '~/types/response/TestResponse';
 
 // Interfaces for result data
 export interface QuestionResult {
@@ -193,5 +194,23 @@ export function useTestResult(attemptId: string) {
     queryKey: ['test-result', attemptId],
     queryFn: () => fetchAttemptResult(attemptId),
     enabled: !!attemptId,
+  });
+}
+
+export const submitTest = async (attemptId: string): Promise<ResultTestResponse> => {
+  try {
+    const response = await api.patch(`/attempts/${attemptId}/submit`);
+    const parsed = ResultTestResponseSchema.parse(response.data.data);
+    return parsed;
+  } catch (error) {
+    console.error('Error submitting test:', error);
+    throw error;
+  }
+}
+
+
+export const useSubmitTestResult =  () => {
+  return useMutation({
+    mutationFn: (attemptId: string) => submitTest(attemptId),
   });
 }

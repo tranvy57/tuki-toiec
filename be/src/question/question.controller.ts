@@ -9,7 +9,6 @@ export class QuestionController {
 
   @Post()
   create(@Body() createQuestionDto: CreateQuestionDto) {
-    
     return this.questionService.create(createQuestionDto);
   }
 
@@ -24,7 +23,10 @@ export class QuestionController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateQuestionDto: UpdateQuestionDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateQuestionDto: UpdateQuestionDto,
+  ) {
     return this.questionService.update(+id, updateQuestionDto);
   }
 
@@ -34,7 +36,17 @@ export class QuestionController {
   }
 
   @Post('/create-with-tags/:id')
-  createWithTags(@Param('id') questionId: string) {
-    return this.questionService.createWithTags(questionId);
+  async createWithTags(@Param('id') questionId: string) {
+    return await this.questionService.createWithTags(questionId);
   }
+
+  @Post('/sync-vocabs-questions')
+  async syncVocabsToQuestions() {
+    return await this.questionService.syncVocabsToQuestions();
+  }
+
+  // @Post('/sync-questions-skills')
+  // updateQuestionSkills() {
+  //   return this.questionService.updateQuestionSkills();
+  // }
 }

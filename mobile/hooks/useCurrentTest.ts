@@ -1,16 +1,24 @@
 // stores/usePracticeTestStore.ts
 import { create } from 'zustand';
-import { Group, Part, Question, Test } from '~/api/attempts/useStartAttempt';
+import { Group, Part, PracticeTestResponse, Question, ResultTestResponse, Test } from '~/types/response/TestResponse';
 
 interface PracticeTestState {
+  fullTest: PracticeTestResponse | null;
+  resultTest: ResultTestResponse | null;
   test: Test | null;
   currentPart: Part | null;
   currentGroup: Group | null;
   currentGroupQuestion: Question[] | null;
   selectedAnswers: Record<string, string>;
+  
+  // Cache for better performance
+  partCache: Map<number, Part>;
+  groupCache: Map<string, Group>;
 
   // actions
   setTest: (test: Test) => void;
+  setFullTest: (fullTest: PracticeTestResponse) => void;
+  setResultTest: (resultTest: ResultTestResponse) => void;  
   setCurrentPart: (partNumber: number) => void;
   setCurrentGroup: (groupId: string) => void;
   nextPart: () => void;
@@ -21,11 +29,16 @@ interface PracticeTestState {
 }
 
 export const useCurrentTest = create<PracticeTestState>((set, get) => ({
+  fullTest: null,
+  resultTest: null,
   test: null,
   currentPart: null,
   currentGroup: null,
   currentGroupQuestion: null,
   selectedAnswers: {},
+  partCache: new Map(),
+  groupCache: new Map(),
+  
   setAnswer: (questionId, answerKey) =>
     set((state) => ({
       selectedAnswers: {
@@ -33,94 +46,111 @@ export const useCurrentTest = create<PracticeTestState>((set, get) => ({
         [questionId]: answerKey,
       },
     })),
+    
+  setFullTest: (fullTest) => {
+    // Build cache when setting full test
+    const partCache = new Map<number, Part>();
+    const groupCache = new Map<string, Group>();
+    
+    fullTest.parts.forEach(part => {
+      partCache.set(part.partNumber, part);
+      part.groups.forEach(group => {
+        groupCache.set(group.id, group);
+      });
+    });
 
+    set({
+      fullTest,
+      partCache,
+      groupCache,
+      currentPart: fullTest.parts[0] || null,
+      currentGroup: fullTest.parts[0]?.groups[0] || null,
+      currentGroupQuestion: fullTest.parts[0]?.groups[0]?.questions || null,
+    });
+  },
   setTest: (test) =>
     set({
       test,
-      currentPart: test.parts[0] || null,
-      currentGroup: test.parts[0]?.groups[0] || null,
-      currentGroupQuestion: test.parts[0]?.groups[0]?.questions || null,
     }),
-
+  setResultTest: (resultTest) =>
+    set({
+      resultTest,
+    }),
   setCurrentPart: (partNumber) => {
-    const test = get().test;
-    if (!test) return;
-    const part = test.parts.find((p) => p.partNumber === partNumber) || null;
-    set({ currentPart: part, currentGroup: null });
+    const { partCache } = get();
+    const part = partCache.get(partNumber) || null;
+    set({ currentPart: part, currentGroup: part?.groups[0] || null });
   },
 
   nextPart: () => {
-    const part = get().currentPart;
-    const test = get().test;
-    if (!part) return;
+    const { currentPart, partCache } = get();
+    if (!currentPart) return;
 
-    const nextPart = test?.parts.find((p) => p.partNumber === part.partNumber + 1) || null;
-    set({ currentPart: nextPart, currentGroup: null });
+    const nextPart = partCache.get(currentPart.partNumber + 1) || null;
+    set({ 
+      currentPart: nextPart, 
+      currentGroup: nextPart?.groups[0] || null,
+      currentGroupQuestion: nextPart?.groups[0]?.questions || null,
+    });
   },
 
   nextGroup: () => {
-    const part = get().currentPart;
-    const group = get().currentGroup;
-    const test = get().test;
-    if (!part || !group || !test) return;
+    const { currentPart, currentGroup, partCache } = get();
+    if (!currentPart || !currentGroup) return;
 
-    // tìm group kế tiếp trong part hiện tại
-    const nextGroup = part.groups.find((g) => g.orderIndex === group.orderIndex + 1) || null;
+    // Find next group in current part (using cached array index)
+    const currentGroupIndex = currentPart.groups.findIndex(g => g.id === currentGroup.id);
+    const nextGroup = currentPart.groups[currentGroupIndex + 1];
 
     if (nextGroup) {
-      // vẫn còn group trong part này
+      // Still have groups in current part
       set({
         currentGroup: nextGroup,
         currentGroupQuestion: nextGroup.questions,
       });
     } else {
-      // hết group trong part → chuyển sang part kế tiếp
-      const nextPart = test.parts.find((p) => p.partNumber === part.partNumber + 1) || null;
+      // Move to next part
+      const nextPart = partCache.get(currentPart.partNumber + 1);
       if (nextPart) {
-        const firstGroup = nextPart.groups[0] ?? null;
+        const firstGroup = nextPart.groups[0];
         set({
           currentPart: nextPart,
-          currentGroup: firstGroup,
-          currentGroupQuestion: firstGroup?.questions ?? null,
+          currentGroup: firstGroup || null,
+          currentGroupQuestion: firstGroup?.questions || null,
         });
       }
     }
   },
 
   setCurrentGroup: (groupId) => {
-    const part = get().currentPart;
-    if (!part) return;
-    const group = part.groups.find((g) => g.id === groupId) || null;
-    set({ currentGroup: group, currentGroupQuestion: group?.questions });
+    const { groupCache } = get();
+    const group = groupCache.get(groupId) || null;
+    set({ currentGroup: group, currentGroupQuestion: group?.questions || null });
   },
 
   beforeGroup: () => {
-    const part = get().currentPart;
-    const group = get().currentGroup;
-    const test = get().test;
-    if (!part || !group || !test) return;
+    const { currentPart, currentGroup, partCache } = get();
+    if (!currentPart || !currentGroup) return;
 
-    // tìm group trước trong cùng part
-    const beforeGroup = part.groups.find((g) => g.orderIndex === group.orderIndex - 1) || null;
+    // Find previous group in current part (using cached array index)
+    const currentGroupIndex = currentPart.groups.findIndex(g => g.id === currentGroup.id);
+    const prevGroup = currentPart.groups[currentGroupIndex - 1];
 
-    if (beforeGroup) {
-      // vẫn còn group trước trong part này
+    if (prevGroup) {
+      // Still have previous groups in current part
       set({
-        currentGroup: beforeGroup,
-        currentGroupQuestion: beforeGroup.questions,
+        currentGroup: prevGroup,
+        currentGroupQuestion: prevGroup.questions,
       });
     } else {
-      // đang ở group đầu tiên -> chuyển sang part trước
-      const prevPart = test.parts.find((p) => p.partNumber === part.partNumber - 1) || null;
-
+      // Move to previous part's last group
+      const prevPart = partCache.get(currentPart.partNumber - 1);
       if (prevPart) {
-        // lấy group cuối cùng trong part trước
-        const lastGroup = prevPart.groups[prevPart.groups.length - 1] ?? null;
-
+        const lastGroup = prevPart.groups[prevPart.groups.length - 1];
         set({
           currentPart: prevPart,
-          currentGroup: lastGroup,
-          currentGroupQuestion: lastGroup?.questions ?? null,
+          currentGroup: lastGroup || null,
+          currentGroupQuestion: lastGroup?.questions || null,
         });
       }
     }
@@ -128,10 +158,13 @@ export const useCurrentTest = create<PracticeTestState>((set, get) => ({
 
   reset: () =>
     set({
+      fullTest: null,
       test: null,
       currentPart: null,
       currentGroup: null,
       currentGroupQuestion: null,
       selectedAnswers: {},
+      partCache: new Map(),
+      groupCache: new Map(),
     }),
 }));

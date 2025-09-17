@@ -1,5 +1,6 @@
 import axios from 'axios';
-// import { addToast } from "@heroui/toast";
+import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
+import { getValueFor, remove } from './secure-store';
 
 export interface ErrorResponse {
   error: string;
@@ -20,7 +21,12 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use(
-  (config) => {
+  async (config) => {
+    const token = await getValueFor('token');
+    console.log(token)
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
     console.log('➡️ [Request]', config);
     return config;
   },
@@ -41,11 +47,17 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response) {
-      console.log('❌ [Response Error]', error);
+      const { status, config } = error.response;
+      console.log('❌ [Response Error]', { url: config?.url, status, data: error.response.data });
+
+      // Check 401 Unauthorized
+      if (status === 401) {
+        remove('token'); // xoá token trong localStorage/cookie        
+      }
     } else if (error.request) {
       console.log('❌ [Network Error]', error.message);
     } else {
-      console.log('❌ [Axios Error]', error.message);
+      console.log('❌ [Axios Error]', error);
     }
     return Promise.reject(error);
   }

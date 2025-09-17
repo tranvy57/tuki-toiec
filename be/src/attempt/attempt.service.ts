@@ -1,12 +1,13 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { CreateAttemptDto } from './dto/create-attempt.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { DataSource, EntityManager, In, Repository } from 'typeorm';
 import { Attempt } from './entities/attempt.entity';
 import { Group } from 'src/group/entities/group.entity';
 import { Question } from 'src/question/entities/question.entity';
@@ -18,6 +19,12 @@ import { AttemptAnswerDto } from 'src/attempt_answers/dto/attempt_answer.dto';
 import { CreateAttemptAnswerDto } from 'src/attempt_answers/dto/create-attempt_answer.dto';
 import { AttemptAnswer } from 'src/attempt_answers/entities/attempt_answer.entity';
 import { Answer } from 'src/answers/entities/answer.entity';
+import { UserProgress } from 'src/user_progress/entities/user_progress.entity';
+import { Plan } from 'src/plan/entities/plan.entity';
+import { TargetSkill } from 'src/target_skills/entities/target_skill.entity';
+import { UserVocabulary } from 'src/user_vocabularies/entities/user_vocabulary.entity';
+import { Vocabulary } from 'src/vocabulary/entities/vocabulary.entity';
+import { UserProgressService } from 'src/user_progress/user_progress.service';
 
 @Injectable()
 export class AttemptService {
@@ -27,9 +34,17 @@ export class AttemptService {
     @InjectRepository(Question) private questionRepo: Repository<Question>,
     @InjectRepository(Test) private testRepo: Repository<Test>,
     @InjectRepository(Answer) private answerRepo: Repository<Answer>,
+    @InjectRepository(Plan) private planRepo: Repository<Plan>,
+    @InjectRepository(TargetSkill)
+    private targetSkillRepo: Repository<TargetSkill>,
     @InjectRepository(AttemptAnswer)
-    private attemptAnserRepo: Repository<AttemptAnswer>,
+    private attemptAnswerRepo: Repository<AttemptAnswer>,
+    @Inject()
+    private readonly userProgressService: UserProgressService,
+    private dataSrc: DataSource,
   ) {}
+
+  MAX_SCORE = 990;
 
   private toResponseDto(attempt: Attempt): AttemptDto {
     return plainToInstance(AttemptDto, attempt, {
@@ -148,7 +163,7 @@ export class AttemptService {
       isCorrect = answer.isCorrect;
     }
 
-    let attemptAnswer = await this.attemptAnserRepo.findOne({
+    let attemptAnswer = await this.attemptAnswerRepo.findOne({
       where: {
         attempt: { id: attempt.id },
         question: { id: dto.questionId },
@@ -161,7 +176,7 @@ export class AttemptService {
       attemptAnswer.isCorrect =
         attempt.mode === 'practice' ? answer.isCorrect : null;
     } else {
-      attemptAnswer = this.attemptAnserRepo.create({
+      attemptAnswer = this.attemptAnswerRepo.create({
         attempt,
         question: answer.question,
         answer,
@@ -169,7 +184,7 @@ export class AttemptService {
       });
     }
 
-    const savedAttemptAnswer = await this.attemptAnserRepo.save(attemptAnswer);
+    const savedAttemptAnswer = await this.attemptAnswerRepo.save(attemptAnswer);
     return this.toAttemptAnswerDto(savedAttemptAnswer);
   }
 
@@ -220,6 +235,71 @@ export class AttemptService {
     };
   }
 
+  async saveAttemptAnswers(
+    attemptId: string,
+    dtos: CreateAttemptAnswerDto[], // mảng DTO
+    user: User,
+  ) {
+    const attempt = await this.attemptRepo.findOne({
+      where: { id: attemptId },
+      relations: { user: true },
+    });
+
+    if (!attempt) throw new NotFoundException('Attempt not found!');
+    if (attempt.user.id !== user.id)
+      throw new UnauthorizedException(
+        'You are not have permission to do this action!',
+      );
+
+    // load toàn bộ answers cần thiết 1 lần
+    const answerIds = dtos.map((d) => d.answerId);
+    const answers = await this.answerRepo.find({
+      where: { id: In(answerIds) },
+      relations: { question: true },
+    });
+    const answerMap = new Map(answers.map((a) => [a.id, a]));
+
+    const updates: AttemptAnswer[] = [];
+
+    for (const dto of dtos) {
+      const answer = answerMap.get(dto.answerId);
+      if (!answer)
+        throw new NotFoundException(`Answer ${dto.answerId} not found!`);
+      if (answer.question.id !== dto.questionId) {
+        throw new BadRequestException(
+          `Question and Answer not match for Q${dto.questionId}`,
+        );
+      }
+
+      // kiểm tra đã có attemptAnswer cho câu hỏi này chưa
+      let attemptAnswer = await this.attemptAnswerRepo.findOne({
+        where: {
+          attempt: { id: attempt.id },
+          question: { id: dto.questionId },
+        },
+        relations: ['question', 'answer'],
+      });
+
+      if (attemptAnswer) {
+        attemptAnswer.answer = answer;
+        attemptAnswer.isCorrect =
+          attempt.mode === 'practice' ? answer.isCorrect : null;
+      } else {
+        attemptAnswer = this.attemptAnswerRepo.create({
+          attempt,
+          question: answer.question,
+          answer,
+          isCorrect: attempt.mode === 'practice' ? answer.isCorrect : null,
+        });
+      }
+
+      updates.push(attemptAnswer);
+    }
+
+    const saved = await this.attemptAnswerRepo.save(updates);
+    return saved.map((aa) => this.toAttemptAnswerDto(aa));
+  }
+
   async submitAttempt(attemptId: string, user: User) {
     let attempt = await this.attemptRepo.findOne({
       where: { id: attemptId },
@@ -236,7 +316,7 @@ export class AttemptService {
       },
     });
 
-    const attemptAnswers = await this.attemptAnserRepo.find({
+    const attemptAnswers = await this.attemptAnswerRepo.find({
       where: { attempt: { id: attemptId } },
       relations: { answer: true, question: true },
     });
@@ -302,6 +382,210 @@ export class AttemptService {
     };
   }
 
+  async submitAttemptReview(attemptId: string, user: User) {
+    return this.dataSrc.transaction(async (manager) => {
+      const attempt = await this.loadAttempt(manager, attemptId, user);
+      const answerMap = await this.loadAttemptAnswers(manager, attemptId);
+
+      const { totalScore, correctCount, totalQuestions, skillMap, allKeys } =
+        this.processQuestions(attempt, answerMap);
+
+      await this.updateUserVocabulary(manager, user.id, allKeys, attempt);
+      const updatedSkills = await this.userProgressService.updateUserProgress(
+        manager,
+        user.id,
+        skillMap,
+      );
+
+      await this.updateAttempt(manager, attempt, totalScore);
+
+      return {
+        attemptId: attempt.id,
+        score: totalScore,
+        correctCount,
+        totalQuestions,
+        updatedSkills: updatedSkills.map((u) => ({
+          skillId: u.skill.id,
+          proficiency: u.proficiency,
+        })),
+        parts: attempt.parts,
+      };
+    });
+  }
+
+  private async loadAttempt(
+    manager: EntityManager,
+    attemptId: string,
+    user: User,
+  ) {
+    const repo = manager.getRepository(Attempt);
+    const attempt = await repo.findOne({
+      where: { id: attemptId },
+      relations: {
+        user: true,
+        test: true,
+        parts: {
+          groups: {
+            questions: {
+              answers: true,
+              questionTags: { skill: true },
+            },
+          },
+        },
+      },
+    });
+    if (!attempt) throw new NotFoundException('Attempt not found!');
+    if (attempt.user.id !== user.id) throw new UnauthorizedException();
+    return attempt;
+  }
+
+  async loadAttemptAnswers(manager: EntityManager, attemptId: string) {
+    const repo = manager.getRepository(AttemptAnswer);
+    const attemptAnswers = await repo.find({
+      where: { attempt: { id: attemptId } },
+      relations: { answer: true, question: true },
+    });
+    return new Map(attemptAnswers.map((aa) => [aa.question.id, aa]));
+  }
+  private processQuestions(
+    attempt: Attempt,
+    answerMap: Map<string, AttemptAnswer>,
+  ) {
+    let totalScore = 0;
+    let correctCount = 0;
+    let totalQuestions = 0;
+
+    const skillMap: Record<string, { totalScore: number; totalDiff: number }> =
+      {};
+    const allKeys = new Set<string>(); // gom cả word lẫn phrase
+
+    for (const part of attempt.parts) {
+      for (const group of part.groups) {
+        for (const q of group.questions) {
+          totalQuestions++;
+          const userAnswer = answerMap.get(q.id);
+          q['userAnswer'] = userAnswer ?? null;
+
+          const isCorrect = userAnswer?.answer?.isCorrect ?? false;
+          if (isCorrect) {
+            totalScore += q['score'] ?? 1;
+            correctCount++;
+          }
+
+          for (const tag of q.questionTags || []) {
+            const skillId = tag.skill.id;
+            const diff = Number(tag.difficulty ?? 1);
+            const score = isCorrect ? 1 : 0;
+            if (!skillMap[skillId])
+              skillMap[skillId] = { totalScore: 0, totalDiff: 0 };
+            skillMap[skillId].totalScore += score;
+            skillMap[skillId].totalDiff += diff;
+          }
+
+          (q.lemmas || []).forEach((l) => allKeys.add(l));
+          (q.phrases || []).forEach((p) => allKeys.add(p));
+        }
+      }
+    }
+
+    return { totalScore, correctCount, totalQuestions, skillMap, allKeys };
+  }
+
+  async updateUserVocabulary(
+    manager: EntityManager,
+    userId: string,
+    lemmas: Set<string>,
+    attempt: Attempt,
+  ) {
+    const uvRepo = manager.getRepository(UserVocabulary);
+    const vocabRepo = manager.getRepository(Vocabulary);
+
+    const lemmaArr = Array.from(lemmas);
+
+    // 1. Lấy vocabularies match với các lemma/phrase đã detect
+    const vocabs = await vocabRepo.find({
+      where: { lemma: In(lemmaArr) },
+      select: ['id', 'lemma', 'isPhrase'],
+    });
+
+    const vocabIdByKey = new Map(vocabs.map((v) => [v.lemma, v.id]));
+
+    // 2. Lấy các UserVocabulary đã tồn tại
+    const existing = await uvRepo.find({
+      where: {
+        user: { id: userId },
+        vocabulary: { id: In([...vocabIdByKey.values()]) },
+      },
+      relations: ['user', 'vocabulary'],
+    });
+
+    const uvByKey = new Map<string, UserVocabulary>();
+    for (const uv of existing) {
+      uvByKey.set(uv.vocabulary.lemma, uv);
+    }
+
+    // 3. Tính toán update
+    const updates: UserVocabulary[] = [];
+    for (const key of lemmaArr) {
+      const vocabId = vocabIdByKey.get(key);
+      if (!vocabId) continue;
+
+      let uv =
+        uvByKey.get(key) ??
+        uvRepo.create({
+          user: { id: userId },
+          vocabulary: { id: vocabId },
+          wrongCount: 0,
+          correctCount: 0,
+          status: 'new',
+        });
+
+      // Tìm các câu hỏi trong attempt có chứa key này
+      const relatedQuestions = attempt.parts.flatMap((p) =>
+        p.groups.flatMap((g) =>
+          g.questions.filter(
+            (q) =>
+              (!vocabs.find((v) => v.lemma === key)?.isPhrase &&
+                q.lemmas?.includes(key)) ||
+              (vocabs.find((v) => v.lemma === key)?.isPhrase &&
+                q.phrases?.includes(key)),
+          ),
+        ),
+      );
+
+      for (const q of relatedQuestions) {
+        const isCorrect = q['userAnswer']?.answer?.isCorrect ?? false;
+        uv.correctCount += isCorrect ? 1 : 0;
+        uv.wrongCount += isCorrect ? 0 : 1;
+      }
+
+      // Cập nhật status
+      if (uv.correctCount === 0) {
+        uv.status = 'learning';
+      } else if (uv.wrongCount === 0) {
+        uv.status = 'mastered';
+      } else {
+        uv.status = 'review';
+      }
+
+      updates.push(uv);
+    }
+
+    await uvRepo.save(updates);
+  }
+
+  async updateAttempt(
+    manager: EntityManager,
+    attempt: Attempt,
+    totalScore: number,
+  ) {
+    const repo = manager.getRepository(Attempt);
+    attempt.status = 'submitted';
+    attempt.finishAt = new Date();
+    attempt.totalScore = totalScore;
+    await repo.save(attempt);
+  }
+
   async historyAttempt(user: User) {
     const attempts = await this.attemptRepo.find({
       // where: { user: { id: user.id } },
@@ -355,3 +639,13 @@ export class AttemptService {
     return `This action removes a #${id} attempt`;
   }
 }
+
+// enum VocabularyStatus {
+//   NEW = 'new',
+//   LEARNING = 'learning',
+//   REVIEW = 'review',
+//   MASTERED = 'mastered',
+//   FORGOTTEN = 'forgotten',
+//   DIFFICULT = 'difficult',
+//   IGNORED = 'ignored',
+// }

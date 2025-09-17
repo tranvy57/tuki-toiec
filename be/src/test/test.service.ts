@@ -1,3 +1,4 @@
+import { group } from 'console';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Group } from 'src/group/entities/group.entity';
@@ -11,6 +12,7 @@ import { Question } from 'src/question/entities/question.entity';
 import { Skill } from 'src/skill/entities/skill.entity';
 import { TestDto } from './dto/test.dto';
 import { Test } from './entities/test.entity';
+import { REVIEW_TEST_CONFIG } from './config/test.config';
 
 @Injectable()
 export class TestService {
@@ -35,6 +37,8 @@ export class TestService {
 
     private dataSrc: DataSource,
   ) {}
+
+  config_review_test = REVIEW_TEST_CONFIG;
 
   async create(dto: TestDto): Promise<TestDto> {
     const skills = await this.skillsRepo.find();
@@ -144,5 +148,65 @@ export class TestService {
 
   remove(id: number) {
     return `This action removes a #${id} test`;
+  }
+
+  async genReviewTest() {
+    const config = this.config_review_test;
+
+    return this.dataSrc.transaction(async (manager) => {
+      const test = manager.create(Test, { title: config.title });
+      const savedTest = await manager.save(test);
+
+      let partOrder = 1;
+      for (const p of config.parts) {
+        const part = manager.create(Part, {
+          partNumber: p.partNumber,
+          test: savedTest,
+        });
+        const savedPart = await manager.save(part);
+
+        let groupOrder = 1;
+        for (const [skillCode, numGroups] of Object.entries(p.skills)) {
+          const groups = await this.getGroupsBySkill(
+            p.partNumber,
+            skillCode,
+            numGroups,
+          );
+
+          for (const g of groups) {
+            const newGroup = manager.create(Group, {
+              ...g,
+              id: undefined,
+              orderIndex: groupOrder++,
+              part: savedPart,
+            });
+            await manager.save(newGroup);
+          }
+        }
+        partOrder++;
+      }
+
+      const fullTest = await manager.findOne(Test, {
+        where: { id: savedTest.id },
+        relations: { parts: { groups: { questions: { answers: true } } } },
+      });
+
+      return plainToInstance(TestDto, fullTest, { excludeExtraneousValues: true });
+    });
+  }
+
+  async getGroupsBySkill(partNumber: number, code: string, limit: number) {
+    return this.groupRepo
+      .createQueryBuilder('g')
+      .innerJoinAndSelect('g.questions', 'q')
+      .innerJoinAndSelect('q.answers', 'a')
+      .leftJoin('g.part', 'p')
+      .leftJoin('q.questionTags', 'qt')
+      .leftJoin('qt.skill', 's')
+      .where('p.partNumber = :partNumber', { partNumber })
+      .andWhere('s.code = :code', { code })
+      .orderBy('RANDOM()')
+      .limit(limit)
+      .getMany();
   }
 }

@@ -29,6 +29,9 @@ export class Vocabulary extends BaseEntity {
   @Column({ name: 'lemma', nullable: true })
   lemma: string;
 
+  @Column({ name: 'is_phrase', default: false })
+  isPhrase: boolean;
+
   @OneToMany(() => UserVocabulary, (uv) => uv.vocabulary)
   userVocabularies: UserVocabulary[];
 
