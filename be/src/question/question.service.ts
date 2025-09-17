@@ -69,7 +69,6 @@ export class QuestionService {
         }
       }
     }
-
     if (pairs.length > 0) {
       await this.dataSrc
         .createQueryBuilder()
@@ -86,3 +85,4 @@ export class QuestionService {
     }
   }
 }
+
