@@ -1,4 +1,9 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
@@ -7,6 +12,9 @@ import { UserResponseDto } from './dto/user-response.dto';
 import { plainToInstance } from 'class-transformer';
 import * as bcrypt from 'bcrypt';
 import { Role } from 'src/role/entities/role.entity';
+import { Vocabulary } from 'src/vocabulary/entities/vocabulary.entity';
+import { UserVocabulary } from 'src/user_vocabularies/entities/user_vocabulary.entity';
+import { UserVocabularyDto } from 'src/user_vocabularies/dto/user-vocabulary.dto';
 
 @Injectable()
 export class UserService {
@@ -15,10 +23,26 @@ export class UserService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
+    @InjectRepository(Vocabulary)
+    private readonly vocabRepository: Repository<Vocabulary>,
+    @InjectRepository(UserVocabulary)
+    private readonly userVocabRepository: Repository<UserVocabulary>,
   ) {}
 
   private toResponseDto(user: User): UserResponseDto {
     return plainToInstance(UserResponseDto, user, {
+      excludeExtraneousValues: true,
+    });
+  }
+
+  private toVocabDto(uVocab: UserVocabulary): UserVocabularyDto {
+    return plainToInstance(UserVocabularyDto, uVocab, {
+      excludeExtraneousValues: true,
+    });
+  }
+
+  private toVocabDtoList(uVocabs: UserVocabulary[]): UserVocabularyDto[] {
+    return plainToInstance(UserVocabularyDto, uVocabs, {
       excludeExtraneousValues: true,
     });
   }
@@ -49,5 +73,50 @@ export class UserService {
     const savedUser = await this.userRepository.save(user);
 
     return this.toResponseDto(savedUser);
+  }
+
+  async saveUserVocab(id: string, user: User) {
+    const vocabulary = await this.vocabRepository.findOne({
+      where: { id: id },
+    });
+    if (!vocabulary) {
+      throw new NotFoundException('Vocabulary not found!');
+    }
+
+    const userVocab = this.userVocabRepository.findOne({
+      where: {
+        vocabulary: {
+          id: id,
+        },
+      },
+    });
+
+    if (!userVocab) {
+      const newUserVocab = this.userVocabRepository.create({
+        user,
+        vocabulary,
+        wrongCount: 0,
+        correctCount: 0,
+      });
+      const saved = await this.userVocabRepository.save(newUserVocab);
+      console.log('saved', saved);
+
+      return this.toVocabDto(saved);
+    } else throw new BadRequestException('this word is already saved!');
+  }
+
+  async getListUserVocab(user: User) {
+    const uVocabList = await this.userVocabRepository.find({
+      where: {
+        user: {
+          id: user.id,
+        },
+      },
+      relations: {
+        vocabulary: true,
+      },
+    });
+
+    return this.toVocabDtoList(uVocabList);
   }
 }
