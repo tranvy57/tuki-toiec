@@ -3,6 +3,8 @@ import {
   Entity,
   Index,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
   OneToMany,
 } from 'typeorm';
@@ -11,6 +13,8 @@ import { PhaseLesson } from 'src/phase_lessons/entities/phase_lesson.entity';
 import { LessonDependency } from 'src/lesson_depedencies/entities/lesson_depedency.entity';
 import { StudyTask } from 'src/study_tasks/entities/study_task.entity';
 import { Unit } from 'src/unit/entities/unit.entity';
+import { Question } from 'src/question/entities/question.entity';
+import { LessonSkill } from 'src/lesson_skills/entities/lesson_skill.entity';
 
 @Entity('lessons')
 export class Lesson extends BaseEntity {
@@ -44,4 +48,21 @@ export class Lesson extends BaseEntity {
 
   @OneToMany(() => StudyTask, (t) => t.lesson)
   studyTasks: StudyTask[];
+
+  @ManyToMany(() => Question, (question) => question.lessons)
+  @JoinTable({
+    name: 'lessson_questions',
+    joinColumn: {
+      name: 'lesson_id',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'question_id',
+      referencedColumnName: 'id',
+    },
+  })
+  questions: Question[];
+
+  @OneToMany(() => LessonSkill, (ls) => ls.lesson, { cascade: true })
+  skills: LessonSkill[];
 }

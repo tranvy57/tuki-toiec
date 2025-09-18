@@ -31,4 +31,9 @@ export class LessonController {
   remove(@Param('id') id: string) {
     return this.lessonService.remove(+id);
   }
+
+  @Post('seed')
+  seedLessons() {
+    return this.lessonService.seedLessons();
+  }
 }

@@ -23,4 +23,10 @@ export class PlanService {
   remove(id: number) {
     return `This action removes a #${id} plan`;
   }
+
+  async planGenerator(
+    userId: number,
+  ){
+
+  }
 }
