@@ -102,7 +102,7 @@ export class QuestionTagsService {
       addTag('R1');
       if (/\b(and|but|because|although|if|when|while)\b/.test(qLower))
         addTag('G1');
-      else addTag('V1');
+      
     } else if (partId === 6) {
       addTag('R2');
       addTag('G1');

@@ -34,6 +34,7 @@ import { SeedService } from './seeder/seed.service';
 import { UploadModule } from './upload/upload.module';
 import { UserVocabulariesModule } from './user_vocabularies/user_vocabularies.module';
 import { QuestionTagsModule } from './question_tags/question_tags.module';
+import { LessonSkillsModule } from './lesson_skills/lesson_skills.module';
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import { QuestionTagsModule } from './question_tags/question_tags.module';
     UploadModule,
     UserVocabulariesModule,
     QuestionTagsModule,
+    LessonSkillsModule,
   ],
   controllers: [AppController],
   providers: [

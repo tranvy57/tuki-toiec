@@ -4,6 +4,7 @@ import { AttemptAnswer } from 'src/attempt_answers/entities/attempt_answer.entit
 import { BaseEntity } from 'src/common/entities/base.entity';
 import { Grammar } from 'src/grammar/entities/grammar.entity';
 import { Group } from 'src/group/entities/group.entity';
+import { Lesson } from 'src/lesson/entities/lesson.entity';
 import { QuestionTag } from 'src/question_tags/entities/question_tag.entity';
 import { Vocabulary } from 'src/vocabulary/entities/vocabulary.entity';
 import {
@@ -73,4 +74,7 @@ export class Question extends BaseEntity {
 
   @OneToMany(() => QuestionTag, (questionTag) => questionTag.question)
   questionTags: QuestionTag[];
+
+  @ManyToMany(() => Lesson, (l) => l.questions)
+  lessons: Lesson[];
 }

@@ -17,7 +17,7 @@ def load_json():
     # ----------------- Reshape thành cấu trúc chuẩn -----------------
     output = {
         "title": "TOEIC Practice Test 01",
-        "audioUrl": "https://s4-media1.study4.com/media/tez_media/sound/eco_toeic_1000_test_1_eco_toeic_1000_test_1.mp3",
+        "audioUrl": "https://s4-media1.study4.com/media/tez_media/sound/eco_toeic_1000_test_3_eco_toeic_1000_test_3.mp3",
         "parts": []
     }
 

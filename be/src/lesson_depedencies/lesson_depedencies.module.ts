@@ -5,5 +5,6 @@ import { LessonDepedenciesController } from './lesson_depedencies.controller';
 @Module({
   controllers: [LessonDepedenciesController],
   providers: [LessonDepedenciesService],
+  exports: [LessonDepedenciesService],
 })
 export class LessonDepedenciesModule {}
