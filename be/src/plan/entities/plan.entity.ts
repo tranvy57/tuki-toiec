@@ -22,7 +22,7 @@ export class Plan extends BaseEntity {
   @Column({ name: 'target_score', type: 'int', nullable: true })
   targetScore?: number;
 
-  @Column({ name: 'start_date', type: 'date', nullable: true })
+  @Column({ name: 'start_date', type: 'date', nullable: true, default: () => 'CURRENT_DATE' })
   startDate?: string;
 
   @Column({ name: 'total_days', type: 'int', nullable: true })

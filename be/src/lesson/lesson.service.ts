@@ -9,9 +9,10 @@ import { LessonDepedenciesService } from 'src/lesson_depedencies/lesson_depedenc
 
 @Injectable()
 export class LessonService {
-  constructor(private readonly dataSrc: DataSource,
+  constructor(
+    private readonly dataSrc: DataSource,
     @Inject()
-    private readonly lessonDepedenciesService: LessonDepedenciesService
+    private readonly lessonDepedenciesService: LessonDepedenciesService,
   ) {}
 
   CHUNK_SIZE: number = 10; // Số câu hỏi mỗi lesson
@@ -45,20 +46,29 @@ export class LessonService {
       relations: { questionTags: { skill: true } },
     });
 
-    const questionsBySkill = new Map<string, Question[]>();
+    // Gom câu hỏi theo skillId (vẫn giữ skillCode để hiển thị)
+    const questionsBySkill = new Map<
+      string, // skillId
+      { code: string; questions: Question[] }
+    >();
+
     for (const q of questions) {
       for (const tag of q.questionTags) {
-        const skillCode = tag.skill.code; // G1, L1, R1…
-        if (!questionsBySkill.has(skillCode)) {
-          questionsBySkill.set(skillCode, []);
+        const skillId = tag.skill.id;
+        const skillCode = tag.skill.code;
+        if (!questionsBySkill.has(skillId)) {
+          questionsBySkill.set(skillId, { code: skillCode, questions: [] });
         }
-        questionsBySkill.get(skillCode)!.push(q);
+        questionsBySkill.get(skillId)!.questions.push(q);
       }
     }
 
-    const lessonsBySkill = new Map<string, Lesson[]>();
+    const lessonsBySkill = new Map<string, Lesson[]>(); // skillId -> lessons
 
-    for (const [skillCode, qs] of questionsBySkill.entries()) {
+    for (const [
+      skillId,
+      { code: skillCode, questions: qs },
+    ] of questionsBySkill.entries()) {
       qs.sort(() => Math.random() - 0.5); // shuffle
 
       let lessonIndex = 1;
@@ -67,6 +77,7 @@ export class LessonService {
       for (let i = 0; i < qs.length; i += this.CHUNK_SIZE) {
         const chunk = qs.slice(i, i + this.CHUNK_SIZE);
 
+        // Lesson hiển thị: dùng skillCode
         const lesson = lessonRepo.create({
           name: `${skillCode} - Lesson ${lessonIndex}`,
           description: `Practice for ${skillCode}`,
@@ -74,18 +85,21 @@ export class LessonService {
         });
         await lessonRepo.save(lesson);
 
+        // Gắn câu hỏi vào lesson
         lesson.questions = chunk;
         await lessonRepo.save(lesson);
 
+        // Tính weight
         const skillCount = chunk.filter((q) =>
-          q.questionTags.some((t) => t.skill.code === skillCode),
+          q.questionTags.some((t) => t.skill.id === skillId),
         ).length;
         const weight = skillCount / chunk.length;
 
+        // Lưu quan hệ lesson ↔ skill bằng skillId
         await lsRepo.save(
           lsRepo.create({
             lesson: { id: lesson.id } as any,
-            skill: { code: skillCode } as any,
+            skill: { id: skillId } as any,
             weight,
           }),
         );
@@ -94,8 +108,10 @@ export class LessonService {
         lessonIndex++;
       }
 
-      lessonsBySkill.set(skillCode, createdLessons);
+      lessonsBySkill.set(skillId, createdLessons);
     }
+
+    // Gọi seed dependency
     this.lessonDepedenciesService.seedLessonDependencies(lessonsBySkill);
 
     return lessonsBySkill;
