@@ -11,8 +11,8 @@ export default function ToeicLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-background">
-      <main className="pt-16 pb-16 md:pb-0">
+    <div className="min-h-screen bg-gray-50">
+      <main className="">
         {children}
       </main>
     </div>

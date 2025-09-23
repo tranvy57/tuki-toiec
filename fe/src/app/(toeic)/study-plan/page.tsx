@@ -6,23 +6,23 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PhaseNode } from "@/components/toeic/study-plan/phase-node";
-import { mockPhases } from "@/lib/study-plan-data";
+import { mockPhases } from "@/libs/study-plan-data";
 import { Target, Calendar, Clock, Award } from "lucide-react";
 
 export default function StudyPlanPage() {
   const [phases] = useState(mockPhases);
 
   const handlePhasePress = (phaseId: string) => {
-    console.log('Phase pressed:', phaseId);
+    console.log("Phase pressed:", phaseId);
     // TODO: Navigate to phase details
   };
 
   const handlePhaseStart = (phaseId: string) => {
-    console.log('Phase started:', phaseId);
+    console.log("Phase started:", phaseId);
     // TODO: Start the phase
   };
 
-  const completedPhases = phases.filter(p => p.status === 'completed').length;
+  const completedPhases = phases.filter((p) => p.status === "completed").length;
   const totalPhases = phases.length;
   const progress = (completedPhases / totalPhases) * 100;
 
@@ -48,7 +48,9 @@ export default function StudyPlanPage() {
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>{completedPhases}/{totalPhases} giai đoạn</span>
+                <span>
+                  {completedPhases}/{totalPhases} giai đoạn
+                </span>
                 <span>{Math.round(progress)}%</span>
               </div>
               <Progress value={progress} className="h-2" />
@@ -101,9 +103,7 @@ export default function StudyPlanPage() {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Lộ trình học tập</span>
-            <Badge variant="outline">
-              {phases.length} giai đoạn
-            </Badge>
+            <Badge variant="outline">{phases.length} giai đoạn</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -111,7 +111,7 @@ export default function StudyPlanPage() {
             <div className="space-y-8 relative">
               {/* Center Line */}
               <div className="absolute left-1/2 top-0 bottom-0 w-px bg-border -translate-x-1/2" />
-              
+
               {phases.map((phase, index) => (
                 <PhaseNode
                   key={phase.phase_id}
@@ -131,7 +131,9 @@ export default function StudyPlanPage() {
       <Card className="text-center">
         <CardContent className="p-6">
           <Award className="h-12 w-12 text-[#ff776f] mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Hoàn thành tất cả giai đoạn</h3>
+          <h3 className="text-lg font-semibold mb-2">
+            Hoàn thành tất cả giai đoạn
+          </h3>
           <p className="text-muted-foreground">
             Bạn sẽ đạt được mục tiêu 750+ điểm TOEIC với lộ trình học tập này!
           </p>

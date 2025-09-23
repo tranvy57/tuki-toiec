@@ -4,13 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TestItem } from "@/types/test";
-import { getDifficultyColor, getDifficultyBgColor } from "@/lib/test-data";
-import { 
-  Clock, 
-  FileText, 
-  ArrowRight,
-  Play
-} from "lucide-react";
+import { getDifficultyColor, getDifficultyBgColor } from "@/libs/test-data";
+import { Clock, FileText, ArrowRight, Play } from "lucide-react";
 
 interface TestCardProps {
   test: TestItem;
@@ -23,7 +18,7 @@ export function TestCard({ test, onTestPress, onTestStart }: TestCardProps) {
   const difficultyBgColor = getDifficultyBgColor(test.difficulty);
 
   return (
-    <Card 
+    <Card
       className="hover:shadow-md transition-shadow cursor-pointer"
       onClick={() => onTestPress(test.test_id)}
     >
@@ -34,14 +29,14 @@ export function TestCard({ test, onTestPress, onTestStart }: TestCardProps) {
             <h3 className="font-semibold text-foreground leading-tight">
               {test.title}
             </h3>
-            <Badge 
-              variant="outline" 
+            <Badge
+              variant="outline"
               className={`${difficultyColor} ${difficultyBgColor} border-current`}
             >
               {test.difficulty}
             </Badge>
           </div>
-          
+
           {test.description && (
             <p className="text-sm text-muted-foreground leading-relaxed">
               {test.description}
@@ -57,7 +52,7 @@ export function TestCard({ test, onTestPress, onTestStart }: TestCardProps) {
               <span>{test.duration} mins</span>
             </div>
           )}
-          
+
           {test.totalQuestions && (
             <div className="flex items-center gap-1">
               <FileText className="h-4 w-4" />
@@ -79,7 +74,7 @@ export function TestCard({ test, onTestPress, onTestStart }: TestCardProps) {
             <Play className="h-4 w-4 mr-2" />
             Start Test
           </Button>
-          
+
           <Button
             variant="outline"
             size="sm"

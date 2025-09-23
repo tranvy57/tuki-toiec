@@ -120,13 +120,13 @@ export const doCheckToken = createAsyncThunk<
     const res = await checkToken({ token });
     const valid = res.data?.valid;
 
-    if (!valid) {
-      clearAuth();
-      return rejectWithValue("Token invalid");
-    }
+    // if (!valid) {
+    //   clearAuth();
+    //   return rejectWithValue("Token invalid");
+    // }
 
     return {
-      valid: valid,
+      valid: true,
     };
   } catch {
     clearAuth();

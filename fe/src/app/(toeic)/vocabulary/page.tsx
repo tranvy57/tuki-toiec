@@ -8,13 +8,14 @@ import { VocabularyCategories } from "@/components/toeic/vocabulary/vocabulary-c
 import { VocabularyList } from "@/components/toeic/vocabulary/vocabulary-list";
 import { VocabularyDetail } from "@/components/toeic/vocabulary/vocabulary-detail";
 import { Vocabulary } from "@/types/vocabulary";
-import { getVocabularies, getWordAudioUrl } from "@/lib/vocabulary-data";
+import { getVocabularies, getWordAudioUrl } from "@/libs/vocabulary-data";
 
 export default function VocabularyPage() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [vocabularies, setVocabularies] = useState<Vocabulary[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [selectedVocabulary, setSelectedVocabulary] = useState<Vocabulary | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedVocabulary, setSelectedVocabulary] =
+    useState<Vocabulary | null>(null);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
 
   const handleSearch = (query: string) => {
@@ -45,13 +46,13 @@ export default function VocabularyPage() {
         await audio.play();
       }
     } catch (error) {
-      console.error('Error playing audio:', error);
+      console.error("Error playing audio:", error);
     }
   };
 
   const handleAddToFavorites = () => {
     // TODO: Implement favorites functionality
-    console.log('Add to favorites:', selectedVocabulary?.word);
+    console.log("Add to favorites:", selectedVocabulary?.word);
   };
 
   useEffect(() => {
@@ -60,7 +61,7 @@ export default function VocabularyPage() {
         const response = await getVocabularies();
         setVocabularies(response.data);
       } catch (error) {
-        console.error('Error fetching vocabularies:', error);
+        console.error("Error fetching vocabularies:", error);
       }
     };
 
@@ -82,7 +83,7 @@ export default function VocabularyPage() {
       {/* Search */}
       <Card>
         <CardContent className="p-4">
-          <VocabularySearch 
+          <VocabularySearch
             onSearch={handleSearch}
             placeholder="Search words, meanings, examples..."
           />

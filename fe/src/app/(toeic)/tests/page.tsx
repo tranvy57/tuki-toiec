@@ -5,46 +5,46 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { TestCard } from "@/components/toeic/tests/test-card";
-import { mockTests } from "@/lib/test-data";
-import { 
-  Search,
-  Filter,
-  BookOpen,
-  Clock,
-  Target
-} from "lucide-react";
+import { mockTests } from "@/libs/test-data";
+import { Search, Filter, BookOpen, Clock, Target } from "lucide-react";
 
 export default function TestsPage() {
   const [tests] = useState(mockTests);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
 
   const handleTestPress = (testId: number) => {
-    console.log('Test pressed:', testId);
-    // TODO: Navigate to test details
+    window.location.href = `/tests/${testId}`;
   };
 
   const handleTestStart = (testId: number) => {
-    console.log('Test started:', testId);
+    console.log("Test started:", testId);
     // TODO: Start the test
   };
 
-  const filteredTests = tests.filter(test => {
-    const matchesSearch = searchQuery === '' || 
+  const filteredTests = tests.filter((test) => {
+    const matchesSearch =
+      searchQuery === "" ||
       test.title.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesDifficulty = selectedDifficulty === 'all' || 
-      test.difficulty === selectedDifficulty;
-    
+
+    const matchesDifficulty =
+      selectedDifficulty === "all" || test.difficulty === selectedDifficulty;
+
     return matchesSearch && matchesDifficulty;
   });
 
   const totalTests = tests.length;
-  const easyTests = tests.filter(t => t.difficulty === 'easy').length;
-  const mediumTests = tests.filter(t => t.difficulty === 'medium').length;
-  const hardTests = tests.filter(t => t.difficulty === 'hard').length;
+  const easyTests = tests.filter((t) => t.difficulty === "easy").length;
+  const mediumTests = tests.filter((t) => t.difficulty === "medium").length;
+  const hardTests = tests.filter((t) => t.difficulty === "hard").length;
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-6">
@@ -76,25 +76,29 @@ export default function TestsPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-foreground">{totalTests}</div>
+            <div className="text-2xl font-bold text-foreground">
+              {totalTests}
+            </div>
             <div className="text-sm text-muted-foreground">Total Tests</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-green-500">{easyTests}</div>
             <div className="text-sm text-muted-foreground">Easy</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-yellow-500">{mediumTests}</div>
+            <div className="text-2xl font-bold text-yellow-500">
+              {mediumTests}
+            </div>
             <div className="text-sm text-muted-foreground">Medium</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-red-500">{hardTests}</div>
@@ -123,9 +127,12 @@ export default function TestsPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            
+
             {/* Difficulty Filter */}
-            <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
+            <Select
+              value={selectedDifficulty}
+              onValueChange={setSelectedDifficulty}
+            >
               <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder="Select difficulty" />
               </SelectTrigger>
@@ -143,12 +150,8 @@ export default function TestsPage() {
       {/* Test Results */}
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold">
-            Available Tests
-          </h2>
-          <Badge variant="outline">
-            {filteredTests.length} tests found
-          </Badge>
+          <h2 className="text-lg font-semibold">Available Tests</h2>
+          <Badge variant="outline">{filteredTests.length} tests found</Badge>
         </div>
 
         {filteredTests.length === 0 ? (
@@ -180,11 +183,12 @@ export default function TestsPage() {
           <p className="text-muted-foreground">
             Take a random test to challenge yourself
           </p>
-          <Button 
-            size="lg" 
+          <Button
+            size="lg"
             className="bg-[#ff776f] hover:bg-[#e55a52]"
             onClick={() => {
-              const randomTest = tests[Math.floor(Math.random() * tests.length)];
+              const randomTest =
+                tests[Math.floor(Math.random() * tests.length)];
               handleTestStart(randomTest.test_id);
             }}
           >
