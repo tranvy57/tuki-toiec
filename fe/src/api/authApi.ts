@@ -1,147 +1,86 @@
+import { LoginRequest, AuthResponse, LoginGoogleRequest, LoginFacebookRequest, LogoutRequest, CheckTokenRequest, ResetPasswordRequest } from "@/types";
 import api from "@/libs/axios-config";
-import { showError } from "@/libs/toast";
-import { ApiResponse } from "@/types";
-import { IUser } from "@/types/implements";
-import { log } from "console";
 
-export interface LoginRequest {
-  username: string;
-  password: string;
-}
 
-export interface LogoutRequest {
-  token: string;
-}
 
-export interface CheckTokenRequest {
-  token: string;
-}
-
-export interface LoginGoogleRequest {
-  idToken: string;
-}
-
-export interface LoginFacebookRequest {
-  accessToken: string;
-}
-
-export interface ResetPasswordRequest {
-  email: string;
-  newPassword: string;
-  otp: string;
-}
-
-export const login = async (body: LoginRequest) => {
+export const login = async (body: LoginRequest): Promise<AuthResponse> => {
   try {
-    
-    const response = await api.post<
-      ApiResponse<{ token: string; user: IUser }>
-    >(`/auth/login`, body);
-
-
+    const response = await api.post<AuthResponse>("/auth/login", body);
     return response.data;
   } catch (error) {
+    console.error("Login error:", error);
     throw error;
   }
 };
 
-export const loginGoogle = async (body: LoginGoogleRequest) => {
+export const loginGoogle = async (body: LoginGoogleRequest): Promise<AuthResponse> => {
   try {
-    const response = await api.post<
-      ApiResponse<{ token: string; user: IUser }>
-    >(`/auth/login/google`, body);
-
-    // console.log("Login response at api:", response);
-
+    const response = await api.post<AuthResponse>("/auth/login/google", body);
     return response.data;
   } catch (error) {
-    // console.log("Login error at api:", error);
+    console.error("Google login error:", error);
     throw error;
   }
 };
 
-export const loginFacebook = async (body: LoginFacebookRequest) => {
+export const loginFacebook = async (body: LoginFacebookRequest): Promise<AuthResponse> => {
   try {
-    const response = await api.post<
-      ApiResponse<{ token: string; user: IUser }>
-    >(`/auth/login/facbook`, body);
-
-    // console.log("Login response at api:", response);
-
-    return response.data;
+    const response = await api.post<{ data: AuthResponse }>("/auth/login/facebook", body);
+    return response.data.data;
   } catch (error) {
-    // console.log("Login error at api:", error);
+    console.error("Facebook login error:", error);
     throw error;
   }
 };
 
-export const logout = async (body: LogoutRequest) => {
+export const logout = async (body: LogoutRequest): Promise<void> => {
   try {
-    const response = await api.post<ApiResponse<void>>(`/auth/logout`, body);
-    // console.log("Logout response at api:", response);
-    return response.data;
+    await api.post("/auth/logout", body);
   } catch (error) {
-    console.log("Logout error at api:", error);
-    showError("Logout failed. Please try again.");
+    console.error("Logout error:", error);
     throw error;
   }
 };
 
-export const checkToken = async (body: CheckTokenRequest) => {
+export const checkToken = async (): Promise<{ valid: boolean }> => {
   try {
-    const response = await api.post<ApiResponse<{ valid: boolean }>>(
-      `/auth/introspect`,
-      body
-    );
-    // console.log("Check token response at api:", response);
-    return response.data;
+    const response = await api.get<{ data: { valid: boolean } }>("/auth/introspect");
+    if(response.data.data.valid) {
+      return { valid: true };
+    } else {
+      return { valid: false };
+    }
   } catch (error) {
-    console.log("Check token error at api:", error);
-    showError("Token validation failed. Please log in again.");
+    console.error("Token validation error:", error);
+    // Return invalid if check fails
+    return { valid: false };
+  }
+};
+
+export const refreshToken = async (token: string): Promise<{ token: string }> => {
+  try {
+    const response = await api.post<{ data: { token: string } }>("/auth/refresh", { token });
+    return response.data.data;
+  } catch (error) {
+    console.error("Token refresh error:", error);
     throw error;
   }
 };
 
-export const refreshToken = async (token: string) => {
+export const forgotPassword = async (email: string): Promise<void> => {
   try {
-    const response = await api.post<ApiResponse<{ token: string }>>(
-      `/auth/refresh`,
-      { token }
-    );
-    // console.log("Refresh token response at api:", response);
-    return response.data;
+    await api.post(`/auth/forgot-password?email=${email}`);
   } catch (error) {
-    console.log("Refresh token error at api:", error);
-    showError("Token refresh failed. Please log in again.");
+    console.error("Forgot password error:", error);
     throw error;
   }
 };
 
-export const forgotPassword = async (email: string) => {
+export const resetPassword = async (body: ResetPasswordRequest): Promise<void> => {
   try {
-    const response = await api.post<ApiResponse<void>>(
-      `/auth/forgot-password?email=${email}`
-    );
-    // console.log("Forgot password response at api:", response);
-    return response.data;
+    await api.post("/auth/reset-password", body);
   } catch (error) {
-    console.log("Forgot password error at api:", error);
-    showError("Failed to send reset password email. Please try again.");
-    throw error;
-  }
-};
-
-export const resetPassword = async (body: ResetPasswordRequest) => {
-  try {
-    const response = await api.post<ApiResponse<void>>(
-      `/auth/reset-password`,
-      body
-    );
-    // console.log("Reset password response at api:", response);
-    return response.data;
-  } catch (error) {
-    console.log("Reset password error at api:", error);
-    showError("Failed to reset password. Please try again.");
+    console.error("Reset password error:", error);
     throw error;
   }
 };

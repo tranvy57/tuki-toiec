@@ -1,6 +1,6 @@
-import { IUser } from "@/types/implements";
+import { User } from "@/types";
 
-export const saveAuth = (token: string, user: IUser) => {
+export const saveAuth = (token: string, user: User) => {
   localStorage.setItem("accessToken", token);
   localStorage.setItem("user", JSON.stringify(user));
 };
@@ -15,7 +15,7 @@ export const getToken = () => {
   return localStorage.getItem("accessToken");
 };
 
-export const getUser = (): IUser | null => {
+export const getUser = (): User | null => {
   if (typeof window === "undefined") return null;
   const user = localStorage.getItem("user");
   return user ? JSON.parse(user) : null;

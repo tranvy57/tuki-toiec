@@ -116,31 +116,82 @@
   * {
     @apply border-border outline-ring/50;
   }
+  
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
-.menu-link {
-  @apply px-2 py-1 font-semibold rounded-sm hover:text-red-400 transition-all duration-200;
+@layer components {
+  /* Navigation styles */
+  .menu-link {
+    @apply px-2 py-1 font-semibold rounded-sm hover:text-red-400 transition-all duration-200;
+  }
+
+  .icon-button {
+    @apply flex items-center justify-center p-1 w-8 h-8 rounded hover:text-red-400 transition-colors duration-200;
+  }
+
+  /* Utility classes */
+  .scrollbar-hidden {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE & Edge */
+  }
+
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+  }
+
+  /* TOEIC brand colors */
+  .text-toeic-primary {
+    color: #ff776f;
+  }
+
+  .bg-toeic-primary {
+    background-color: #ff776f;
+  }
+
+  .border-toeic-primary {
+    border-color: #ff776f;
+  }
+
+  /* Focus states */
+  .focus-toeic {
+    @apply focus:ring-2 focus:ring-[#ff776f] focus:ring-offset-2;
+  }
 }
 
-.icon-button {
-  @apply flex items-center justify-center p-1 w-8 h-8 rounded hover:text-red-400 transition-colors duration-200;
-}
+@layer utilities {
+  /* Hide swiper navigation arrows */
+  .swiper-button-prev::after,
+  .swiper-button-next::after {
+    display: none !important;
+    content: none !important;
+  }
 
-.scrollbar-hidden {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE & Edge */
-}
+  /* Custom scrollbar styling */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #ff776f #f1f1f1;
+  }
 
-.scrollbar-hidden::-webkit-scrollbar {
-  display: none; /* Chrome, Safari */
-}
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
 
-.swiper-button-prev::after,
-.swiper-button-next::after {
-  display: none !important;
-  content: none !important;
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #ff776f;
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #e55a52;
+  }
 }
 

@@ -7,23 +7,28 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/hooks";
 import { useAppDispatch, useAppSelector } from "@/hooks/store-hook";
 import { showSuccess } from "@/libs/toast";
-import { logout } from "@/store/slice/auth-slice";
 import { Divide, UserRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-export default function UserIcon() {
+interface UserIconProps {
+  isMobile?: boolean;
+  onAction?: () => void;
+}
+
+export default function UserIcon({ isMobile = false, onAction }: UserIconProps) {
   const { authenticated, user } = useAppSelector((state) => state.auth);
-  const dispatch = useAppDispatch();
   const router = useRouter();
+  const { logout } = useAuth();
 
   const handleLogout = () => {
-    dispatch(logout());
     router.push("/");
     showSuccess("Đăng xuất thành công!");
+    logout();
   };
 
   return (

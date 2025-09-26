@@ -40,4 +40,15 @@ export class AuthService {
       user,
     };
   }
+
+  async introspect(token: string) {
+    try {
+      await this.jwtService.verifyAsync(token);
+      return {
+        valid: true,
+      };
+    } catch (error) {
+      return { valid: false };
+    }
+  }
 }
