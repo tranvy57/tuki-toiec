@@ -1,8 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks";
 import { useAppDispatch } from "@/hooks/store-hook";
-import { doLoginFacebook, doLoginGoogle } from "@/store/slice/auth-slice";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -15,7 +15,7 @@ declare global {
 }
 
 export default function FacebookLoginButton() {
-  const dispatch = useAppDispatch();
+  const { loginFacebook } = useAuth();
   const router = useRouter();
   useEffect(() => {
     window.fbAsyncInit = function () {
@@ -40,7 +40,7 @@ export default function FacebookLoginButton() {
       function (response: any) {
         if (response.authResponse) {
           const accessToken = response.authResponse.accessToken;
-          dispatch(doLoginFacebook({ accessToken }));
+          loginFacebook(accessToken);
           router.push("/");
         } else {
           console.warn(" Người dùng từ chối hoặc đóng popup.");

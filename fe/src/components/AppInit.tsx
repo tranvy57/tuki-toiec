@@ -1,15 +1,22 @@
 "use client";
 
+import { useAuth } from "@/hooks";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { useAppDispatch } from "@/hooks/store-hook";
-import { doCheckToken } from "@/store/slice/auth-slice";
 
 export default function AppInit() {
-  const dispatch = useAppDispatch();
+  const { authenticated, loading, hydrated } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    dispatch(doCheckToken());
-  }, []);
+    console.log("auth:", authenticated, "loading:", loading, "hydrated:", hydrated);
+
+    if (!hydrated) return; 
+
+    if (!authenticated) {
+      router.replace("/login"); 
+    }
+  }, [authenticated, hydrated, router]);
 
   return null;
 }

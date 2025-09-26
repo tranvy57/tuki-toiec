@@ -1,20 +1,46 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "@/styles/globals.css";
+import Providers from "@/provider/provider";
+import { getLocale, getMessages } from "next-intl/server";
+import AppInit from "@/components/AppInit";
+import Header from "@/components/layout/header/header";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
-  title: "Tuki TOEIC® - Luyện thi TOEIC hiệu quả",
-  description: "Ứng dụng luyện thi TOEIC với hệ thống bài học và đề thi phong phú",
+  title: "Climping Rose",
+  description: "Tiệm vẽ Climping Rose - Tiệm tranh số hóa tại Nhật",
+  icons: {
+    icon: "/avt.jpg",
+  },
 };
 
-export default function ToeicLayout({
+export default async function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+  const timeZone = "Asia/Ho_Chi_Minh";
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="">
-        {children}
-      </main>
-    </div>
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+          <AppInit />
+          <Header />
+          {children}
+      </body>
+    </html>
   );
 }

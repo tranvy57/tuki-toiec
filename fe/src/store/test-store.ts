@@ -1,4 +1,3 @@
-// stores/usePracticeTestStore.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
@@ -8,9 +7,10 @@ import {
   Question,
   ResultTestResponse,
   Test,
-} from "../types/implements/test";
+} from "@/types";
 
 interface PracticeTestState {
+  // Core state
   fullTest: PracticeTestResponse | null;
   resultTest: ResultTestResponse | null;
   test: Test | null;
@@ -19,27 +19,36 @@ interface PracticeTestState {
   currentGroupQuestion: Question[] | null;
   selectedAnswers: Record<string, string>;
 
-  // cache
+  // Performance optimizations - cache frequently accessed data
   partCache: Map<number, Part>;
   groupCache: Map<string, Group>;
 
-  // actions
+  // Actions
   setTest: (test: Test) => void;
   setFullTest: (fullTest: PracticeTestResponse) => void;
   setResultTest: (resultTest: ResultTestResponse) => void;
   setCurrentPart: (partNumber: number) => void;
   setCurrentGroup: (groupId: string) => void;
+  setAnswer: (questionId: string, answerKey: string) => void;
+  
+  // Navigation
   nextPart: () => void;
   nextGroup: () => void;
-  beforeGroup: () => void;
-  setAnswer: (questionId: string, answerKey: string) => void;
+  previousGroup: () => void;
+  
+  // Utilities
   reset: () => void;
-  clearPersistedState: () => void; // thêm action này
+  clearPersistedState: () => void;
+  getAnswerCount: () => number;
+  getPartProgress: (partNumber: number) => number;
 }
 
-export const useCurrentTest = create<PracticeTestState>()(
+const STORAGE_KEY = "practice-test-storage";
+
+export const usePracticeTest = create<PracticeTestState>()(
   persist(
     (set, get) => ({
+      // Initial state
       fullTest: null,
       resultTest: null,
       test: null,
@@ -50,6 +59,7 @@ export const useCurrentTest = create<PracticeTestState>()(
       partCache: new Map(),
       groupCache: new Map(),
 
+      // Actions
       setAnswer: (questionId, answerKey) =>
         set((state) => ({
           selectedAnswers: {
@@ -62,6 +72,7 @@ export const useCurrentTest = create<PracticeTestState>()(
         const partCache = new Map<number, Part>();
         const groupCache = new Map<string, Group>();
 
+        // Build cache for performance
         fullTest.parts.forEach((part) => {
           partCache.set(part.partNumber, part);
           part.groups.forEach((group) => {
@@ -69,39 +80,60 @@ export const useCurrentTest = create<PracticeTestState>()(
           });
         });
 
+        const firstPart = fullTest.parts[0];
+        const firstGroup = firstPart?.groups[0];
+
         set({
           fullTest,
           partCache,
           groupCache,
-          currentPart: fullTest.parts[0] || null,
-          currentGroup: fullTest.parts[0]?.groups[0] || null,
-          currentGroupQuestion: fullTest.parts[0]?.groups[0]?.questions || null,
+          currentPart: firstPart || null,
+          currentGroup: firstGroup || null,
+          currentGroupQuestion: firstGroup?.questions || null,
         });
       },
 
       setTest: (test) => set({ test }),
+      
       setResultTest: (resultTest) => set({ resultTest }),
 
       setCurrentPart: (partNumber) => {
         const { partCache } = get();
-        const part = partCache.get(partNumber) || null;
-        set({
-          currentPart: part,
-          currentGroup: part?.groups[0] || null,
-          currentGroupQuestion: part?.groups[0]?.questions || null,
-        });
+        const part = partCache.get(partNumber);
+        if (part) {
+          const firstGroup = part.groups[0];
+          set({
+            currentPart: part,
+            currentGroup: firstGroup || null,
+            currentGroupQuestion: firstGroup?.questions || null,
+          });
+        }
+      },
+
+      setCurrentGroup: (groupId) => {
+        const { groupCache } = get();
+        const group = groupCache.get(groupId);
+        if (group) {
+          set({
+            currentGroup: group,
+            currentGroupQuestion: group.questions,
+          });
+        }
       },
 
       nextPart: () => {
         const { currentPart, partCache } = get();
         if (!currentPart) return;
 
-        const nextPart = partCache.get(currentPart.partNumber + 1) || null;
-        set({
-          currentPart: nextPart,
-          currentGroup: nextPart?.groups[0] || null,
-          currentGroupQuestion: nextPart?.groups[0]?.questions || null,
-        });
+        const nextPart = partCache.get(currentPart.partNumber + 1);
+        if (nextPart) {
+          const firstGroup = nextPart.groups[0];
+          set({
+            currentPart: nextPart,
+            currentGroup: firstGroup || null,
+            currentGroupQuestion: firstGroup?.questions || null,
+          });
+        }
       },
 
       nextGroup: () => {
@@ -119,28 +151,20 @@ export const useCurrentTest = create<PracticeTestState>()(
             currentGroupQuestion: nextGroup.questions,
           });
         } else {
+          // Move to next part
           const nextPart = partCache.get(currentPart.partNumber + 1);
-          if (nextPart) {
+          if (nextPart && nextPart.groups.length > 0) {
             const firstGroup = nextPart.groups[0];
             set({
               currentPart: nextPart,
-              currentGroup: firstGroup || null,
-              currentGroupQuestion: firstGroup?.questions || null,
+              currentGroup: firstGroup,
+              currentGroupQuestion: firstGroup.questions,
             });
           }
         }
       },
 
-      setCurrentGroup: (groupId) => {
-        const { groupCache } = get();
-        const group = groupCache.get(groupId) || null;
-        set({
-          currentGroup: group,
-          currentGroupQuestion: group?.questions || null,
-        });
-      },
-
-      beforeGroup: () => {
+      previousGroup: () => {
         const { currentPart, currentGroup, partCache } = get();
         if (!currentPart || !currentGroup) return;
 
@@ -155,16 +179,39 @@ export const useCurrentTest = create<PracticeTestState>()(
             currentGroupQuestion: prevGroup.questions,
           });
         } else {
+          // Move to previous part's last group
           const prevPart = partCache.get(currentPart.partNumber - 1);
-          if (prevPart) {
+          if (prevPart && prevPart.groups.length > 0) {
             const lastGroup = prevPart.groups[prevPart.groups.length - 1];
             set({
               currentPart: prevPart,
-              currentGroup: lastGroup || null,
-              currentGroupQuestion: lastGroup?.questions || null,
+              currentGroup: lastGroup,
+              currentGroupQuestion: lastGroup.questions,
             });
           }
         }
+      },
+
+      getAnswerCount: () => {
+        return Object.keys(get().selectedAnswers).length;
+      },
+
+      getPartProgress: (partNumber) => {
+        const { partCache, selectedAnswers } = get();
+        const part = partCache.get(partNumber);
+        if (!part) return 0;
+
+        const totalQuestions = part.groups.reduce(
+          (sum, group) => sum + group.questions.length,
+          0
+        );
+        const answeredQuestions = part.groups.reduce((sum, group) => {
+          return sum + group.questions.filter(
+            (q) => selectedAnswers[q.id]
+          ).length;
+        }, 0);
+
+        return totalQuestions > 0 ? (answeredQuestions / totalQuestions) * 100 : 0;
       },
 
       reset: () =>
@@ -181,22 +228,12 @@ export const useCurrentTest = create<PracticeTestState>()(
         }),
 
       clearPersistedState: () => {
-        localStorage.removeItem("practice-test-storage");
-        set({
-          fullTest: null,
-          resultTest: null,
-          test: null,
-          currentPart: null,
-          currentGroup: null,
-          currentGroupQuestion: null,
-          selectedAnswers: {},
-          partCache: new Map(),
-          groupCache: new Map(),
-        });
+        localStorage.removeItem(STORAGE_KEY);
+        get().reset();
       },
     }),
     {
-      name: "practice-test-storage",
+      name: STORAGE_KEY,
       partialize: (state) => ({
         selectedAnswers: state.selectedAnswers,
         currentPart: state.currentPart,

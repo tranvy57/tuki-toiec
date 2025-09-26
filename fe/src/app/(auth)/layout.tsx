@@ -3,9 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "@/styles/globals.css";
 import Providers from "@/provider/provider";
 import { getLocale, getMessages } from "next-intl/server";
-import AppInit from "@/components/AppInit";
-import MessengerButton from "@/components/layout/MessageButton";
-import Header from "@/components/layout/header/header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,8 +36,6 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers locale={locale} messages={messages} timeZone={timeZone}>
-          <AppInit />
-          <Header />
           {children}
         </Providers>
       </body>

@@ -2,11 +2,8 @@
 
 import Footer from "@/components/layout/footer";
 import Header from "@/components/layout/header/header";
-import { persistor, store } from "@/store/store";
 import { NextIntlClientProvider } from "next-intl";
 import { usePathname } from "next/navigation";
-import { Provider } from "react-redux";
-import { PersistGate } from "redux-persist/integration/react";
 import { Toaster } from "sonner";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -28,8 +25,6 @@ export default function Providers({
   return (
     <QueryClientProvider client={queryClient}>
       <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
-        <Provider store={store}>
-          <PersistGate loading={null} persistor={persistor}>
             <NextIntlClientProvider
               locale={locale}
               messages={messages}
@@ -46,8 +41,6 @@ export default function Providers({
               />
               <HideLayoutWrapper>{children}</HideLayoutWrapper>
             </NextIntlClientProvider>
-          </PersistGate>
-        </Provider>
       </GoogleOAuthProvider>
     </QueryClientProvider>
   );
@@ -64,7 +57,7 @@ function HideLayoutWrapper({ children }: { children: React.ReactNode }) {
   return (
     <>
       {!hideLayout && <Header />}
-      <main className="py-15 flex flex-col md:gap-8 max-w-full mx-auto">
+      <main className="flex flex-col md:gap-8 max-w-full mx-auto">
         {children}
       </main>
       {!hideLayout && !hideFooter && <Footer />}

@@ -48,4 +48,15 @@ export class AuthController {
   testPer() {
     return 'Heehh';
   }
+
+  @Get('introspect')
+  @Public()
+  async introspect(@Request() req) {
+    const authHeader = req.headers['authorization'];
+    if (!authHeader) {
+      return { valid: false };
+    }
+    const token = authHeader.split(' ')[1];
+    return this.authService.introspect(token);
+  }
 }
