@@ -10,6 +10,9 @@ export class Test extends BaseEntity {
   @Column({ name: 'audio_url', nullable: true })
   audioUrl: string;
 
+  @Column({ name: 'is_review', nullable: true, default: false })
+  isReview: boolean;
+
   @OneToMany(() => Part, (part) => part.test)
   parts: Part[];
 

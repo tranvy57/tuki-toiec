@@ -24,8 +24,6 @@ export class AttemptController {
     @CurrentUser() user: User,
     @Body() dto: CreateAttemptDto,
   ) {
-    console.log('current user', user);
-
     return await this.attemptService.createAttempt(dto, user);
   }
 

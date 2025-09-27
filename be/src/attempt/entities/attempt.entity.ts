@@ -26,7 +26,7 @@ export class Attempt extends BaseEntity {
   status: 'in_progress' | 'submitted';
 
   @Column()
-  mode: 'practice' | 'test';
+  mode: 'practice' | 'test' | 'review';
 
   @ManyToOne(() => User, (user) => user.attempts)
   @JoinColumn({ name: 'user_id' })

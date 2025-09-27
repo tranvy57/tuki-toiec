@@ -10,7 +10,7 @@ export class AttemptDto {
   id: string;
 
   @Expose()
-  mode: 'practice' | 'test';
+  mode: 'practice' | 'test' | 'review';
 
   @Expose()
   partIds: string[];
