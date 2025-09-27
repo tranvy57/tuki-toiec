@@ -29,17 +29,14 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const locale = await getLocale();
-  const messages = await getMessages();
-  const timeZone = "Asia/Ho_Chi_Minh";
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-          <AppInit />
-          <Header />
-          {children}
+        <AppInit />
+        <Header />
+        <div style={{ height: "calc(100vh - 50px)" }}>{children}</div>
       </body>
     </html>
   );
