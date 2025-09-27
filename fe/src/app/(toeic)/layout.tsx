@@ -17,10 +17,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Climping Rose",
-  description: "Tiệm vẽ Climping Rose - Tiệm tranh số hóa tại Nhật",
+  title: "Tuki TOEIC",
+  description: "Tuki TOEIC",
   icons: {
-    icon: "/avt.jpg",
+    icon: "/logo.png",
   },
 };
 
