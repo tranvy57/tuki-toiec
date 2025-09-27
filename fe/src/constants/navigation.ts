@@ -36,12 +36,6 @@ export const TOEIC_NAVIGATION: NavigationItem[] = [
     icon: BookOpen,
   },
   {
-    id: "speaking",
-    name: "Luyện nói",
-    href: "/speaking",
-    icon: Mic,
-  },
-  {
     id: "ai-chat",
     name: "Trợ lý AI",
     href: "/ai-chat",
