@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Play, Settings, Volume2 } from "lucide-react";
 import { AudioPlayer } from "./Audio";
-import { useCurrentTest } from "@/hooks/useTest";
+import { usePracticeTest } from "@/hooks";
 
 interface TestHeaderProps {
   testTitle: string;
@@ -21,7 +21,7 @@ export function TestHeader({
   onHighlightChange,
   onExit,
 }: TestHeaderProps) {
-  const { fullTest } = useCurrentTest();
+  const { fullTest } = usePracticeTest();
   return (
     <div className="bg-white border-b">
       {/* Top bar */}

@@ -26,7 +26,7 @@ export const TOEIC_NAVIGATION: NavigationItem[] = [
   {
     id: "study-plan",
     name: "Kế hoạch học",
-    href: "/study-plan", 
+    href: "/plan-check", 
     icon: ClipboardList,
   },
   {

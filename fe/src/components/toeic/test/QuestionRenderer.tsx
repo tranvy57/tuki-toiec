@@ -4,9 +4,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/utils/libs";
 import { Part, Question } from "@/types/implements/test";
-import { useCurrentTest } from "@/hooks/useTest";
 import Image from "next/image";
 import { AudioPlayer } from "./Audio";
+import { usePracticeTest } from "@/hooks";
 
 interface QuestionRendererProps {
   questions?: Question[]; // Optional prop for part questions
@@ -23,7 +23,7 @@ export function QuestionRenderer({
 }: QuestionRendererProps) {
   // Render question content based on part
   const { currentGroup, currentPart, currentGroupQuestion, fullTest } =
-    useCurrentTest();
+    usePracticeTest();
 
   // Use provided questions or fallback to current group questions
 

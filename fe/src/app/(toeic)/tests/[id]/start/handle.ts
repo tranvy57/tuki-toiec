@@ -1,18 +1,17 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 // API hooks
 import {
-  submitTest,
   useAddAttemptAnswer,
   useStartTestPractice,
-  useSubmitTestResult,
+  useSubmitTestResult
 } from "@/api/useAttempt";
 
 // Store
-import { useCurrentTest } from "@/hooks/useTest";
 
 // Types
+import { usePracticeTest } from "@/hooks";
 import { Question } from "@/types/implements/test";
 
 // Constants
@@ -118,17 +117,11 @@ export const useTestLogic = () => {
   const {
     fullTest,
     currentPart,
-    currentGroup,
-    currentGroupQuestion,
     selectedAnswers,
     setFullTest,
     setCurrentPart,
-    setCurrentGroup,
     setAnswer,
-    nextGroup,
-    beforeGroup,
-    reset,
-  } = useCurrentTest();
+  } = usePracticeTest();
 
   // Local state for UI
   const [currentQuestion, setCurrentQuestion] = useState(1);
@@ -138,7 +131,7 @@ export const useTestLogic = () => {
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [open, setOpen] = useState(false);
-  const { setResultTest } = useCurrentTest();
+  const { setResultTest } = usePracticeTest();
   const { mutateAsync: submitTest, isError, error } = useSubmitTestResult();
 
   // Start test attempt when component mounts
