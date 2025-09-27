@@ -5,6 +5,7 @@ import {
   Users, 
   User,
   Mic,
+  Bot,
   LucideIcon
 } from "lucide-react";
 
@@ -39,6 +40,12 @@ export const TOEIC_NAVIGATION: NavigationItem[] = [
     name: "Luyện nói",
     href: "/speaking",
     icon: Mic,
+  },
+  {
+    id: "ai-chat",
+    name: "Trợ lý AI",
+    href: "/ai-chat",
+    icon: Bot,
   },
   {
     id: "tests",

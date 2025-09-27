@@ -36,7 +36,7 @@ export default async function RootLayout({
       >
         <AppInit />
         <Header />
-        <div style={{ height: "calc(100vh - 50px)" }}>{children}</div>
+        <div className="mt-16">{children}</div>
       </body>
     </html>
   );
