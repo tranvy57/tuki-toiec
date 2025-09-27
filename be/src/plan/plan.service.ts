@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePlanDto } from './dto/create-plan.dto';
 import { UpdatePlanDto } from './dto/update-plan.dto';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Plan } from './entities/plan.entity';
 import { UserProgress } from 'src/user_progress/entities/user_progress.entity';
 import { LessonSkill } from 'src/lesson_skills/entities/lesson_skill.entity';
@@ -11,10 +11,22 @@ import { StudyTask } from 'src/study_tasks/entities/study_task.entity';
 import { PhaseLesson } from 'src/phase_lessons/entities/phase_lesson.entity';
 import { Phase } from 'src/phase/entities/phase.entity';
 import { User } from 'src/user/entities/user.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { PlanDto } from './dto/plan.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class PlanService {
-  constructor(private readonly dataSrc: DataSource) {}
+  constructor(
+    private readonly dataSrc: DataSource,
+    @InjectRepository(Plan) private readonly planRepo: Repository<Plan>,
+  ) {}
+
+  private toDTO(plan: Plan): PlanDto {
+    return plainToInstance(PlanDto, plan, {
+      excludeExtraneousValues: true,
+    });
+  }
 
   async create(createPlanDto: CreatePlanDto, user: User) {
     const planRepo = this.dataSrc.getRepository(Plan);
@@ -205,5 +217,15 @@ export class PlanService {
     }
 
     return result;
+  }
+
+  async getMyPlan(user: User) {
+    const plan = await this.planRepo.findOne({
+      where: { user: { id: user.id }, isActive: true },
+      relations: { phases: true },
+    });
+
+    if (!plan) throw new NotFoundException('No active plan found for user');
+    return this.toDTO(plan);
   }
 }
