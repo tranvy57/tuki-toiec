@@ -228,4 +228,5 @@ export class PlanService {
     if (!plan) throw new NotFoundException('No active plan found for user');
     return this.toDTO(plan);
   }
+
 }

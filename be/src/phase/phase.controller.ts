@@ -1,9 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { PhaseService } from './phase.service';
 import { CreatePhaseDto } from './dto/create-phase.dto';
 import { UpdatePhaseDto } from './dto/update-phase.dto';
 
-@Controller('phase')
+@Controller('phases')
 export class PhaseController {
   constructor(private readonly phaseService: PhaseService) {}
 
@@ -30,5 +38,10 @@ export class PhaseController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.phaseService.remove(+id);
+  }
+
+  @Get(':phaseId/lessons')
+  async getPhaseLessons(@Param('phaseId') phaseId: string) {
+    return this.phaseService.getPhaseLessons(phaseId);
   }
 }
