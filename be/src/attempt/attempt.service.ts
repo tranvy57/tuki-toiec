@@ -59,8 +59,13 @@ export class AttemptService {
   }
 
   async createAttempt(dto: CreateAttemptDto, user: User) {
+    let idTest = dto.testId;
+    if (dto.mode === 'review') {
+      idTest = '5fe39a7e-cc0a-432a-8b52-2ee94e10f0b3';
+    }
+
     const test = await this.testRepo.findOne({
-      where: { id: dto.testId },
+      where: { id: idTest },
       relations: {
         parts: {
           groups: {
@@ -159,7 +164,7 @@ export class AttemptService {
       throw new BadRequestException('Question and Answer not match!');
 
     let isCorrect: boolean | null = null;
-    if (attempt.mode == 'practice') {
+    if (attempt.mode == 'practice' || attempt.mode == 'review') {
       isCorrect = answer.isCorrect;
     }
 
@@ -180,7 +185,10 @@ export class AttemptService {
         attempt,
         question: answer.question,
         answer,
-        isCorrect: attempt.mode === 'practice' ? answer.isCorrect : null,
+        isCorrect:
+          attempt.mode === 'practice' || attempt.mode === 'review'
+            ? answer.isCorrect
+            : null,
       });
     }
 

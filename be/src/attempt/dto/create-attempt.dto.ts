@@ -1,5 +1,5 @@
 export class CreateAttemptDto {
-  mode: 'practice' | 'test';
+  mode: 'practice' | 'test' | 'review';
   partIds: string[];
   testId?: string;
 }
