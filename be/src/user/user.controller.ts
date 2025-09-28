@@ -43,13 +43,16 @@ export class UserController {
 
   @Delete('/vocabularies/:id')
   async deleteUserVocab(@CurrentUser() user: User, @Param('id') id: string) {
-    console.log('userrrr', user);
-
     return this.userService.deleteUserVocab(user, id);
   }
 
   @Patch('update-me')
   async updateMe(@CurrentUser() user: User, @Body() dto: UpdateUserDto) {
     return this.userService.updateMe(user, dto);
+  }
+
+  @Get('me')
+  async getMe(@CurrentUser() user: User) {
+    return this.userService.getMe(user);
   }
 }

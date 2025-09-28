@@ -158,4 +158,16 @@ export class UserService {
     await this.userRepository.save(user);
     return this.toResponseDto(user);
   }
+
+  async getMe(user: User) {
+    const found = await this.userRepository.findOne({
+      where: { id: user.id },
+      relations: {
+        roles: true,
+      },
+    });
+
+    if (!found) throw new NotFoundException('User not found');
+    return this.toResponseDto(found);
+  }
 }
