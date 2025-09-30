@@ -2,13 +2,13 @@
 
 
 import { useCallback, useRef } from "react";
-import { useTestLogic } from "../../tests/[id]/start/handle";
 import { ConfirmSubmitModal } from "@/components/toeic/test/ModalConfirm";
 import { TestHeader } from "@/components/toeic/test/TestHeader";
 import { PartTabs } from "@/components/toeic/test/PartTabs";
 import { QuestionRenderer } from "@/components/toeic/test/QuestionRenderer";
 import { TestSidebar } from "@/components/toeic/test/TestSidebar";
 import { cn } from "@/utils";
+import { useTestLogic } from "./handle";
 
 // Custom hook
 
@@ -122,6 +122,7 @@ export default function TestStartPage() {
             answers={mappedAnswers}
             onAnswerChange={handleQuestionAnswerChange}
             isTransitioning={isTransitioning}
+            mode="review"
           />
         </div>
       </div>

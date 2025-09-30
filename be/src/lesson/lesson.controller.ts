@@ -32,8 +32,8 @@ export class LessonController {
     return this.lessonService.remove(+id);
   }
 
-  @Post('seed')
-  seedLessons() {
-    return this.lessonService.seedLessons();
-  }
+  // @Post('seed')
+  // seedLessons() {
+  //   return this.lessonService.seedLessons();
+  // }
 }

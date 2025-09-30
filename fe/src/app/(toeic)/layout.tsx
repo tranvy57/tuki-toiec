@@ -26,18 +26,25 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+  const timeZone = "Asia/Ho_Chi_Minh"; // hoặc lấy động
+
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AppInit />
-        <Header />
-        <div className="mt-16">{children}</div>
+        <Providers locale={locale} messages={messages} timeZone={timeZone}>
+          <AppInit />
+          <Header />
+          <div className="mt-16">{children}</div>
+        </Providers>
       </body>
     </html>
   );
 }
+

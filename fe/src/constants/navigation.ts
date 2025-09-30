@@ -37,7 +37,7 @@ export const TOEIC_NAVIGATION: NavigationItem[] = [
   },
   {
     id: "ai-chat",
-    name: "Trợ lý AI",
+    name: "Trợ lý",
     href: "/ai-chat",
     icon: Bot,
   },

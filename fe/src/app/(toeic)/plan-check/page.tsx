@@ -77,7 +77,7 @@ export default function PlanCheckPage() {
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       // Mock: 70% chance user doesn't have plan
-      const hasPlan = Math.random() > 0.7;
+      const hasPlan = Math.random() > 0;
 
       if (hasPlan) {
         setUserPlan({

@@ -1,6 +1,7 @@
 import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { BaseEntity } from 'src/common/entities/base.entity';
 import { Group } from 'src/group/entities/group.entity';
+import { Skill } from 'src/skill/entities/skill.entity';
 import { Test } from 'src/test/entities/test.entity';
 import { Column, Entity, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
 
@@ -20,4 +21,7 @@ export class Part extends BaseEntity {
 
   @OneToMany(() => Group, (group) => group.part)
   groups: Group[];
+
+  @ManyToMany(() => Skill, (skill) => skill.parts)
+  skills: Skill[];
 }

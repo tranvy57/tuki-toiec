@@ -1,4 +1,4 @@
-import { Vocabulary } from "@/types/vocabulary";
+import { Vocabulary } from "@/types/implements/vocabulary";
 
 export const mockVocabularies: Vocabulary[] = [
   {

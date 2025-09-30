@@ -144,7 +144,7 @@ export const useTestLogic = () => {
     ) {
       setIsInitialized(true);
       startTestMutation.mutate({
-        testId: testId,
+        mode: "review"
       }, {
         onSuccess: (data) => {
           setFullTest(data);
