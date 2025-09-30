@@ -44,7 +44,7 @@ export const TestSchema = z.object({
 
 export const PracticeTestResponseSchema = z.object({
   id: z.string(),
-  mode: z.enum(["practice", "test"]),
+  mode: z.enum(["practice", "test", "review"]),
   test: TestSchema,
   parts: z.array(PartSchema),
   startedAt: z.string(),

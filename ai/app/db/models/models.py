@@ -63,18 +63,22 @@ class Skills(Base):
     __tablename__ = 'skills'
     __table_args__ = (
         PrimaryKeyConstraint('id', name='PK_0d3212120f4ecedf90864d7e298'),
-        UniqueConstraint('code', name='UQ_038684d9432434385638dce158d')
     )
 
     id = mapped_column(Uuid, server_default=text('uuid_generate_v4()'))
-    created_at = mapped_column(DateTime(True), nullable=False, server_default=text('now()'))
+    created_at = mapped_column(DateTime(True), nullable=False, server_default=text('now(SkillsSkills)'))
     updated_at = mapped_column(DateTime(True), nullable=False, server_default=text('now()'))
     is_active = mapped_column(Boolean, nullable=False, server_default=text('true'))
     name = mapped_column(String(255), nullable=False)
-    code = mapped_column(String(64), nullable=False)
     description = mapped_column(Text)
 
+    parts: Mapped[List['Parts']] = relationship(
+        'Parts',
+        secondary='skill_parts',
+        back_populates='skills'
+    )
     user_progress: Mapped[List['UserProgress']] = relationship('UserProgress', uselist=True, back_populates='skill')
+    lesson_skills: Mapped[List['LessonSkills']] = relationship('LessonSkills', uselist=True, back_populates='skill')
     target_skills: Mapped[List['TargetSkills']] = relationship('TargetSkills', uselist=True, back_populates='skill')
     question_tags: Mapped[List['QuestionTags']] = relationship('QuestionTags', uselist=True, back_populates='skill')
 
@@ -91,6 +95,7 @@ class Tests(Base):
     is_active = mapped_column(Boolean, nullable=False, server_default=text('true'))
     title = mapped_column(String, nullable=False)
     audio_url = mapped_column(String)
+    is_review = mapped_column(Boolean, server_default=text('false'))
 
     attempts: Mapped[List['Attempts']] = relationship('Attempts', uselist=True, back_populates='test')
     parts: Mapped[List['Parts']] = relationship('Parts', uselist=True, back_populates='tests')
@@ -152,12 +157,12 @@ class Vocabularies(Base):
     part_of_speech = mapped_column(String, nullable=False)
     example_en = mapped_column(String, nullable=False)
     example_vn = mapped_column(String, nullable=False)
+    is_phrase = mapped_column(Boolean, nullable=False, server_default=text('false'))
     audio_url = mapped_column(String)
     lemma = mapped_column(String)
-    is_phrase = mapped_column(Boolean, nullable=False, server_default=text('false'))
 
     user_vocabularies: Mapped[List['UserVocabularies']] = relationship('UserVocabularies', uselist=True, back_populates='vocabulary')
-    question_vocabularies: Mapped[List['QuestionVocabularies']] = relationship('QuestionVocabularies', uselist=True, back_populates='vocabulary')
+    question: Mapped['Questions'] = relationship('Questions', secondary='question_vocabularies', back_populates='vocabulary')
 
 
 class Attempts(Base):
@@ -204,8 +209,10 @@ class Lessons(Base):
     unit_id = mapped_column(Uuid)
 
     unit: Mapped[Optional['Units']] = relationship('Units', back_populates='lessons')
+    question: Mapped['Questions'] = relationship('Questions', secondary='lessson_questions', back_populates='lesson')
     lesson_dependencies: Mapped[List['LessonDependencies']] = relationship('LessonDependencies', uselist=True, foreign_keys='[LessonDependencies.lesson_before_id]', back_populates='lesson_before')
     lesson_dependencies_: Mapped[List['LessonDependencies']] = relationship('LessonDependencies', uselist=True, foreign_keys='[LessonDependencies.lesson_id]', back_populates='lesson')
+    lesson_skills: Mapped[List['LessonSkills']] = relationship('LessonSkills', uselist=True, back_populates='lesson')
     study_tasks: Mapped[List['StudyTasks']] = relationship('StudyTasks', uselist=True, back_populates='lesson')
     phase_lessons: Mapped[List['PhaseLessons']] = relationship('PhaseLessons', uselist=True, back_populates='lesson')
 
@@ -227,6 +234,11 @@ class Parts(Base):
 
     attempt: Mapped['Attempts'] = relationship('Attempts', secondary='attempt_parts', back_populates='part')
     tests: Mapped[Optional['Tests']] = relationship('Tests', back_populates='parts')
+    skills: Mapped[List['Skills']] = relationship(
+        'Skills',
+        secondary='skill_parts',
+        back_populates='parts'
+    )
     groups: Mapped[List['Groups']] = relationship('Groups', uselist=True, back_populates='parts')
 
 
@@ -243,7 +255,7 @@ class Plans(Base):
     updated_at = mapped_column(DateTime(True), nullable=False, server_default=text('now()'))
     is_active = mapped_column(Boolean, nullable=False, server_default=text('true'))
     target_score = mapped_column(Integer)
-    start_date = mapped_column(Date)
+    start_date = mapped_column(Date, server_default=text("('now'::text)::date"))
     total_days = mapped_column(Integer)
     user_id = mapped_column(Uuid)
 
@@ -377,6 +389,26 @@ class LessonDependencies(Base):
     lesson: Mapped[Optional['Lessons']] = relationship('Lessons', foreign_keys=[lesson_id], back_populates='lesson_dependencies_')
 
 
+class LessonSkills(Base):
+    __tablename__ = 'lesson_skills'
+    __table_args__ = (
+        ForeignKeyConstraint(['lesson_id'], ['lessons.id'], name='FK_55d6f51dbd746c28a01f19c5c52'),
+        ForeignKeyConstraint(['skill_id'], ['skills.id'], name='FK_37696ef41f13cde8b7d7f72283e'),
+        PrimaryKeyConstraint('id', name='PK_f63869515ae08b8f14f257444c1')
+    )
+
+    id = mapped_column(Uuid, server_default=text('uuid_generate_v4()'))
+    created_at = mapped_column(DateTime(True), nullable=False, server_default=text('now()'))
+    updated_at = mapped_column(DateTime(True), nullable=False, server_default=text('now()'))
+    is_active = mapped_column(Boolean, nullable=False, server_default=text('true'))
+    weight = mapped_column(Double(53), nullable=False, server_default=text("'0'::double precision"))
+    lesson_id = mapped_column(Uuid)
+    skill_id = mapped_column(Uuid)
+
+    lesson: Mapped[Optional['Lessons']] = relationship('Lessons', back_populates='lesson_skills')
+    skill: Mapped[Optional['Skills']] = relationship('Skills', back_populates='lesson_skills')
+
+
 class Phases(Base):
     __tablename__ = 'phases'
     __table_args__ = (
@@ -398,6 +430,18 @@ class Phases(Base):
 
     plan: Mapped[Optional['Plans']] = relationship('Plans', back_populates='phases')
     phase_lessons: Mapped[List['PhaseLessons']] = relationship('PhaseLessons', uselist=True, back_populates='phase')
+
+
+t_skill_parts = Table(
+    'skill_parts', metadata,
+    Column('skill_id', Uuid, nullable=False),
+    Column('part_id', Uuid, nullable=False),
+    ForeignKeyConstraint(['part_id'], ['parts.id'], name='FK_3b47e98424c1a1b88627c1afc5f'),
+    ForeignKeyConstraint(['skill_id'], ['skills.id'], ondelete='CASCADE', onupdate='CASCADE', name='FK_62bc1fa41dbd7302f15ce3c0fb6'),
+    PrimaryKeyConstraint('skill_id', 'part_id', name='PK_20459a3d20358c6ef31af596c8e'),
+    Index('IDX_3b47e98424c1a1b88627c1afc5', 'part_id'),
+    Index('IDX_62bc1fa41dbd7302f15ce3c0fb', 'skill_id')
+)
 
 
 class StudyTasks(Base):
@@ -489,10 +533,11 @@ class Questions(Base):
     phrases = mapped_column(ARRAY(Text()))
 
     grammar: Mapped['Grammars'] = relationship('Grammars', secondary='question_grammars', back_populates='question')
+    lesson: Mapped['Lessons'] = relationship('Lessons', secondary='lessson_questions', back_populates='question')
     groups: Mapped[Optional['Groups']] = relationship('Groups', back_populates='questions')
+    vocabulary: Mapped['Vocabularies'] = relationship('Vocabularies', secondary='question_vocabularies', back_populates='question')
     answers: Mapped[List['Answers']] = relationship('Answers', uselist=True, back_populates='questions')
     question_tags: Mapped[List['QuestionTags']] = relationship('QuestionTags', uselist=True, back_populates='question')
-    question_vocabularies: Mapped[List['QuestionVocabularies']] = relationship('QuestionVocabularies', uselist=True, back_populates='question')
     attempt_answers: Mapped[List['AttemptAnswers']] = relationship('AttemptAnswers', uselist=True, back_populates='questions')
 
 
@@ -514,6 +559,18 @@ class Answers(Base):
 
     questions: Mapped[Optional['Questions']] = relationship('Questions', back_populates='answers')
     attempt_answers: Mapped[List['AttemptAnswers']] = relationship('AttemptAnswers', uselist=True, back_populates='answers')
+
+
+t_lessson_questions = Table(
+    'lessson_questions', metadata,
+    Column('lesson_id', Uuid, nullable=False),
+    Column('question_id', Uuid, nullable=False),
+    ForeignKeyConstraint(['lesson_id'], ['lessons.id'], ondelete='CASCADE', onupdate='CASCADE', name='FK_2c965fed13b23af62cbe7bf7235'),
+    ForeignKeyConstraint(['question_id'], ['questions.id'], name='FK_8339328e604cacc7b2907fefded'),
+    PrimaryKeyConstraint('lesson_id', 'question_id', name='PK_0b76701b2bf896754c20734800e'),
+    Index('IDX_2c965fed13b23af62cbe7bf723', 'lesson_id'),
+    Index('IDX_8339328e604cacc7b2907fefde', 'question_id')
+)
 
 
 t_question_grammars = Table(
@@ -549,25 +606,16 @@ class QuestionTags(Base):
     skill: Mapped[Optional['Skills']] = relationship('Skills', back_populates='question_tags')
 
 
-class QuestionVocabularies(Base):
-    __tablename__ = 'question_vocabularies'
-    __table_args__ = (
-        ForeignKeyConstraint(['question_id'], ['questions.id'], ondelete='CASCADE', name='FK_7b342a932166cc4bd206857cbd6'),
-        ForeignKeyConstraint(['vocabulary_id'], ['vocabularies.id'], ondelete='CASCADE', name='FK_fd1de7c02904bfe97229f56bfc8'),
-        PrimaryKeyConstraint('id', name='PK_1f6fb6836cb5437629c9abf11b1')
-    )
-
-    id = mapped_column(Uuid, server_default=text('uuid_generate_v4()'))
-    created_at = mapped_column(DateTime(True), nullable=False, server_default=text('now()'))
-    updated_at = mapped_column(DateTime(True), nullable=False, server_default=text('now()'))
-    is_active = mapped_column(Boolean, nullable=False, server_default=text('true'))
-    is_focus = mapped_column(Boolean, nullable=False, server_default=text('false'))
-    weight = mapped_column(Double(53))
-    question_id = mapped_column(Uuid)
-    vocabulary_id = mapped_column(Uuid)
-
-    question: Mapped[Optional['Questions']] = relationship('Questions', back_populates='question_vocabularies')
-    vocabulary: Mapped[Optional['Vocabularies']] = relationship('Vocabularies', back_populates='question_vocabularies')
+t_question_vocabularies = Table(
+    'question_vocabularies', metadata,
+    Column('question_id', Uuid, nullable=False),
+    Column('vocabulary_id', Uuid, nullable=False),
+    ForeignKeyConstraint(['question_id'], ['questions.id'], ondelete='CASCADE', onupdate='CASCADE', name='FK_7b342a932166cc4bd206857cbd6'),
+    ForeignKeyConstraint(['vocabulary_id'], ['vocabularies.id'], name='FK_fd1de7c02904bfe97229f56bfc8'),
+    PrimaryKeyConstraint('question_id', 'vocabulary_id', name='PK_25d85f8593a15e93db3287bb0ff'),
+    Index('IDX_7b342a932166cc4bd206857cbd', 'question_id'),
+    Index('IDX_fd1de7c02904bfe97229f56bfc', 'vocabulary_id')
+)
 
 
 class AttemptAnswers(Base):

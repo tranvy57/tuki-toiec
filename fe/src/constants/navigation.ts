@@ -4,6 +4,8 @@ import {
   ClipboardList, 
   Users, 
   User,
+  Mic,
+  Bot,
   LucideIcon
 } from "lucide-react";
 
@@ -24,7 +26,7 @@ export const TOEIC_NAVIGATION: NavigationItem[] = [
   {
     id: "study-plan",
     name: "Kế hoạch học",
-    href: "/study-plan", 
+    href: "/plan-check", 
     icon: ClipboardList,
   },
   {
@@ -32,6 +34,12 @@ export const TOEIC_NAVIGATION: NavigationItem[] = [
     name: "Từ vựng",
     href: "/vocabulary",
     icon: BookOpen,
+  },
+  {
+    id: "ai-chat",
+    name: "Trợ lý",
+    href: "/ai-chat",
+    icon: Bot,
   },
   {
     id: "tests",

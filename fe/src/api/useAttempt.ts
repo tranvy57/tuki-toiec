@@ -3,14 +3,17 @@ import { CreateAttemptAnswerReq } from "@/types/implements/attempt-answer";
 import { PracticeTestResponse, PracticeTestResponseSchema, ResultTestResponse, ResultTestResponseSchema } from "@/types/implements/test";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
-
+type StartTestVariables = {
+  testId?: string | undefined;
+  mode?: "test" | "review";
+};
 
 async function startTestPractice(
-  testId: string
+  testId: string | undefined, mode: "test" | "review" = "test"
 ): Promise<PracticeTestResponse> {
   const res = await api.post(`/attempts`, {
     testId,
-    mode: "test",
+    mode,
   });
 
   const parsed = PracticeTestResponseSchema.parse(res.data.data);
@@ -30,7 +33,7 @@ async function addAttemptAnswer(attemptAnswer: CreateAttemptAnswerReq) {
 
 export function useStartTestPractice() {
   return useMutation({
-    mutationFn: (testId: string) => startTestPractice(testId),
+    mutationFn: ({ testId, mode }: StartTestVariables) => startTestPractice(testId, mode),
   });
 }
 

@@ -49,9 +49,9 @@ export class QuestionService {
       relations: ['group', 'group.part'],
     });
     const skills = await this.skillsRepo.find();
-    if (question) {
-      return this.questionTagsService.addTagToQuestion(question, skills);
-    }
+    // if (question) {
+    //   return this.questionTagsService.addTagToQuestion(question, skills);
+    // }
   }
   async syncVocabsToQuestions(): Promise<void> {
     const questions = await this.questionsRepo.find();

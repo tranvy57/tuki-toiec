@@ -17,30 +17,34 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Climping Rose",
-  description: "Tiệm vẽ Climping Rose - Tiệm tranh số hóa tại Nhật",
+  title: "Tuki TOEIC",
+  description: "Tuki TOEIC",
   icons: {
-    icon: "/avt.jpg",
+    icon: "/logo.png",
   },
 };
 
 export default async function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   const locale = await getLocale();
   const messages = await getMessages();
-  const timeZone = "Asia/Ho_Chi_Minh";
+  const timeZone = "Asia/Ho_Chi_Minh"; // hoặc lấy động
+
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Providers locale={locale} messages={messages} timeZone={timeZone}>
           <AppInit />
           <Header />
-          {children}
+          <div className="mt-16">{children}</div>
+        </Providers>
       </body>
     </html>
   );
 }
+

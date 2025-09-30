@@ -92,11 +92,11 @@ export class TestService {
               }
             }
 
-            await this.questionTagsService.addTagToQuestion(
-              savedQuestion,
-              skills,
-              manager, // truyền manager vào service
-            );
+            // await this.questionTagsService.addTagToQuestion(
+            //   savedQuestion,
+            //   skills,
+            //   manager, // truyền manager vào service
+            // );
           }
         }
       }

@@ -1,15 +1,31 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors } from '~/constants/Color';
 
-export const StudyHeader = () => {
+interface StudyHeaderProps {
+  onProgressPress?: () => void;
+}
+
+export const StudyHeader: React.FC<StudyHeaderProps> = ({ onProgressPress }) => {
   return (
     <View>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Lộ Trình Học Tập</Text>
-        <Text style={styles.headerSubtitle}>
-          Hoàn thành từng giai đoạn để mở khóa nội dung tiếp theo
-        </Text>
+        <View style={styles.headerContent}>
+          <View style={styles.headerText}>
+            <Text style={styles.headerTitle}>Học Tập Hôm Nay</Text>
+            <Text style={styles.headerSubtitle}>
+              Hoàn thành các bài học để tiến bộ mỗi ngày
+            </Text>
+          </View>
+          
+          {onProgressPress && (
+            <Pressable style={styles.progressButton} onPress={onProgressPress}>
+              <Ionicons name="stats-chart" size={20} color="white" />
+              <Text style={styles.progressButtonText}>Tiến độ</Text>
+            </Pressable>
+          )}
+        </View>
       </View>
     </View>
   );
@@ -33,6 +49,15 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  headerText: {
+    flex: 1,
+    alignItems: 'center',
+  },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
@@ -45,6 +70,25 @@ const styles = StyleSheet.create({
     color: 'gray',
     textAlign: 'center',
     lineHeight: 22,
+  },
+  progressButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.brandCoral,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  progressButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 6,
   },
   scrollView: {
     flex: 1,

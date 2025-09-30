@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import Image from "next/image";
 import { MoveLeft } from "lucide-react";
 import Link from "next/link";
-import { register } from "@/api/userApi";
 import { showError, showSuccess } from "@/libs/toast";
 import { useRouter } from "next/navigation";
 

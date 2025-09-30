@@ -1,130 +1,134 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { VocabularySearch } from "@/components/toeic/vocabulary/vocabulary-search";
-import { VocabularyStats } from "@/components/toeic/vocabulary/vocabulary-stats";
-import { VocabularyCategories } from "@/components/toeic/vocabulary/vocabulary-categories";
-import { VocabularyList } from "@/components/toeic/vocabulary/vocabulary-list";
-import { VocabularyDetail } from "@/components/toeic/vocabulary/vocabulary-detail";
-import { Vocabulary } from "@/types/vocabulary";
-import { getVocabularies, getWordAudioUrl } from "@/libs/vocabulary-data";
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { BookOpen } from "lucide-react";
+import { WeakVocabulary } from "@/types/implements/vocabulary";
+import { mockWeakVocabularies } from "@/data/mockVocabulary";
+import {
+  StatsOverview,
+  SearchAndFilter,
+  VocabularyCard,
+  ReviewSession,
+} from "@/components/vocabulary";
+import { useVocabularyReview } from "@/hooks/use-vocabulary";
+import { useGetVocabularies } from "@/api/useVocabulary";
 
 export default function VocabularyPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [vocabularies, setVocabularies] = useState<Vocabulary[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [selectedVocabulary, setSelectedVocabulary] =
-    useState<Vocabulary | null>(null);
-  const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
+  const [vocabularies, setVocabularies] = useState<WeakVocabulary[]>(mockWeakVocabularies);
+  const [filterLevel, setFilterLevel] = useState<string>("all");
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-  };
+  const { data, isLoading, isError } = useGetVocabularies();
 
-  const handleCategorySelect = (categoryId: string) => {
-    setSelectedCategory(categoryId);
-  };
+  const {
+    currentReviewIndex,
+    isReviewMode,
+    showAnswer,
+    reviewSession,
+    reviewMode,
+    currentQuizType,
+    showQuiz,
+    quizAnswer,
+    quizOptions,
+    selectedOption,
+    quizCompleted,
+    currentReviewWord,
+    startFlashcardSession,
+    startQuizSession,
+    endReviewSession,
+    handleQuizSubmit,
+    proceedToNextWord,
+    handleShowAnswer,
+    handleFlashcardNext,
+    toggleMarkForReview,
+    setQuizAnswer,
+    setSelectedOption,
+  } = useVocabularyReview(vocabularies, setVocabularies);
 
-  const handleVocabularyPress = (vocabulary: Vocabulary) => {
-    setSelectedVocabulary(vocabulary);
-    setIsDetailModalVisible(true);
-  };
+  const filteredVocabularies = vocabularies.filter((vocab) => {
+    const matchesSearch =
+      vocab.word.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      vocab.meaning.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter =
+      filterLevel === "all" || vocab.weaknessLevel === filterLevel;
+    return matchesSearch && matchesFilter;
+  });
 
-  const handleCloseDetail = () => {
-    setIsDetailModalVisible(false);
-    setSelectedVocabulary(null);
-  };
+  const markedForReview = vocabularies.filter(
+    (v) => v.isMarkedForReview
+  ).length;
 
-  const handlePlayAudio = async () => {
-    if (!selectedVocabulary) return;
-
-    try {
-      const url = await getWordAudioUrl(selectedVocabulary.word);
-      if (url) {
-        const audio = new Audio(url);
-        await audio.play();
-      }
-    } catch (error) {
-      console.error("Error playing audio:", error);
-    }
-  };
-
-  const handleAddToFavorites = () => {
-    // TODO: Implement favorites functionality
-    console.log("Add to favorites:", selectedVocabulary?.word);
-  };
-
-  useEffect(() => {
-    const fetchVocabularies = async () => {
-      try {
-        const response = await getVocabularies();
-        setVocabularies(response.data);
-      } catch (error) {
-        console.error("Error fetching vocabularies:", error);
-      }
-    };
-
-    fetchVocabularies();
-  }, []);
+  // Show review session if in review mode
+  if (isReviewMode && currentReviewWord) {
+    return (
+      <ReviewSession
+        reviewMode={reviewMode}
+        currentWord={currentReviewWord}
+        reviewSession={reviewSession}
+        currentReviewIndex={currentReviewIndex}
+        allVocabularies={vocabularies}
+        onEndSession={endReviewSession}
+        showAnswer={showAnswer}
+        onShowAnswer={handleShowAnswer}
+        onFlashcardNext={handleFlashcardNext}
+        showQuiz={showQuiz}
+        currentQuizType={currentQuizType}
+        quizOptions={quizOptions}
+        selectedOption={selectedOption}
+        onSelectOption={setSelectedOption}
+        quizAnswer={quizAnswer}
+        onAnswerChange={setQuizAnswer}
+        quizCompleted={quizCompleted}
+        onQuizSubmit={handleQuizSubmit}
+        onProceedToNext={proceedToNextWord}
+      />
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-6">
-      {/* Header */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">Vocabulary</CardTitle>
-          <p className="text-muted-foreground">
-            Learn and practice new words to improve your TOEIC score
-          </p>
-        </CardHeader>
-      </Card>
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-bold text-gray-800">Từ vựng</h1>
+        <p className="text-muted-foreground">
+          Ôn luyện và cải thiện những từ vựng bạn thường mắc lỗi
+        </p>
+      </div>
 
-      {/* Search */}
-      <Card>
-        <CardContent className="p-4">
-          <VocabularySearch
-            onSearch={handleSearch}
-            placeholder="Search words, meanings, examples..."
-          />
-        </CardContent>
-      </Card>
+      <StatsOverview vocabularies={vocabularies} />
 
-      {/* Stats */}
-      <VocabularyStats
-        totalWords={vocabularies.length}
-        learnedWords={22}
-        todayWords={8}
-        weekStreak={7}
-      />
-
-      {/* Categories */}
-      <Card>
-        <CardContent className="p-4">
-          <VocabularyCategories
-            selectedCategory={selectedCategory}
-            onCategorySelect={handleCategorySelect}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Vocabulary List */}
-      <VocabularyList
-        vocabularies={vocabularies}
-        onVocabularyPress={handleVocabularyPress}
+      <SearchAndFilter
         searchQuery={searchQuery}
-        selectedCategory={selectedCategory}
+        setSearchQuery={setSearchQuery}
+        filterLevel={filterLevel}
+        setFilterLevel={setFilterLevel}
+        markedForReview={markedForReview}
+        onStartFlashcard={startFlashcardSession}
+        onStartQuiz={startQuizSession}
       />
 
-      {/* Detail Modal */}
-      {isDetailModalVisible && selectedVocabulary && (
-        <VocabularyDetail
-          vocabulary={selectedVocabulary}
-          onClose={handleCloseDetail}
-          onPlayAudio={handlePlayAudio}
-          onAddToFavorites={handleAddToFavorites}
-          isFavorite={false}
-        />
+      <div className="space-y-4">
+        {filteredVocabularies.map((vocab) => (
+          <VocabularyCard
+            key={vocab.id}
+            vocabulary={vocab}
+            onToggleMarkForReview={toggleMarkForReview}
+          />
+        ))}
+      </div>
+
+      {filteredVocabularies.length === 0 && (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-muted-foreground mb-2">
+              Không tìm thấy từ vựng
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Thử thay đổi từ khóa tìm kiếm hoặc bộ lọc
+            </p>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

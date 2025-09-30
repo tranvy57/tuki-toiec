@@ -4,15 +4,16 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/utils/libs";
 import { Part, Question } from "@/types/implements/test";
-import { useCurrentTest } from "@/hooks/useTest";
 import Image from "next/image";
 import { AudioPlayer } from "./Audio";
+import { usePracticeTest } from "@/hooks";
 
 interface QuestionRendererProps {
   questions?: Question[]; // Optional prop for part questions
   answers: Record<number, string>;
   onAnswerChange: (questionId: number, value: string) => void;
   isTransitioning: boolean;
+  mode?: "test" | "practice" | "review"; // Add mode prop
 }
 
 export function QuestionRenderer({
@@ -20,10 +21,11 @@ export function QuestionRenderer({
   answers,
   onAnswerChange,
   isTransitioning,
+  mode = "test", // Default to test mode
 }: QuestionRendererProps) {
   // Render question content based on part
   const { currentGroup, currentPart, currentGroupQuestion, fullTest } =
-    useCurrentTest();
+    usePracticeTest();
 
   // Use provided questions or fallback to current group questions
 
@@ -98,9 +100,10 @@ export function QuestionRenderer({
                 {question.explanation}
               </p>
             )}
-            {fullTest?.mode === "practice" && group?.audioUrl && (
-              <AudioPlayer audioUrl={group.audioUrl} />
-            )}
+            {/* Only show audio here if NOT in review mode (review mode shows group audio separately) */}
+            {fullTest?.mode === "practice" &&
+              mode !== "review" &&
+              group?.audioUrl && <AudioPlayer audioUrl={group.audioUrl} />}
           </div>
         );
     }
@@ -150,6 +153,10 @@ export function QuestionRenderer({
   // Check if this is a reading part (6-7) that needs passage layout
   const isReadingPart = currentPart.partNumber >= 6;
 
+  // Check if this is a listening part (1-4) that needs audio in review mode
+  const isListeningPart = currentPart && currentPart.partNumber <= 4;
+  const shouldShowGroupAudio = mode === "review" && isListeningPart;
+
   return (
     <div
       className={cn(
@@ -159,6 +166,11 @@ export function QuestionRenderer({
     >
       {groupedQuestions.map((groupData, groupIndex) => (
         <div key={groupData.group?.id || groupIndex} className="mb-12">
+          {/* Group Audio for Review Mode (Listening Parts Only) */}
+          {shouldShowGroupAudio && groupData.group?.audioUrl && (
+            <AudioPlayer audioUrl={groupData.group.audioUrl} />
+          )}
+
           {/* Reading parts (6-7) with passage layout */}
           {isReadingPart &&
           (groupData.group?.paragraphEn || groupData.group?.paragraphVn) ? (

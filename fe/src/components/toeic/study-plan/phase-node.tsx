@@ -3,13 +3,14 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { Phase } from "@/types/study-plan";
 import {
   getPhaseStatusColor,
   isPhaseAccessible,
   getPhaseDescription,
 } from "@/libs/study-plan-data";
-import { Play, Lock, CheckCircle, ArrowRight } from "lucide-react";
+import { Play, Lock, CheckCircle, ArrowRight, BookOpen, Clock } from "lucide-react";
 import { cn } from "@/utils/libs";
 
 interface PhaseNodeProps {
@@ -29,126 +30,161 @@ export function PhaseNode({
 }: PhaseNodeProps) {
   const isAccessible = isPhaseAccessible(phase.status);
   const lessonDescription = getPhaseDescription(phase.lessons.length);
+  
+  // Mock progress data
+  const completedLessons = phase.status === "completed" ? phase.lessons.length 
+    : phase.status === "active" ? Math.floor(phase.lessons.length * 0.3) 
+    : 0;
+  const progressPercentage = (completedLessons / phase.lessons.length) * 100;
 
-  const getStatusIcon = () => {
+  const getStatusConfig = () => {
     switch (phase.status) {
       case "completed":
-        return <CheckCircle className="h-8 w-8 text-green-500" />;
+        return {
+          icon: <CheckCircle className="h-6 w-6" />,
+          color: "text-white bg-green-500",
+          badge: "Hoàn thành",
+          badgeClass: "bg-green-100 text-green-700 border-green-200"
+        };
       case "active":
-        return <Play className="h-8 w-8 text-[#ff776f]" />;
+        return {
+          icon: <Play className="h-6 w-6" />,
+          color: "text-white bg-toeic-primary",
+          badge: "Khả dụng",
+          badgeClass: "bg-orange-100 text-orange-700 border-orange-200"
+        };
       default:
-        return <Lock className="h-8 w-8 text-muted-foreground" />;
+        return {
+          icon: <Lock className="h-6 w-6" />,
+          color: "text-gray-500 bg-gray-200",
+          badge: "Đã khóa", 
+          badgeClass: "bg-gray-100 text-gray-600 border-gray-200"
+        };
     }
   };
 
-  const getStatusBadge = () => {
-    switch (phase.status) {
-      case "completed":
-        return <Badge className="bg-green-500">Hoàn thành</Badge>;
-      case "active":
-        return <Badge className="bg-[#ff776f]">Khả dụng</Badge>;
-      default:
-        return <Badge variant="secondary">Đã khóa</Badge>;
-    }
-  };
+  const statusConfig = getStatusConfig();
 
   return (
-    <div
-      className={cn(
-        "mb-8 flex items-center relative",
-        isLeft ? "justify-start" : "justify-end"
-      )}
-    >
-      {/* Connection Line */}
+    <div className="relative mb-8 w-full">
+      {/* Connecting Line */}
       {index > 0 && (
-        <div
-          className={cn(
-            "absolute top-1/2 w-32 h-px bg-border",
-            isLeft ? "-left-32" : "-right-32"
-          )}
-        />
+        <div className="absolute left-1/2 -top-8 w-px h-8 bg-gradient-to-b from-gray-300 to-gray-200 -translate-x-1/2" />
       )}
 
-      {/* Phase Number Badge */}
-      <div
+      {/* Phase Card */}
+      <Card 
         className={cn(
-          "absolute top-0 z-10 w-8 h-8 rounded-full bg-background border-2 flex items-center justify-center text-sm font-bold",
-          isLeft ? "-left-4" : "-right-4"
+          "relative max-w-sm mx-auto transition-all duration-300 hover:shadow-lg cursor-pointer group",
+          !isAccessible && "opacity-60 cursor-not-allowed",
+          phase.status === "active" && "ring-2 ring-toeic-primary/20 bg-gradient-to-br from-orange-50 to-red-50",
+          phase.status === "completed" && "bg-gradient-to-br from-green-50 to-emerald-50"
         )}
-        style={{ borderColor: getPhaseStatusColor(phase.status) }}
+        onClick={() => isAccessible && onPhasePress(phase.phase_id)}
       >
-        {phase.order_no}
-      </div>
-
-      <div
-        className={cn(
-          "flex items-center gap-4 max-w-md",
-          isLeft ? "flex-row" : "flex-row-reverse"
-        )}
-      >
-        {/* Node Circle */}
-        <Button
-          variant="ghost"
-          size="lg"
+        {/* Phase Number Circle */}
+        <div 
           className={cn(
-            "h-16 w-16 rounded-full p-0",
-            isAccessible
-              ? "hover:scale-110 transition-transform"
-              : "opacity-60 cursor-not-allowed"
+            "absolute -top-4 left-6 w-12 h-12 rounded-full flex items-center justify-center shadow-lg z-10",
+            statusConfig.color,
+            isAccessible && "group-hover:scale-110 transition-transform duration-300"
           )}
-          style={{
-            backgroundColor: getPhaseStatusColor(phase.status),
-            color: "white",
-          }}
-          onClick={() => isAccessible && onPhaseStart(phase.phase_id)}
-          disabled={!isAccessible}
         >
-          {getStatusIcon()}
-        </Button>
+          <div className="text-center">
+            <div className="text-xs font-bold leading-none">Phase</div>
+            <div className="text-lg font-bold leading-none">{phase.order_no}</div>
+          </div>
+        </div>
 
-        {/* Phase Info Card */}
-        <Card
-          className={cn(
-            "transition-shadow hover:shadow-md cursor-pointer",
-            !isAccessible && "opacity-70"
-          )}
-          onClick={() => isAccessible && onPhasePress(phase.phase_id)}
-        >
-          <CardContent className="p-4 space-y-3">
-            {/* Status Badge */}
-            <div className="flex justify-between items-start">
-              <h3 className="font-semibold text-sm leading-tight">
+        <CardContent className="pt-8 pb-6 px-6">
+          {/* Header */}
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex-1 pr-2">
+              <h3 className="font-bold text-base leading-tight mb-1">
                 {phase.title}
               </h3>
-              {getStatusBadge()}
+              <p className="text-sm text-muted-foreground">
+                {phase.lessons.length} bài học
+              </p>
             </div>
+            <Badge className={statusConfig.badgeClass} variant="outline">
+              {statusConfig.badge}
+            </Badge>
+          </div>
 
-            <p className="text-xs text-muted-foreground">{lessonDescription}</p>
+          {/* Progress Bar */}
+          {phase.status !== "locked" && (
+            <div className="mb-4">
+              <div className="flex justify-between text-xs mb-2">
+                <span className="text-muted-foreground">Tiến độ</span>
+                <span className="font-medium">{completedLessons}/{phase.lessons.length}</span>
+              </div>
+              <Progress 
+                value={progressPercentage} 
+                className={cn(
+                  "h-2",
+                  phase.status === "completed" && "[&>div]:bg-green-500",
+                  phase.status === "active" && "[&>div]:bg-toeic-primary"
+                )}
+              />
+            </div>
+          )}
 
-            {/* Lesson Preview */}
-            <div className="flex flex-wrap gap-1">
-              {phase.lessons.slice(0, 3).map((lessonId, idx) => (
-                <Badge key={lessonId} variant="outline" className="text-xs">
+          {/* Lesson Pills */}
+          <div className="mb-4">
+            <div className="text-xs text-muted-foreground mb-2">Bài học:</div>
+            <div className="flex flex-wrap gap-1.5">
+              {phase.lessons.slice(0, 4).map((lessonId, idx) => (
+                <div
+                  key={lessonId}
+                  className={cn(
+                    "px-2 py-1 rounded-full text-xs font-medium",
+                    idx < completedLessons 
+                      ? "bg-green-100 text-green-700 border border-green-200" 
+                      : "bg-gray-100 text-gray-600 border border-gray-200"
+                  )}
+                >
                   Bài {lessonId}
-                </Badge>
+                </div>
               ))}
-              {phase.lessons.length > 3 && (
-                <Badge variant="outline" className="text-xs">
-                  +{phase.lessons.length - 3}
-                </Badge>
+              {phase.lessons.length > 4 && (
+                <div className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                  +{phase.lessons.length - 4}
+                </div>
               )}
             </div>
+          </div>
 
-            {/* Action Button */}
+          {/* Action Button */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Clock className="h-3 w-3" />
+              <span>~{phase.lessons.length * 15} phút</span>
+            </div>
+            
             {isAccessible && (
-              <div className="flex items-center text-xs text-[#ff776f] font-medium">
-                <ArrowRight className="h-3 w-3 mr-1" />
-                Bắt đầu học
-              </div>
+              <Button 
+                size="sm" 
+                className={cn(
+                  "h-8 px-3 text-xs font-medium",
+                  phase.status === "active" 
+                    ? "bg-toeic-primary hover:bg-red-600 text-white" 
+                    : "bg-green-600 hover:bg-green-700 text-white"
+                )}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPhaseStart(phase.phase_id);
+                }}
+              >
+                {statusConfig.icon}
+                <span className="ml-1">
+                  {phase.status === "completed" ? "Ôn tập" : "Bắt đầu"}
+                </span>
+              </Button>
             )}
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

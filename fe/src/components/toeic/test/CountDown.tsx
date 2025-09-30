@@ -1,6 +1,6 @@
 "use client";
 
-import { formatTime } from "@/utils/formatTime";
+import { formatTime } from "@/utils";
 import { useEffect, useRef, useState } from "react";
 
 interface CountdownTimerProps {
