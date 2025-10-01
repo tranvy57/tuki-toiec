@@ -1,4 +1,6 @@
 import { BaseEntity } from 'src/common/entities/base.entity';
+import { CourseBand } from 'src/courses/consts';
+import { Course } from 'src/courses/entities/course.entity';
 import { Phase } from 'src/phase/entities/phase.entity';
 import { StudyTask } from 'src/study_tasks/entities/study_task.entity';
 import { TargetSkill } from 'src/target_skills/entities/target_skill.entity';
@@ -22,7 +24,12 @@ export class Plan extends BaseEntity {
   @Column({ name: 'target_score', type: 'int', nullable: true })
   targetScore?: number;
 
-  @Column({ name: 'start_date', type: 'date', nullable: true, default: () => 'CURRENT_DATE' })
+  @Column({
+    name: 'start_date',
+    type: 'date',
+    nullable: true,
+    default: () => 'CURRENT_DATE',
+  })
   startDate?: string;
 
   @Column({ name: 'total_days', type: 'int', nullable: true })
@@ -36,4 +43,11 @@ export class Plan extends BaseEntity {
 
   @OneToMany(() => TargetSkill, (ts) => ts.plan)
   targetSkills: TargetSkill[];
+
+  @Column({
+    type: 'enum',
+    enum: CourseBand,
+    nullable: true,
+  })
+  band?: CourseBand;
 }
