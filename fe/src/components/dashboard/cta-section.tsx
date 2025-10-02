@@ -33,7 +33,7 @@ export const CTASection = () => {
     <section className="relative py-22 px-4 sm:px-6 lg:px-8 overflow-hidden ">
       <div className="w-[70%] mx-auto relative py-14 ">
         {/* Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-400 via-pink-400 to-rose-400 rounded-4xl" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-2 to-rose-400 rounded-4xl" />
 
         {/* Grid Pattern Overlay */}
         <div className="absolute inset-0 grid-pattern opacity-30 " />

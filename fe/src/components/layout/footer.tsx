@@ -16,7 +16,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="relative bg-gradient-to-b from-pink-400 via-purple-500 to-slate-900 text-white overflow-hidden">
+    <footer className="relative bg-gradient-to-b from-primary via-primary to-primary-2 text-white overflow-hidden">
       {/* Subtle grid overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
 
@@ -176,7 +176,7 @@ const Footer = () => {
                 />
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-pink-500 via-purple-500 to-slate-600 hover:from-pink-400 hover:via-purple-400 hover:to-slate-500 text-white shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40 transition-all duration-300 rounded-xl h-12 font-medium hover:scale-[1.02] border border-white/10"
+                  className="w-full bg-gradient-to-r from-pink-300 to-primary hover:from-pink-300  hover:to-pink-400 text-white shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40 transition-all duration-300 rounded-xl h-12 font-medium hover:scale-[1.02] border border-white/10"
                 >
                   <Send className="w-4 h-4 mr-2" />
                   Đăng ký ngay

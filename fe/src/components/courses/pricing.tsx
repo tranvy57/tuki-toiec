@@ -1,85 +1,31 @@
-import { Check } from "lucide-react";
+"use client";
+
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Check, Shield } from "lucide-react";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card";
+import { pricingPlans } from "../dashboard/pricing-section";
 import { RippleButton } from "../ui/ripple-button";
 import { cn } from "@/utils";
 
-export const pricingPlans = [
-  {
-    name: "Free",
-    price: "0đ",
-    description: "Khởi đầu miễn phí, làm quen TOEIC",
-    features: [
-      "10 bài luyện tập cơ bản",
-      "50 từ vựng TOEIC thiết yếu",
-      "Theo dõi tiến độ cơ bản",
-      "Hỗ trợ cộng đồng",
-    ],
-    highlighted: false,
-  },
-  {
-    name: "450",
-    price: "199,000đ",
-    description: "Mục tiêu vượt qua 450 điểm",
-    features: [
-      "Tất cả tính năng Free",
-      "30+ bài luyện tập kỹ năng cơ bản",
-      "Ngữ pháp trọng tâm Part 5",
-      "Listening Part 1-2 dễ hiểu",
-      "Gợi ý cải thiện cá nhân",
-    ],
-    highlighted: false,
-  },
-
-  {
-    name: "750+",
-    price: "599,000đ",
-    description: "Chinh phục TOEIC 750+",
-    features: [
-      "Tất cả tính năng 550",
-      "Bài tập thực chiến không giới hạn",
-      "AI coach 1-1 cá nhân",
-      "Mô phỏng thi thật",
-      "Đảm bảo đạt mục tiêu",
-      "Chứng chỉ hoàn thành",
-    ],
-    highlighted: true,
-  },
-  {
-    name: "550",
-    price: "299,000đ",
-    description: "Đạt mục tiêu 550 điểm",
-    features: [
-      "Tất cả tính năng 450",
-      "100+ bài luyện tập nâng cao",
-      "AI phân tích điểm yếu",
-      "Lộ trình học cá nhân hóa",
-      "Hỗ trợ ưu tiên",
-    ],
-    highlighted: false,
-  },
-];
-
-export default function PricingSection() {
+export function Pricing() {
   return (
-    <section className="py-24 px-4 sm:px-6 lg:px-8 ">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4 text-balance">
-            Chọn gói học phù hợp với bạn
+    <section id="pricing" className="py-20 md:py-28">
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-16"
+        >
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 text-balance">
+            Bảng giá đơn giản, minh bạch
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto text-pretty">
-            Học TOEIC thông minh với AI, tiết kiệm thời gian và đạt mục tiêu
-            nhanh chóng
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
+            Chọn gói phù hợp với mục tiêu học tập của bạn
           </p>
-        </div>
+        </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 items-center">
           {pricingPlans.map((plan, index) => {
