@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   UseInterceptors,
 } from '@nestjs/common';
@@ -16,6 +17,7 @@ import { Public } from 'src/common/decorator/public.decorator';
 import { Roles } from 'src/common/decorator/roles.decorator';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { User } from './entities/user.entity';
+import { UpdateUserDto } from './dto/update-user.dto';
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -41,8 +43,16 @@ export class UserController {
 
   @Delete('/vocabularies/:id')
   async deleteUserVocab(@CurrentUser() user: User, @Param('id') id: string) {
-    console.log('userrrr', user);
-
     return this.userService.deleteUserVocab(user, id);
+  }
+
+  @Patch('update-me')
+  async updateMe(@CurrentUser() user: User, @Body() dto: UpdateUserDto) {
+    return this.userService.updateMe(user, dto);
+  }
+
+  @Get('me')
+  async getMe(@CurrentUser() user: User) {
+    return this.userService.getMe(user);
   }
 }

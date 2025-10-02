@@ -35,6 +35,9 @@ import { UploadModule } from './upload/upload.module';
 import { UserVocabulariesModule } from './user_vocabularies/user_vocabularies.module';
 import { QuestionTagsModule } from './question_tags/question_tags.module';
 import { LessonSkillsModule } from './lesson_skills/lesson_skills.module';
+import { CoursesModule } from './courses/courses.module';
+import { UserCoursesModule } from './user_courses/user_courses.module';
+import { LessonContentModule } from './lesson_content/lesson_content.module';
 
 @Module({
   imports: [
@@ -67,6 +70,9 @@ import { LessonSkillsModule } from './lesson_skills/lesson_skills.module';
     UserVocabulariesModule,
     QuestionTagsModule,
     LessonSkillsModule,
+    CoursesModule,
+    UserCoursesModule,
+    LessonContentModule,
   ],
   controllers: [AppController],
   providers: [

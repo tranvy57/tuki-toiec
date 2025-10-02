@@ -2,6 +2,7 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { BaseEntity } from 'src/common/entities/base.entity';
 import { Plan } from 'src/plan/entities/plan.entity';
 import { PhaseLesson } from 'src/phase_lessons/entities/phase_lesson.entity';
+import { Course } from 'src/courses/entities/course.entity';
 
 export type PhaseStatus = 'locked' | 'active' | 'done';
 
@@ -32,4 +33,8 @@ export class Phase extends BaseEntity {
 
   @OneToMany(() => PhaseLesson, (pl) => pl.phase)
   phaseLessons: PhaseLesson[];
+
+  @ManyToOne(() => Course, (c) => c.phases)
+  @JoinColumn({ name: 'course_id' })
+  course?: Course;
 }

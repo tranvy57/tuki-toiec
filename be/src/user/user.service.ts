@@ -15,6 +15,7 @@ import { Role } from 'src/role/entities/role.entity';
 import { Vocabulary } from 'src/vocabulary/entities/vocabulary.entity';
 import { UserVocabulary } from 'src/user_vocabularies/entities/user_vocabulary.entity';
 import { UserVocabularyDto } from 'src/user_vocabularies/dto/user-vocabulary.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
@@ -139,5 +140,34 @@ export class UserService {
     }
     await this.userVocabRepository.remove(uVocab);
     return;
+  }
+
+  async updateMe(user: User, dto: UpdateUserDto) {
+    const { email, displayName } = dto;
+
+    if (email && email !== user.email) {
+      const emailExisted = await this.userRepository.exist({
+        where: { email: email },
+      });
+      if (emailExisted) throw new ConflictException('Email đã tồn tại');
+      user.email = email;
+    }
+    if (displayName && displayName !== user.displayName) {
+      user.displayName = displayName;
+    }
+    await this.userRepository.save(user);
+    return this.toResponseDto(user);
+  }
+
+  async getMe(user: User) {
+    const found = await this.userRepository.findOne({
+      where: { id: user.id },
+      relations: {
+        roles: true,
+      },
+    });
+
+    if (!found) throw new NotFoundException('User not found');
+    return this.toResponseDto(found);
   }
 }

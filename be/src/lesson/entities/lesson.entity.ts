@@ -15,6 +15,7 @@ import { StudyTask } from 'src/study_tasks/entities/study_task.entity';
 import { Unit } from 'src/unit/entities/unit.entity';
 import { Question } from 'src/question/entities/question.entity';
 import { LessonSkill } from 'src/lesson_skills/entities/lesson_skill.entity';
+import { LessonContent } from 'src/lesson_content/entities/lesson_content.entity';
 
 @Entity('lessons')
 export class Lesson extends BaseEntity {
@@ -65,4 +66,7 @@ export class Lesson extends BaseEntity {
 
   @OneToMany(() => LessonSkill, (ls) => ls.lesson, { cascade: true })
   skills: LessonSkill[];
+
+  @OneToMany(() => LessonContent, (lc) => lc.lesson, { cascade: true })
+  contents?: LessonContent[];
 }
