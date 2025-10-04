@@ -1,15 +1,24 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { CheckCircle2, Lock, PlayCircle, TrendingUp, Sparkles, Crown } from "lucide-react"
+import { motion } from "framer-motion";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import {
+  CheckCircle2,
+  Lock,
+  PlayCircle,
+  TrendingUp,
+  Sparkles,
+  Crown,
+} from "lucide-react";
+import { RippleButton } from "@/components/ui/ripple-button";
+import { useRouter } from "next/navigation";
 
 interface PhaseOverviewProps {
-  testResults: any
-  onUpgradeClick: () => void
+  testResults: any;
+  onUpgradeClick: () => void;
 }
 
 // Mock data for phases and modules
@@ -24,9 +33,24 @@ const learningPhases = [
         title: "TOEIC Test Structure",
         duration: "15 min",
         lessons: [
-          { id: 1, title: "Understanding the Format", type: "foundation", status: "in-progress" },
-          { id: 2, title: "Scoring System", type: "foundation", status: "locked" },
-          { id: 3, title: "Time Management Tips", type: "practice", status: "locked" },
+          {
+            id: 1,
+            title: "Understanding the Format",
+            type: "foundation",
+            status: "in-progress",
+          },
+          {
+            id: 2,
+            title: "Scoring System",
+            type: "foundation",
+            status: "locked",
+          },
+          {
+            id: 3,
+            title: "Time Management Tips",
+            type: "practice",
+            status: "locked",
+          },
         ],
       },
       {
@@ -34,9 +58,24 @@ const learningPhases = [
         title: "Basic Vocabulary",
         duration: "30 min",
         lessons: [
-          { id: 4, title: "Common Business Terms", type: "theory", status: "locked" },
-          { id: 5, title: "Workplace Vocabulary", type: "theory", status: "locked" },
-          { id: 6, title: "Practice Exercises", type: "practice", status: "locked" },
+          {
+            id: 4,
+            title: "Common Business Terms",
+            type: "theory",
+            status: "locked",
+          },
+          {
+            id: 5,
+            title: "Workplace Vocabulary",
+            type: "theory",
+            status: "locked",
+          },
+          {
+            id: 6,
+            title: "Practice Exercises",
+            type: "practice",
+            status: "locked",
+          },
         ],
       },
     ],
@@ -51,10 +90,30 @@ const learningPhases = [
         title: "Part 1: Photographs",
         duration: "45 min",
         lessons: [
-          { id: 7, title: "Photo Description Strategies", type: "theory", status: "skipped" },
-          { id: 8, title: "Common Vocabulary", type: "theory", status: "skipped" },
-          { id: 9, title: "Practice Questions", type: "practice", status: "in-progress" },
-          { id: 10, title: "Advanced Techniques", type: "theory", status: "locked" },
+          {
+            id: 7,
+            title: "Photo Description Strategies",
+            type: "theory",
+            status: "skipped",
+          },
+          {
+            id: 8,
+            title: "Common Vocabulary",
+            type: "theory",
+            status: "skipped",
+          },
+          {
+            id: 9,
+            title: "Practice Questions",
+            type: "practice",
+            status: "in-progress",
+          },
+          {
+            id: 10,
+            title: "Advanced Techniques",
+            type: "theory",
+            status: "locked",
+          },
         ],
       },
       {
@@ -62,9 +121,24 @@ const learningPhases = [
         title: "Part 2: Question-Response",
         duration: "50 min",
         lessons: [
-          { id: 11, title: "Question Types", type: "theory", status: "skipped" },
-          { id: 12, title: "Response Patterns", type: "theory", status: "locked" },
-          { id: 13, title: "Practice Drills", type: "practice", status: "locked" },
+          {
+            id: 11,
+            title: "Question Types",
+            type: "theory",
+            status: "skipped",
+          },
+          {
+            id: 12,
+            title: "Response Patterns",
+            type: "theory",
+            status: "locked",
+          },
+          {
+            id: 13,
+            title: "Practice Drills",
+            type: "practice",
+            status: "locked",
+          },
         ],
       },
     ],
@@ -80,8 +154,18 @@ const learningPhases = [
         duration: "40 min",
         lessons: [
           { id: 14, title: "Grammar Rules", type: "theory", status: "locked" },
-          { id: 15, title: "Vocabulary in Context", type: "theory", status: "locked" },
-          { id: 16, title: "Practice Questions", type: "practice", status: "locked" },
+          {
+            id: 15,
+            title: "Vocabulary in Context",
+            type: "theory",
+            status: "locked",
+          },
+          {
+            id: 16,
+            title: "Practice Questions",
+            type: "practice",
+            status: "locked",
+          },
         ],
       },
       {
@@ -89,29 +173,60 @@ const learningPhases = [
         title: "Part 7: Reading Comprehension",
         duration: "60 min",
         lessons: [
-          { id: 17, title: "Skimming Techniques", type: "theory", status: "skipped" },
-          { id: 18, title: "Detail Questions", type: "theory", status: "locked" },
-          { id: 19, title: "Inference Questions", type: "theory", status: "locked" },
-          { id: 20, title: "Practice Passages", type: "practice", status: "locked" },
+          {
+            id: 17,
+            title: "Skimming Techniques",
+            type: "theory",
+            status: "skipped",
+          },
+          {
+            id: 18,
+            title: "Detail Questions",
+            type: "theory",
+            status: "locked",
+          },
+          {
+            id: 19,
+            title: "Inference Questions",
+            type: "theory",
+            status: "locked",
+          },
+          {
+            id: 20,
+            title: "Practice Passages",
+            type: "practice",
+            status: "locked",
+          },
         ],
       },
     ],
   },
-]
+];
 
-export function PhaseOverview({ testResults, onUpgradeClick }: PhaseOverviewProps) {
+export function PhaseOverview({
+  testResults,
+  onUpgradeClick,
+}: PhaseOverviewProps) {
+  const router = useRouter();
   const totalLessons = learningPhases.reduce(
-    (acc, phase) => acc + phase.modules.reduce((sum, module) => sum + module.lessons.length, 0),
-    0,
-  )
+    (acc, phase) =>
+      acc +
+      phase.modules.reduce((sum, module) => sum + module.lessons.length, 0),
+    0
+  );
 
   const skippedLessons = learningPhases.reduce(
     (acc, phase) =>
-      acc + phase.modules.reduce((sum, module) => sum + module.lessons.filter((l) => l.status === "skipped").length, 0),
-    0,
-  )
+      acc +
+      phase.modules.reduce(
+        (sum, module) =>
+          sum + module.lessons.filter((l) => l.status === "skipped").length,
+        0
+      ),
+    0
+  );
 
-  const percentSaved = Math.round((skippedLessons / totalLessons) * 100)
+  const percentSaved = Math.round((skippedLessons / totalLessons) * 100);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50/50p-4 py-12">
@@ -365,12 +480,21 @@ export function PhaseOverview({ testResults, onUpgradeClick }: PhaseOverviewProp
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25, delay: 0.5 }}
-          className="mt-8 text-center"
+          className="mt-8 text-center w-full justify-center flex"
         >
-          <Button className="rounded-xl bg-pink-500 hover:bg-pink-600 px-8 py-6 text-lg font-semibold">
-            <PlayCircle className="mr-2 h-5 w-5" />
-            Start Learning Today
-          </Button>
+          <RippleButton
+            rippleColor="bg-pink-500/30"
+            className=" rounded-xl bg-primary hover:bg-primary-2 px-4 py-2 text-lg font-semibold"
+            onClick={() => {
+              // Start learning action
+              router.push("/study-plan/123456");
+            }}
+          >
+            <div className="flex items-center">
+              <PlayCircle className="mr-2 h-5 w-5" color="white" />
+              <p className="text-white">Start Learning Today</p>
+            </div>
+          </RippleButton>
         </motion.div>
       </div>
     </div>

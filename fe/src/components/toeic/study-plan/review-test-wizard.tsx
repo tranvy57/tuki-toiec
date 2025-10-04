@@ -298,7 +298,7 @@ export function ReviewTestWizard({ targetBand, onComplete }: ReviewTestWizardPro
 
   if (stage === "results") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50/50 flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -314,14 +314,14 @@ export function ReviewTestWizard({ targetBand, onComplete }: ReviewTestWizardPro
           </p>
         </motion.div>
       </div>
-    )
+    );
   }
 
   const question = sampleQuestions[currentQuestion]
   const IconComponent = partIcons[question.icon as keyof typeof partIcons]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50/50 p-4">
       <div className="max-w-4xl mx-auto py-8">
         {/* Header */}
         <div className="mb-8">
@@ -331,7 +331,9 @@ export function ReviewTestWizard({ targetBand, onComplete }: ReviewTestWizardPro
                 <IconComponent className="h-5 w-5 text-pink-500" />
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">Part {question.part}</div>
+                <div className="text-sm text-muted-foreground">
+                  Part {question.part}
+                </div>
                 <div className="font-semibold">{question.partName}</div>
               </div>
             </div>
@@ -353,7 +355,9 @@ export function ReviewTestWizard({ targetBand, onComplete }: ReviewTestWizardPro
             transition={{ duration: 0.2 }}
           >
             <Card className="glass border-white/10 p-6 sm:p-8 mb-6">
-              <h2 className="text-xl sm:text-2xl font-semibold mb-6">{question.question}</h2>
+              <h2 className="text-xl sm:text-2xl font-semibold mb-6">
+                {question.question}
+              </h2>
 
               <div className="space-y-3">
                 {question.options.map((option, index) => (
@@ -373,10 +377,16 @@ export function ReviewTestWizard({ targetBand, onComplete }: ReviewTestWizardPro
                       <div
                         className={`
                         w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0
-                        ${answers[question.id] === option ? "border-pink-500 bg-pink-500" : "border-white/30"}
+                        ${
+                          answers[question.id] === option
+                            ? "border-pink-500 bg-pink-500"
+                            : "border-white/30"
+                        }
                       `}
                       >
-                        {answers[question.id] === option && <CheckCircle2 className="h-4 w-4 text-white" />}
+                        {answers[question.id] === option && (
+                          <CheckCircle2 className="h-4 w-4 text-white" />
+                        )}
                       </div>
                       <span>{option}</span>
                     </div>
@@ -400,12 +410,18 @@ export function ReviewTestWizard({ targetBand, onComplete }: ReviewTestWizardPro
           </Button>
 
           {currentQuestion === sampleQuestions.length - 1 ? (
-            <Button onClick={handleSubmit} className="rounded-xl bg-pink-500 hover:bg-pink-600">
+            <Button
+              onClick={handleSubmit}
+              className="rounded-xl bg-pink-500 hover:bg-pink-600"
+            >
               Submit Test
               <CheckCircle2 className="ml-2 h-5 w-5" />
             </Button>
           ) : (
-            <Button onClick={handleNext} className="rounded-xl bg-pink-500 hover:bg-pink-600">
+            <Button
+              onClick={handleNext}
+              className="rounded-xl bg-pink-500 hover:bg-pink-600"
+            >
               Next
               <ChevronRight className="ml-2 h-5 w-5" />
             </Button>
@@ -413,5 +429,5 @@ export function ReviewTestWizard({ targetBand, onComplete }: ReviewTestWizardPro
         </div>
       </div>
     </div>
-  )
+  );
 }

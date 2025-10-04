@@ -253,7 +253,7 @@ export default function VocabularySection() {
           >
             Cá nhân hóa theo bạn
             <motion.span
-              className="block mt-2 text-transparent bg-gradient-to-r from-fuchsia-200 via-fuchsia-400 to-primary bg-clip-text"
+              className="block mt-2 text-transparent bg-gradient-to-r from-primary-2 via-fuchsia-400 to-primary bg-clip-text"
               animate={{
                 backgroundPosition: ["0%", "100%", "0%"],
               }}
