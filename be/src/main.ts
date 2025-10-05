@@ -10,7 +10,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const port = process.env.PORT ?? 3000;
-  const host = 'localhost';
+  const host = '0.0.0.0';
 
   app.use(bodyParser.json({ limit: '10mb' }));
 
@@ -41,7 +41,7 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(process.env.PORT ?? 3000, 'localhost', () => {
+  await app.listen(process.env.PORT ?? 3000, '0.0.0.0', () => {
     InformationServerLog(port as number, host);
   });
 }

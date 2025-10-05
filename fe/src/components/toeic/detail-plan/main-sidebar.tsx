@@ -13,12 +13,12 @@ import {
   MOCK_UNITS,
 } from "@/app/(toeic)/study-plan/[id]/constants";
 import { MobileDrawer, MobileMenuButton } from "./mobile-navigation";
-import { SidebarToggle } from "@/app/(toeic)/study-plan/[id]/page";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HeaderBreadcrumb } from "./header-breadcrumb";
 import { ContentPane } from "./content-pane";
 import { findLessonByType } from "@/app/(toeic)/study-plan/[id]/exercise-lessons";
 import { UnitLessons } from "./unit-lessons";
+import { SidebarToggle } from "./sidebar-toggle";
 
 export function MainSidebar({
   activeUnitId,
