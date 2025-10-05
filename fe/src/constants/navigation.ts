@@ -24,9 +24,15 @@ export const TOEIC_NAVIGATION: NavigationItem[] = [
     icon: Home,
   },
   {
+    id: "courses",
+    name: "Khóa học",
+    href: "/courses",
+    icon: BookOpen,
+  },
+  {
     id: "study-plan",
     name: "Kế hoạch học",
-    href: "/plan-check", 
+    href: "/study-plan", 
     icon: ClipboardList,
   },
   {
@@ -46,12 +52,6 @@ export const TOEIC_NAVIGATION: NavigationItem[] = [
     name: "Đề thi",
     href: "/tests",
     icon: Users,
-  },
-  {
-    id: "profile",
-    name: "Hồ sơ",
-    href: "/profile",
-    icon: User,
   },
 ];
 
