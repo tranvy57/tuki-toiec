@@ -1,10 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { motion } from "framer-motion";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -12,190 +19,245 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TestCard } from "@/components/toeic/tests/test-card";
-import { mockTests } from "@/libs/test-data";
-import { Search, Filter, BookOpen, Clock, Target } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
+import { Search, Users, Clock, FileText, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { useTest } from "@/api/useTest";
 
-export default function TestsPage() {
-  const [tests] = useState(mockTests);
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+    },
+  },
+};
+
+export default function TestListPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
+  const [difficultyFilter, setDifficultyFilter] = useState("all");
+  const [sourceFilter, setSourceFilter] = useState("all");
+  const { data, isLoading, isError } = useTest();
 
-  const handleTestPress = (testId: number) => {
-    window.location.href = `/tests/${testId}`;
-  };
-
-  const handleTestStart = (testId: number) => {
-    console.log("Test started:", testId);
-    // TODO: Start the test
-  };
-
-  const filteredTests = tests.filter((test) => {
-    const matchesSearch =
-      searchQuery === "" ||
-      test.title.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesDifficulty =
-      selectedDifficulty === "all" || test.difficulty === selectedDifficulty;
-
-    return matchesSearch && matchesDifficulty;
+  const filteredTests = data?.filter((test) => {
+    const matchesSearch = test.title
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    console.log(data);
+    return matchesSearch;
   });
 
-  const totalTests = tests.length;
-  const easyTests = tests.filter((t) => t.difficulty === "easy").length;
-  const mediumTests = tests.filter((t) => t.difficulty === "medium").length;
-  const hardTests = tests.filter((t) => t.difficulty === "hard").length;
-
   return (
-    <div className="container mx-auto px-4 py-6 space-y-6">
-      {/* Header */}
-      <Card className="bg-gradient-to-r from-[#ff776f] to-[#ff9b94] text-white">
-        <CardContent className="p-6 text-center">
-          <h1 className="text-3xl font-bold mb-2">TOEIC Tests</h1>
-          <p className="text-white/90 mb-4">
-            {totalTests} practice tests available to boost your TOEIC score
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden">
+      {/* Floating decorative elements */}
+      <motion.div
+        className="absolute top-20 left-10 w-20 h-20 bg-blue-400/20 rounded-full blur-xl"
+        animate={{
+          y: [0, -20, 0],
+          scale: [1, 1.1, 1],
+        }}
+        transition={{
+          duration: 4,
+          repeat: Number.POSITIVE_INFINITY,
+          ease: "easeInOut",
+        }}
+      />
+      <motion.div
+        className="absolute top-40 right-20 w-32 h-32 bg-purple-400/20 rounded-full blur-xl"
+        animate={{
+          y: [0, 20, 0],
+          scale: [1, 1.2, 1],
+        }}
+        transition={{
+          duration: 5,
+          repeat: Number.POSITIVE_INFINITY,
+          ease: "easeInOut",
+        }}
+      />
+      <motion.div
+        className="absolute bottom-20 left-1/4 w-24 h-24 bg-pink-400/20 rounded-full blur-xl"
+        animate={{
+          y: [0, -15, 0],
+          scale: [1, 1.15, 1],
+        }}
+        transition={{
+          duration: 4.5,
+          repeat: Number.POSITIVE_INFINITY,
+          ease: "easeInOut",
+        }}
+      />
+
+      <div className="container mx-auto px-4 py-12 relative z-10">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
+        >
+          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-[var(--color-7)]  to-[var(--primary)] bg-clip-text text-transparent">
+            Đề Thi Thử TOEIC
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Nâng cao kỹ năng tiếng Anh với bộ đề thi thử TOEIC toàn diện của
+            chúng tôi
           </p>
-          <div className="flex justify-center gap-4 text-sm">
-            <div className="flex items-center gap-1">
-              <BookOpen className="h-4 w-4" />
-              <span>200 questions per test</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Clock className="h-4 w-4" />
-              <span>120 minutes</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Target className="h-4 w-4" />
-              <span>Real TOEIC format</span>
-            </div>
+        </motion.div>
+
+        {/* Search and Filters */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="mb-8 flex flex-col md:flex-row gap-4 max-w-4xl mx-auto"
+        >
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+            <Input
+              placeholder="Tìm kiếm đề thi..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 bg-white/80 backdrop-blur-sm border-gray-200"
+            />
           </div>
-        </CardContent>
-      </Card>
+          <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
+            <SelectTrigger className="w-full md:w-[180px] bg-white/80 backdrop-blur-sm border-gray-200">
+              <SelectValue placeholder="Độ khó" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả cấp độ</SelectItem>
+              <SelectItem value="beginner">Cơ bản</SelectItem>
+              <SelectItem value="intermediate">Trung cấp</SelectItem>
+              <SelectItem value="advanced">Nâng cao</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={sourceFilter} onValueChange={setSourceFilter}>
+            <SelectTrigger className="w-full md:w-[180px] bg-white/80 backdrop-blur-sm border-gray-200">
+              <SelectValue placeholder="Nguồn" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả nguồn</SelectItem>
+              <SelectItem value="ETS">ETS</SelectItem>
+              <SelectItem value="New Economy">New Economy</SelectItem>
+            </SelectContent>
+          </Select>
+        </motion.div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-foreground">
-              {totalTests}
-            </div>
-            <div className="text-sm text-muted-foreground">Total Tests</div>
-          </CardContent>
-        </Card>
+        {/* Loading state with spinner */}
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col items-center justify-center py-20 gap-4"
+          >
+            <Spinner className="w-12 h-12 text-purple-500" />
+            <p className="text-lg text-muted-foreground">
+              Đang tải đề thi TOEIC...
+            </p>
+          </motion.div>
+        )}
 
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-500">{easyTests}</div>
-            <div className="text-sm text-muted-foreground">Easy</div>
-          </CardContent>
-        </Card>
+        {/* Error state */}
+        {isError && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-12 bg-red-50 rounded-xl max-w-2xl mx-auto"
+          >
+            <p className="text-lg text-red-600 font-medium">
+              Không thể tải đề thi. Vui lòng thử lại sau.
+            </p>
+          </motion.div>
+        )}
 
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-yellow-500">
-              {mediumTests}
-            </div>
-            <div className="text-sm text-muted-foreground">Medium</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-red-500">{hardTests}</div>
-            <div className="text-sm text-muted-foreground">Hard</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Filter Tests
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Search */}
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                className="pl-10"
-                placeholder="Search tests..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-
-            {/* Difficulty Filter */}
-            <Select
-              value={selectedDifficulty}
-              onValueChange={setSelectedDifficulty}
+        {!isLoading && !isError && (
+          <>
+            {/* Test Cards Grid */}
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto"
             >
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="Select difficulty" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Difficulties</SelectItem>
-                <SelectItem value="easy">Easy</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="hard">Hard</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+              {filteredTests?.map((test) => (
+                <motion.div key={test.id} variants={itemVariants}>
+                  <motion.div
+                    whileHover={{ scale: 1.03, y: -5 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Card className="h-full bg-white/80 backdrop-blur-sm border-gray-200 shadow-lg hover:shadow-2xl transition-shadow duration-300 rounded-xl overflow-hidden">
+                      <CardHeader className="pb-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <Badge
+                            variant="secondary"
+                            className="bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border-0"
+                          >
+                            Đề thi thử
+                          </Badge>
+                        </div>
+                        <CardTitle className="text-xl font-bold text-gray-900">
+                          {test.title}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3 pb-4">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <FileText className="w-4 h-4 text-blue-500" />
+                          <span>200 câu hỏi</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Clock className="w-4 h-4 text-purple-500" />
+                          <span>120 phút</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Sparkles className="w-4 h-4 text-pink-500" />
+                          <span>7 phần thi</span>
+                        </div>
+                        <div className="flex items-center gap-2 pt-2">
+                          <Users className="w-4 h-4 text-green-500" />
+                          <span className="text-sm font-medium text-gray-700">
+                            999+ học viên
+                          </span>
+                        </div>
+                      </CardContent>
+                      <CardFooter>
+                        <Link href={`/tests/${test.id}`} className="w-full">
+                          <Button className="w-full bg-gradient-to-r from-[var(--color-7)] to-[var(--primary)] hover:from-fuchsia-200-700 hover:via-orange-400 hover:to-yellow-400 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-300">
+                            Bắt đầu luyện tập
+                          </Button>
+                        </Link>
+                      </CardFooter>
+                    </Card>
+                  </motion.div>
+                </motion.div>
+              ))}
+            </motion.div>
 
-      {/* Test Results */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold">Available Tests</h2>
-          <Badge variant="outline">{filteredTests.length} tests found</Badge>
-        </div>
-
-        {filteredTests.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <p className="text-muted-foreground">
-                No tests found matching your criteria.
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTests.map((test) => (
-              <TestCard
-                key={test.test_id}
-                test={test}
-                onTestPress={handleTestPress}
-                onTestStart={handleTestStart}
-              />
-            ))}
-          </div>
+            {filteredTests?.length === 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-12"
+              >
+                <p className="text-lg text-muted-foreground">
+                  Không tìm thấy đề thi phù hợp với tiêu chí tìm kiếm
+                </p>
+              </motion.div>
+            )}
+          </>
         )}
       </div>
-
-      {/* Quick Start */}
-      <Card>
-        <CardContent className="p-6 text-center space-y-4">
-          <h3 className="text-lg font-semibold">Ready to start?</h3>
-          <p className="text-muted-foreground">
-            Take a random test to challenge yourself
-          </p>
-          <Button
-            size="lg"
-            className="bg-[#ff776f] hover:bg-[#e55a52]"
-            onClick={() => {
-              const randomTest =
-                tests[Math.floor(Math.random() * tests.length)];
-              handleTestStart(randomTest.test_id);
-            }}
-          >
-            Take Random Test
-          </Button>
-        </CardContent>
-      </Card>
     </div>
   );
 }
