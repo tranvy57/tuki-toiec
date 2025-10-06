@@ -136,10 +136,16 @@ export class TestService {
         parts: {
           groups: {
             questions: {
-              // answers: true,
+              answers: true,
             },
           },
           skills: true,
+        },
+      },
+      order: {
+        parts: {
+          partNumber: 'ASC',
+          groups: { orderIndex: 'ASC' },
         },
       },
     });
