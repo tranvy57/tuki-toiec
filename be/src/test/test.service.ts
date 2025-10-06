@@ -136,9 +136,10 @@ export class TestService {
         parts: {
           groups: {
             questions: {
-              answers: true,
+              // answers: true,
             },
           },
+          skills: true,
         },
       },
     });
