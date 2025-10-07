@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { BaseResponseSchema } from "../api-response";
+import { SkillSchema } from "./skill";
+import { title } from "process";
 
 export const AnswerSchema = z.object({
   id: z.string(),
@@ -92,6 +94,15 @@ export const SubmitPartSchema = z.object({
   directions: z.string().optional(),
   groups: z.array(SubmitGroupSchema),
 });
+
+export const FullPartSchema = z.object({
+  id: z.string(),
+  partNumber: z.number().min(1).max(7), // từ 1-7
+  directions: z.string().optional(),
+  groups: z.array(SubmitGroupSchema),
+  skills: z.array(SkillSchema), 
+});
+
 export const ResultTestResponseSchema = z.object({
   id: z.string(),
   mode: z.enum(["practice", "test"]),
@@ -102,6 +113,16 @@ export const ResultTestResponseSchema = z.object({
   status: z.enum(["in_progress", "submitted"]),
 });
 
+export const FullTestResponseSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  parts: z.array(FullPartSchema),
+  audioUrl: z.string().nullable(),
+  isActive: z.boolean(),
+  createdAt: z.string(), // có thể refine .datetime() nếu muốn
+  updatedAt: z.string(),
+});
+
 export type Answer = z.infer<typeof AnswerSchema>;
 export type Question = z.infer<typeof QuestionSchema>;
 export type Group = z.infer<typeof GroupSchema>;
@@ -109,4 +130,5 @@ export type Part = z.infer<typeof PartSchema>;
 export type Test = z.infer<typeof TestSchema>;
 export type PracticeTestResponse = z.infer<typeof PracticeTestResponseSchema>;
 export type ResultTestResponse = z.infer<typeof ResultTestResponseSchema>;
+export type FullTestResponse = z.infer<typeof FullTestResponseSchema>;
 export type BaseResponse<T> = z.infer<ReturnType<typeof BaseResponseSchema>>;

@@ -196,11 +196,12 @@ def crawl_to_entities(soup, audio_main, title=None, soup_audio=None) -> Tuple[Te
     for elm in soup.select(".question-group-wrapper, .question-item-wrapper"):
         classes = elm.get("class", [])
         if "question-group-wrapper" in classes:
-            node = elm.find(class_="context-content context-transcript text-highlightable")
-            collapse = node.select_one(".collapse") if node else None
-            para_en = txt(collapse) if collapse else txt(node)
-            node_trans = elm.find(class_="question-explanation-wrapper")
-            para_trans = txt(node_trans.select_one(".collapse")) if node_trans else None
+            outer = elm.find(class_="context-content text-highlightable")
+            inner = outer.select_one("div div") if outer else None
+            para_en = inner.decode_contents() if inner else None
+            node_trans = elm.find(class_="context-content context-transcript text-highlightable")
+            collapse_tag = node_trans.select_one(".collapse") if node_trans else None
+            para_trans = collapse_tag.decode_contents() if collapse_tag else None
             img_urls = [normalize_url(img.get("src")) for img in elm.find_all("img") if img and img.get("src")]
             img_url = img_urls[0] if img_urls else None
 

@@ -12,6 +12,7 @@ import { ConfirmSubmitModal } from "@/components/toeic/test/ModalConfirm";
 
 // Custom hook
 import { useTestLogic } from "./handle";
+import { AudioPlayer } from "@/components/toeic/test/Audio";
 
 export default function TestStartPage() {
   const {
@@ -87,54 +88,65 @@ export default function TestStartPage() {
   }
 
   return (
-    <div className="min-h-screen flex my-5">
-      {/* Modal */}
-      <ConfirmSubmitModal
-        open={open}
-        onClose={() => setOpen(false)}
-        onConfirm={confirmSubmit}
+    <div className="min-h-screen p-5 bg-gray-50">
+      <TestHeader
+        testTitle={fullTest.test.title || "TOEIC Practice Test"}
+        highlightContent={highlightContent}
+        onHighlightChange={setHighlightContent}
+        onExit={handleExit}
       />
-
-      {/* Main Content */}
-      <div className="flex-1">
-        <TestHeader
-          testTitle={fullTest.test.title || "TOEIC Practice Test"}
-          highlightContent={highlightContent}
-          onHighlightChange={setHighlightContent}
-          onExit={handleExit}
+      <div className="flex relative">
+        {/* Modal */}
+        <ConfirmSubmitModal
+          open={open}
+          onClose={() => setOpen(false)}
+          onConfirm={confirmSubmit}
         />
 
-        <PartTabs
-          parts={partTabs}
-          currentPart={currentPart?.partNumber || 1}
-          onPartChange={handlePartChange}
-        />
-
-        {/* Questions */}
-        <div
-          ref={contentRef}
-          className={cn(
-            "px-6 py-6 transition-opacity duration-300",
-            isTransitioning ? "opacity-50" : "opacity-100"
-          )}
-        >
-          <QuestionRenderer
-            questions={currentPartQuestions}
-            answers={mappedAnswers}
-            onAnswerChange={handleQuestionAnswerChange}
-            isTransitioning={isTransitioning}
+        {/* Main Content */}
+        <div className="flex-1  rounded-xl shadow mb-4 border border-gray-200 mr-6">
+          <div className="px-6 py-2 bg-white">
+            <div className="flex items-center justify-between">
+              {/* Audio controls */}
+              <div className="w-full">
+                {fullTest?.test.audioUrl && (
+                  <AudioPlayer audioUrl={fullTest.test.audioUrl} />
+                )}
+              </div>
+            </div>
+          </div>
+          <PartTabs
+            parts={partTabs}
+            currentPart={currentPart?.partNumber || 1}
+            onPartChange={handlePartChange}
           />
-        </div>
-      </div>
 
-      {/* Sidebar */}
-      <TestSidebar
-        currentQuestion={currentQuestion}
-        answers={mappedAnswers}
-        timeRemaining={timeRemaining}
-        onQuestionChange={handleQuestionChangeWithScroll}
-        onSubmitTest={() => handleSubmit()}
-      />
+          {/* Questions */}
+          <div
+            ref={contentRef}
+            className={cn(
+              "px-6 py-6 transition-opacity duration-300 bg-white",
+              isTransitioning ? "opacity-50" : "opacity-100"
+            )}
+          >
+            <QuestionRenderer
+              questions={currentPartQuestions}
+              answers={mappedAnswers}
+              onAnswerChange={handleQuestionAnswerChange}
+              isTransitioning={isTransitioning}
+            />
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <TestSidebar
+          currentQuestion={currentQuestion}
+          answers={mappedAnswers}
+          timeRemaining={timeRemaining}
+          onQuestionChange={handleQuestionChangeWithScroll}
+          onSubmitTest={() => handleSubmit()}
+        />
+      </div>
     </div>
   );
 }

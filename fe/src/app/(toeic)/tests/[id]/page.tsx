@@ -22,83 +22,8 @@ import {
   ChevronUp,
   Lightbulb,
 } from "lucide-react";
-import { useParams } from "next/navigation";
-
-// Mock test data
-const testData = {
-  id: 1,
-  title: "New Economy TOEIC Test 1",
-  duration: 120,
-  parts: 7,
-  questions: 200,
-  comments: 1234,
-  parts_detail: [
-    {
-      id: 1,
-      name: "Part 1: Photographs",
-      questions: 6,
-      tags: ["Description", "People", "Objects", "Scenes"],
-    },
-    {
-      id: 2,
-      name: "Part 2: Question-Response",
-      questions: 25,
-      tags: [
-        "WHO",
-        "WHERE",
-        "HOW",
-        "WHY",
-        "YES-NO",
-        "Suggestion",
-        "Tag Question",
-      ],
-    },
-    {
-      id: 3,
-      name: "Part 3: Conversations",
-      questions: 39,
-      tags: ["Company", "Event", "Service", "Shopping", "Travel", "Office"],
-    },
-    {
-      id: 4,
-      name: "Part 4: Talks",
-      questions: 30,
-      tags: [
-        "Company",
-        "Event",
-        "Service",
-        "Announcement",
-        "Advertisement",
-        "News",
-      ],
-    },
-    {
-      id: 5,
-      name: "Part 5: Incomplete Sentences",
-      questions: 30,
-      tags: ["Grammar", "Vocabulary", "Prepositions", "Conjunctions"],
-    },
-    {
-      id: 6,
-      name: "Part 6: Text Completion",
-      questions: 16,
-      tags: ["Grammar", "Vocabulary", "Context", "Coherence"],
-    },
-    {
-      id: 7,
-      name: "Part 7: Reading Comprehension",
-      questions: 54,
-      tags: [
-        "Single Passage",
-        "Double Passage",
-        "Triple Passage",
-        "Email",
-        "Article",
-        "Advertisement",
-      ],
-    },
-  ],
-};
+import { useParams, useRouter } from "next/navigation";
+import { useTestById } from "@/api/useTest";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -121,10 +46,19 @@ const staggerContainer = {
 
 export default function TestDetailPage() {
   const params = useParams();
-  const [selectedParts, setSelectedParts] = useState<number[]>([]);
-  const [openParts, setOpenParts] = useState<number[]>([1]);
+  const {
+    data: testData,
+    isLoading,
+    isError,
+  } = useTestById(params.id as string);
+  const router = useRouter();
 
-  const togglePart = (partId: number) => {
+  const [selectedParts, setSelectedParts] = useState<string[]>([]);
+  const [openParts, setOpenParts] = useState<string[]>([
+    testData?.parts[0]?.id || "",
+  ]);
+
+  const togglePart = (partId: string) => {
     setSelectedParts((prev) =>
       prev.includes(partId)
         ? prev.filter((id) => id !== partId)
@@ -132,7 +66,7 @@ export default function TestDetailPage() {
     );
   };
 
-  const toggleOpen = (partId: number) => {
+  const toggleOpen = (partId: string) => {
     setOpenParts((prev) =>
       prev.includes(partId)
         ? prev.filter((id) => id !== partId)
@@ -141,7 +75,7 @@ export default function TestDetailPage() {
   };
 
   const selectAll = () => {
-    setSelectedParts(testData.parts_detail.map((part) => part.id));
+    setSelectedParts(testData?.parts.map((part) => part.id) ?? []);
   };
 
   const deselectAll = () => {
@@ -159,14 +93,14 @@ export default function TestDetailPage() {
           className="mb-8"
         >
           <div className="flex items-center gap-2 mb-4">
-            <Badge className="bg-gradient-to-r from-blue-600 to-purple-500 text-white border-0">
+            <Badge className="bg-gradient-to-r from-pink-500 to-primary text-white border-0 shadow-sm">
               #TOEIC
             </Badge>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-            {testData.title}
-          </h1>
 
+          <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-pink-500 via-rose-400 to-primary bg-clip-text text-transparent">
+            {testData?.title}
+          </h1>
           {/* Info Box */}
           <Card className="bg-white/80 backdrop-blur-sm border-gray-200 shadow-lg rounded-xl">
             <CardContent className="pt-6">
@@ -174,29 +108,22 @@ export default function TestDetailPage() {
                 <div className="flex items-center gap-2">
                   <Clock className="w-5 h-5 text-blue-500" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Duration</p>
-                    <p className="font-semibold">{testData.duration} min</p>
+                    <p className="text-sm text-muted-foreground">Thời gian</p>
+                    <p className="font-semibold">120 phút</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <FileText className="w-5 h-5 text-purple-500" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Parts</p>
-                    <p className="font-semibold">{testData.parts} parts</p>
+                    <p className="text-sm text-muted-foreground">Phần thi</p>
+                    <p className="font-semibold">7 phần</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <FileText className="w-5 h-5 text-pink-500" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Questions</p>
-                    <p className="font-semibold">{testData.questions}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5 text-green-500" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Comments</p>
-                    <p className="font-semibold">{testData.comments}</p>
+                    <p className="text-sm text-muted-foreground">Câu hỏi</p>
+                    <p className="font-semibold">200</p>
                   </div>
                 </div>
               </div>
@@ -205,7 +132,8 @@ export default function TestDetailPage() {
               <Alert className="mt-6 border-red-200 bg-red-50">
                 <Info className="h-4 w-4 text-red-600" />
                 <AlertDescription className="text-red-700 font-medium">
-                  To get scaled score, please complete FULL TEST mode.
+                  Để nhận điểm số chuẩn, vui lòng hoàn thành chế độ BÀI THI ĐẦY
+                  ĐỦ.
                 </AlertDescription>
               </Alert>
             </CardContent>
@@ -223,15 +151,15 @@ export default function TestDetailPage() {
             <TabsList className="grid w-full grid-cols-2 mb-6 bg-white/80 backdrop-blur-sm p-1 rounded-xl shadow-md">
               <TabsTrigger
                 value="practice"
-                className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-500 data-[state=active]:text-white"
+                className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-400 data-[state=active]:to-primary data-[state=active]:text-white"
               >
-                Practice Mode
+                Chế độ Luyện tập
               </TabsTrigger>
               <TabsTrigger
                 value="fulltest"
-                className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-500 data-[state=active]:text-white"
+                className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-400 data-[state=active]:to-primary data-[state=active]:text-white"
               >
-                Full Test Mode
+                Chế độ Thi đầy đủ
               </TabsTrigger>
             </TabsList>
 
@@ -246,16 +174,17 @@ export default function TestDetailPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-green-800">
                       <Lightbulb className="w-5 h-5" />
-                      Pro Tips
+                      Mẹo Học tập
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-green-700 leading-relaxed">
-                      <strong>Practice Mode</strong> allows you to select
-                      specific parts to focus on. Perfect for targeted practice
-                      and skill improvement. For an official score, switch to{" "}
-                      <strong>Full Test Mode</strong> which simulates the real
-                      exam experience with all 7 parts and strict timing.
+                      <strong>Chế độ Luyện tập</strong> cho phép bạn chọn các
+                      phần cụ thể để tập trung luyện tập. Hoàn hảo cho việc
+                      luyện tập có mục tiêu và cải thiện kỹ năng. Để có điểm số
+                      chính thức, hãy chuyển sang{" "}
+                      <strong>Chế độ Thi đầy đủ</strong> mô phỏng trải nghiệm
+                      thi thật với đầy đủ 7 phần và thời gian nghiêm ngặt.
                     </p>
                   </CardContent>
                 </Card>
@@ -270,7 +199,7 @@ export default function TestDetailPage() {
               >
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-2xl font-bold text-gray-900">
-                    Select Test Parts
+                    Chọn Phần Thi
                   </h2>
                   <div className="flex gap-2">
                     <Button
@@ -279,7 +208,7 @@ export default function TestDetailPage() {
                       onClick={selectAll}
                       className="text-sm bg-transparent"
                     >
-                      Select All
+                      Chọn tất cả
                     </Button>
                     <Button
                       variant="outline"
@@ -287,19 +216,19 @@ export default function TestDetailPage() {
                       onClick={deselectAll}
                       className="text-sm bg-transparent"
                     >
-                      Clear All
+                      Bỏ chọn tất cả
                     </Button>
                   </div>
                 </div>
 
-                {testData.parts_detail.map((part, index) => (
+                {testData?.parts.map((part, index) => (
                   <motion.div key={part.id} variants={fadeInUp}>
                     <Collapsible
                       open={openParts.includes(part.id)}
                       onOpenChange={() => toggleOpen(part.id)}
                     >
                       <Card className="bg-white/80 backdrop-blur-sm border-gray-200 shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl overflow-hidden">
-                        <CollapsibleTrigger className="w-full">
+                        <CollapsibleTrigger className="w-full" asChild>
                           <CardHeader className="hover:bg-gray-50/50 transition-colors">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-4">
@@ -311,10 +240,13 @@ export default function TestDetailPage() {
                                 />
                                 <div className="text-left">
                                   <CardTitle className="text-lg font-bold text-gray-900">
-                                    {part.name}
+                                    Part {part.partNumber}
                                   </CardTitle>
                                   <p className="text-sm text-muted-foreground mt-1">
-                                    {part.questions} questions
+                                    {part.groups
+                                      .map((group) => group.questions.length)
+                                      .reduce((a, b) => a + b, 0)}{" "}
+                                    câu hỏi
                                   </p>
                                 </div>
                               </div>
@@ -336,18 +268,19 @@ export default function TestDetailPage() {
                                 transition={{ duration: 0.3 }}
                                 className="flex flex-wrap gap-2 pt-2"
                               >
-                                {part.tags.map((tag, tagIndex) => (
+                                {part.skills.map((skill, skillIndex) => (
                                   <motion.div
-                                    key={tag}
+                                    key={skill.id}
                                     initial={{ opacity: 0, scale: 0.8 }}
                                     animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ delay: tagIndex * 0.05 }}
+                                    transition={{ delay: skillIndex * 0.05 }}
                                   >
                                     <Badge
                                       variant="secondary"
-                                      className="bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border-0 hover:from-blue-200 hover:to-purple-200 transition-colors"
+                                      className="bg-gradient-to-r from-pink-100 to-orange-100 text-shadow-blue-600 border-0 
+             hover:from-pink-200 hover:to-orange-200 transition-colors"
                                     >
-                                      {tag}
+                                      {skill.name}
                                     </Badge>
                                   </motion.div>
                                 ))}
@@ -380,9 +313,9 @@ export default function TestDetailPage() {
                 >
                   <Button
                     disabled={selectedParts.length === 0}
-                    className="w-full py-6 text-lg font-bold bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 hover:from-blue-700 hover:via-purple-600 hover:to-pink-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full py-6 text-lg font-bold bg-gradient-to-r from-pink-400 to-primary hover:from-blue-700 hover:via-purple-600 hover:to-pink-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Start Selected Parts ({selectedParts.length})
+                    Bắt đầu Phần đã chọn ({selectedParts.length})
                   </Button>
                 </motion.div>
               </motion.div>
@@ -392,21 +325,21 @@ export default function TestDetailPage() {
               <Card className="bg-white/80 backdrop-blur-sm border-gray-200 shadow-lg rounded-xl">
                 <CardHeader>
                   <CardTitle className="text-2xl font-bold text-gray-900">
-                    Full Test Mode
+                    Chế độ Thi đầy đủ
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <p className="text-gray-700 leading-relaxed">
-                    Complete all 7 parts (200 questions) in 120 minutes to
-                    receive your scaled TOEIC score. This mode simulates the
-                    real exam experience with strict timing and no breaks
-                    between sections.
+                    Hoàn thành tất cả 7 phần (200 câu hỏi) trong 120 phút để
+                    nhận điểm TOEIC chuẩn của bạn. Chế độ này mô phỏng trải
+                    nghiệm thi thật với thời gian nghiêm ngặt và không có thời
+                    gian nghỉ giữa các phần.
                   </p>
                   <Alert className="border-blue-200 bg-blue-50">
                     <Info className="h-4 w-4 text-blue-600" />
                     <AlertDescription className="text-blue-700">
-                      Make sure you have 2 hours of uninterrupted time before
-                      starting the full test.
+                      Đảm bảo bạn có 2 giờ liên tục không bị gián đoạn trước khi
+                      bắt đầu bài thi đầy đủ.
                     </AlertDescription>
                   </Alert>
                   <motion.div
@@ -419,8 +352,12 @@ export default function TestDetailPage() {
                       ease: "easeInOut",
                     }}
                   >
-                    <Button className="w-full py-6 text-lg font-bold bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 hover:from-blue-700 hover:via-purple-600 hover:to-pink-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl mt-4">
-                      Start Full Test (120 minutes)
+                    <Button
+                      // disabled={selectedParts.length === 0}
+                      onClick={() => router.push(`/tests/${testData?.id}/start`)}
+                      className="w-full py-6 text-lg font-bold bg-gradient-to-r from-pink-400 to-primary hover:from-pink-500  hover:to-pink-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Bắt đầu Bài thi đầy đủ (120 phút)
                     </Button>
                   </motion.div>
                 </CardContent>
