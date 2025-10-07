@@ -309,20 +309,22 @@ export class AttemptService {
   }
 
   async submitAttempt(attemptId: string, user: User) {
-    let attempt = await this.attemptRepo.findOne({
+    const attempt = await this.attemptRepo.findOne({
       where: { id: attemptId },
       relations: {
         user: true,
-        test: true,
-        parts: {
-          groups: {
-            questions: {
-              answers: true,
-            },
-          },
-        },
+        parts: { groups: { questions: { answers: true, questionTags: { skill: true } } } },
       },
+      order: {
+        parts: {
+          partNumber: 'ASC',
+        }
+      }
     });
+
+    if (!attempt) throw new NotFoundException('Attempt not found!');
+    if (attempt.user.id !== user.id)
+      throw new UnauthorizedException('You do not have permission!');
 
     const attemptAnswers = await this.attemptAnswerRepo.find({
       where: { attempt: { id: attemptId } },
@@ -330,63 +332,42 @@ export class AttemptService {
     });
 
     const answerMap = new Map(attemptAnswers.map((aa) => [aa.question.id, aa]));
-
-    if (!attempt) {
-      throw new NotFoundException('Attempt not found!');
-    }
-    if (attempt?.user.id !== user.id)
-      throw new UnauthorizedException(
-        'You are not have permission to do this action!',
-      );
-
-    let totalScore = 0;
-    let correctCount = 0;
-    let totalQuestions = 0;
-    let wrongCount = 0;
-    let skippedCount = 0;
-
-    attempt.parts.forEach((p) =>
-      p.groups.forEach((g) =>
-        g.questions.forEach((q) => {
-          totalQuestions += 1;
-          const userAnswer = answerMap.get(q.id);
-          q['userAnswer'] = userAnswer ?? null;
-          if (!userAnswer) {
-            // Câu bỏ qua
-            skippedCount += 1;
-          } else if (userAnswer.answer?.isCorrect) {
-            // Câu trả lời đúng
-            totalScore += q['score'] ?? 1;
-            correctCount += 1;
-          } else {
-            // Câu trả lời sai
-            wrongCount += 1;
-          }
-        }),
-      ),
+    const allQuestions = attempt.parts.flatMap((p) =>
+      p.groups.flatMap((g) => g.questions),
     );
 
-    const accuracy = correctCount / totalQuestions;
+    let totalScore = 0,
+      correctCount = 0,
+      wrongCount = 0,
+      skippedCount = 0;
 
-    // for (const a of attemptAnswers) {
-    //   if (a.isCorrect === true) totalScore += a.question.score;
-    // }
+    for (const q of allQuestions) {
+      const ans = answerMap.get(q.id);
+      if (!ans) skippedCount++;
+      else if (ans.answer?.isCorrect) {
+        totalScore += q['score'] ?? 1;
+        correctCount++;
+      } else wrongCount++;
+    }
 
-    attempt.status = 'submitted';
-    attempt.finishAt = new Date();
-    attempt.totalScore = totalScore;
+    const accuracy = correctCount / allQuestions.length;
 
-    const savedAttempt = await this.attemptRepo.save(attempt);
+    Object.assign(attempt, {
+      status: 'submitted',
+      finishAt: new Date(),
+      totalScore,
+    });
+
+    await this.attemptRepo.save(attempt);
 
     return {
-      ...savedAttempt,
-      parts: attempt.parts,
-      totalQuestions,
+      ...attempt,
+      totalQuestions: allQuestions.length,
       correctCount,
+      wrongCount,
+      skippedCount,
       totalScore,
       accuracy,
-      skippedCount,
-      wrongCount,
     };
   }
 
