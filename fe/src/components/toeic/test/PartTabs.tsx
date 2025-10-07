@@ -1,13 +1,9 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Part } from "@/types";
 import { cn } from "@/utils/libs";
 
-interface Part {
-  number: number;
-  name: string;
-  questions: number[];
-}
 
 interface PartTabsProps {
   parts: Part[];
@@ -17,25 +13,24 @@ interface PartTabsProps {
 
 export function PartTabs({ parts, currentPart, onPartChange }: PartTabsProps) {
   const handlePartClick = (part: Part) => {
-    const firstQuestion = part.questions[0];
-    onPartChange(firstQuestion);
+    onPartChange(part.partNumber);
   };
 
   return (
-    <div className="bg-white border-b px-6 py-3">
+    <div className="bg-white  px-6 py-3">
       <div className="flex gap-1">
         {parts.map((part) => (
           <Button
-            key={part.number}
-            variant={part.number === currentPart ? "default" : "outline"}
+            key={part.partNumber}
+            variant={part.partNumber === currentPart ? "default" : "outline"}
             size="sm"
             className={cn(
               "h-8 text-xs px-3 transition-all duration-200",
-              part.number === currentPart && "bg-blue-500 text-white hover:bg-blue-600"
+              part.partNumber === currentPart && "bg-blue-500 text-white hover:bg-blue-600"
             )}
             onClick={() => handlePartClick(part)}
           >
-            Part {part.number}
+            Part {part.partNumber}
           </Button>
         ))}
       </div>

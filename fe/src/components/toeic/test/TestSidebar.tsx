@@ -52,16 +52,16 @@ export function TestSidebar({
   };
 
   return (
-    <div className="w-60 bg-gray-50 border-l flex flex-col overflow-y-hidden">
+    <div className="sticky -top-[calc(100vh+96px)] w-60 bg-white flex flex-col overflow-y-hidden border rounded-xl shadow-sm h-fit">
       <div className="p-6 flex-1">
         <div className="space-y-6">
           {/* Timer */}
-          <div className="text-center">
+          <div className="text-center sticky top-2 mb-6">
             <div className="text-sm text-gray-600 mb-1">Thời gian còn lại:</div>
             <CountdownTimer initialSeconds={timeRemaining} tickInterval={1000} onExpire={onSubmitTest} />
             <Button
               size="sm"
-              className="mt-3 bg-blue-600 hover:bg-blue-700 text-xs px-4"
+              className="mt-3 bg-primary hover:bg-primary-2 text-xs px-4"
               onClick={onSubmitTest}
             >
               NỘP BÀI
@@ -69,22 +69,14 @@ export function TestSidebar({
           </div>
           <hr className="border-gray-200" />
 
-          <div className="p-4 border-t bg-white ">
-            <div className="space-y-2 text-xs">
-              <div className="text-orange-600">Khôi phục/lưu bài làm ▶</div>
-              <div className="text-blue-600 leading-relaxed">
-                Chú ý: bạn có thể click vào số thứ tự câu hỏi trong bài để đánh
-                dấu review.
-              </div>
-            </div>
-          </div>
-          <hr className="border-gray-200" />
+          
+          {/* <hr className="border-gray-200" /> */}
 
           {/* Part Navigation */}
           <div className="space-y-4 overflow-y-hidden">
             {parts.map((part) => (
               <div key={part.number} className="space-y-2">
-                <h3 className="font-semibold text-xs text-gray-700 sticky top-0 bg-gray-50 py-1">
+                <h3 className="font-semibold text-xs text-gray-700 sticky top-0 py-1">
                   Part {part.number}
                 </h3>
                 <div className="grid grid-cols-5 gap-x-1.5 gap-y-1.5">
@@ -94,7 +86,7 @@ export function TestSidebar({
                       size="sm"
                       variant="ghost"
                       className={cn(
-                        "h-7 w-7 p-0 flex items-center justify-center text-[10px] font-medium transition-all duration-200",
+                        "h-7 w-7 p-0 flex items-center justify-center text-[12px] font-medium transition-all duration-200",
                         getQuestionStatusColor(questionNum)
                       )}
                       onClick={() => onQuestionChange(questionNum)}

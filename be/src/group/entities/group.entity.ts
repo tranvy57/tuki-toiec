@@ -8,10 +8,10 @@ export class Group extends BaseEntity {
   @Column({ name: 'order_index' })
   orderIndex: number;
 
-  @Column({ name: 'parageraph_en' })
+  @Column({ name: 'parageraph_en', type: 'text', nullable: true })
   paragraphEn: string;
 
-  @Column({ name: 'paragraph_vn' })
+  @Column({ name: 'paragraph_vn', type: 'text', nullable: true })
   paragraphVn: string;
 
   @Column({ name: 'image_url', nullable: true })

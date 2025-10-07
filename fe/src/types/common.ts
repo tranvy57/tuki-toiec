@@ -3,8 +3,8 @@ import z from "zod";
 export const BaseEntitySchema = z.object({
   id: z.string(),
   isActive: z.boolean(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
 });
 
 export type UserRole = "ADMIN" | "USER";

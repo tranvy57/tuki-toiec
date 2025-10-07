@@ -12,18 +12,13 @@ import {
 
 // Types
 import { usePracticeTest } from "@/hooks";
-import { Question } from "@/types/implements/test";
+import { Part, Question } from "@/types/implements/test";
 
 // Constants
 const TEST_DURATION = 120 * 60; // 2 hours in seconds
 const TRANSITION_DELAY = 200;
 
 // Utility types for UI components
-interface PartTab {
-  number: number;
-  name: string;
-  questions: number[]; // question numberLabels
-}
 
 // Custom hooks for optimized data access
 export const useTestData = (fullTest: any) => {
@@ -40,7 +35,7 @@ export const useTestData = (fullTest: any) => {
 
     const questions: Question[] = [];
     const groups: any[] = [];
-    const parts: PartTab[] = [];
+    const parts: Part[] = [];
     const questionMap = new Map<number, Question>();
     const groupMap = new Map<string, any>();
 
@@ -57,9 +52,8 @@ export const useTestData = (fullTest: any) => {
       });
 
       parts.push({
-        number: part.partNumber,
-        name: `Part ${part.partNumber}`,
-        questions: partQuestionNumbers.sort((a, b) => a - b),
+        partNumber: part.partNumber,
+        ...part
       });
     });
 
@@ -71,7 +65,7 @@ export const useTestData = (fullTest: any) => {
 
     return {
       allQuestions: questions,
-      partTabs: parts.sort((a, b) => a.number - b.number),
+      partTabs: parts.sort((a, b) => a.partNumber - b.partNumber),
       allGroups: groups,
       questionMap,
       groupMap,
@@ -327,9 +321,9 @@ export const useTestLogic = () => {
   // Memoized part change handler
   const handlePartChange = useCallback(
     (partNumber: number) => {
-      const part = partTabs.find((p) => p.number === partNumber);
-      if (part && part.questions.length > 0) {
-        handleQuestionChange(part.questions[0]);
+      const part = partTabs.find((p) => p.partNumber === partNumber);
+      if (part && part.groups.length > 0) {
+        handleQuestionChange(part.groups[0].questions[0].numberLabel);
       }
     },
     [partTabs, handleQuestionChange]
