@@ -20,4 +20,13 @@ export class QuestionDto {
   @Expose()
   @Type(() => AnswerDto)
   answers?: AnswerDto[];
+
+  @Expose()
+  isCorrect?: boolean | null;
+
+  @Expose()
+  userAnswerId?: string | null;
+  
+  @Expose()
+  partNumber?: number | null;
 }
