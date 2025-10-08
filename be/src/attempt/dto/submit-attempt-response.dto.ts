@@ -4,7 +4,7 @@ import { PartDto } from 'src/part/dto/part.dto';
 import { Part } from 'src/part/entities/part.entity';
 import { TestDto } from 'src/test/dto/test.dto';
 
-export class AttemptDto {
+export class AttemptResultDto {
   @Expose()
   id: string;
 
