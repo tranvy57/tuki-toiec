@@ -12,8 +12,8 @@ export class AttemptResultDto {
   mode: 'practice' | 'test';
 
   @Expose()
-  @Type(() => TestDto)
-  test: TestDto;
+  @Type(() => PartDto)
+  parts: PartDto[];
 
   @Expose()
   startedAt: Date;
