@@ -26,7 +26,8 @@ import { Vocabulary } from 'src/vocabulary/entities/vocabulary.entity';
 import { UserProgressService } from 'src/user_progress/user_progress.service';
 import { attempt } from 'joi';
 import { QuestionDto } from 'src/question/dto/question.dto';
-import { AttemptDto } from './dto/submit-attempt-response.dto';
+import { AttemptDto } from './dto/attempt.dto';
+import { AttemptResultDto } from './dto/submit-attempt-response.dto';
 
 @Injectable()
 export class AttemptService {
@@ -421,7 +422,7 @@ export class AttemptService {
     await this.attemptRepo.save(attempt);
 
     const result = plainToInstance(
-      AttemptDto,
+      AttemptResultDto,
       {
         id: attempt.id,
         mode: attempt.mode,
