@@ -8,6 +8,9 @@ import { Toaster } from "sonner";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+
+
 
 export default function Providers({
   children,
@@ -22,26 +25,28 @@ export default function Providers({
 }>) {
   const [queryClient] = useState(() => new QueryClient());
 
+
   return (
     <QueryClientProvider client={queryClient}>
       <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
-            <NextIntlClientProvider
-              locale={locale}
-              messages={messages}
-              timeZone={timeZone}
-            >
-              <Toaster
-                position="top-right"
-                toastOptions={{
-                  classNames: {
-                    toast: "text-xs",
-                    icon: "text-pink-500",
-                  },
-                }}
-              />
-              <HideLayoutWrapper>{children}</HideLayoutWrapper>
-            </NextIntlClientProvider>
+        <NextIntlClientProvider
+          locale={locale}
+          messages={messages}
+          timeZone={timeZone}
+        >
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              classNames: {
+                toast: "text-xs",
+                icon: "text-pink-500",
+              },
+            }}
+          />
+          <HideLayoutWrapper>{children}</HideLayoutWrapper>
+        </NextIntlClientProvider>
       </GoogleOAuthProvider>
+      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
 }

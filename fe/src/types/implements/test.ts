@@ -2,6 +2,7 @@ import { z } from "zod";
 import { BaseResponseSchema } from "../api-response";
 import { SkillSchema } from "./skill";
 import { title } from "process";
+import { id } from "zod/v4/locales";
 
 export const AnswerSchema = z.object({
   id: z.string(),
@@ -70,6 +71,13 @@ export const UserAnswerSchema = z.object({
   isCorrect: z.boolean().nullable(),
 });
 
+export const questionTagsSchema = z.object({
+  id: z.string(),
+  difficulty: z.string().nullable(),
+  confidence: z.string().nullable(),
+  skill: SkillSchema,
+})
+
 export const SubmitQuestionSchema = z.object({
   id: z.string(),
   numberLabel: z.number(), // số câu
@@ -77,7 +85,9 @@ export const SubmitQuestionSchema = z.object({
   explanation: z.string().nullable().optional(),
   answers: z.array(AnswerSchema), // các đáp án
   userAnswer: UserAnswerSchema.optional().nullable(),
+  questionTags: z.array(questionTagsSchema).optional(), // các thẻ tag
 });
+
 export const SubmitGroupSchema = z.object({
   id: z.string(),
   orderIndex: z.number(),

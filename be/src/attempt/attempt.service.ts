@@ -209,6 +209,8 @@ export class AttemptService {
     let skippedCount = 0;
     let totalQuestions = 0;
 
+    let listeningScore = 0;
+    let readingScore = 0;
     attempt.parts.forEach((p) =>
       p.groups.forEach((g) =>
         g.questions.forEach((q) => {
@@ -218,11 +220,22 @@ export class AttemptService {
           const userAnswer = answerMap.get(q.id);
           q['userAnswer'] = userAnswer ?? null;
 
+          const score = q['score'] ?? 1;
+
           if (!userAnswer) {
             skippedCount += 1;
-          } else if (userAnswer.answer?.isCorrect) {
-            totalScore += q['score'] ?? 1;
+            return;
+          }
+
+          if (userAnswer.answer?.isCorrect) {
+            totalScore += score;
             correctCount += 1;
+
+            if (p.partNumber <= 4) {
+              listeningScore += score;
+            } else {
+              readingScore += score;
+            }
           } else {
             wrongCount += 1;
           }
@@ -234,6 +247,8 @@ export class AttemptService {
 
     return {
       parts: attempt.parts,
+      listeningScore,
+      readingScore,
       totalQuestions,
       correctCount,
       wrongCount,
@@ -313,13 +328,17 @@ export class AttemptService {
       where: { id: attemptId },
       relations: {
         user: true,
-        parts: { groups: { questions: { answers: true, questionTags: { skill: true } } } },
+        parts: {
+          groups: {
+            questions: { answers: true, questionTags: { skill: true } },
+          },
+        },
       },
       order: {
         parts: {
           partNumber: 'ASC',
-        }
-      }
+        },
+      },
     });
 
     if (!attempt) throw new NotFoundException('Attempt not found!');
@@ -333,7 +352,12 @@ export class AttemptService {
 
     const answerMap = new Map(attemptAnswers.map((aa) => [aa.question.id, aa]));
     const allQuestions = attempt.parts.flatMap((p) =>
-      p.groups.flatMap((g) => g.questions),
+      p.groups.flatMap((g) =>
+        g.questions.map((q) => ({
+          ...q,
+          partNumber: p.partNumber, // gắn thêm info part
+        })),
+      ),
     );
 
     let totalScore = 0,
@@ -341,15 +365,25 @@ export class AttemptService {
       wrongCount = 0,
       skippedCount = 0;
 
+    let listeningScore = 0;
+    let readingScore = 0;
+
     for (const q of allQuestions) {
       const ans = answerMap.get(q.id);
-      if (!ans) skippedCount++;
-      else if (ans.answer?.isCorrect) {
-        totalScore += q['score'] ?? 1;
-        correctCount++;
-      } else wrongCount++;
-    }
+      const score = q['score'] ?? 1;
 
+      if (!ans) {
+        skippedCount++;
+      } else if (ans.answer?.isCorrect) {
+        totalScore += score;
+        correctCount++;
+
+        if (q.partNumber <= 4) listeningScore += score;
+        else readingScore += score;
+      } else {
+        wrongCount++;
+      }
+    }
     const accuracy = correctCount / allQuestions.length;
 
     Object.assign(attempt, {
@@ -362,6 +396,8 @@ export class AttemptService {
 
     return {
       ...attempt,
+      listeningScore,
+      readingScore,
       totalQuestions: allQuestions.length,
       correctCount,
       wrongCount,

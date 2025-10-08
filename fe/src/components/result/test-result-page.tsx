@@ -10,6 +10,7 @@ import { AIAnalysis } from "./ai-analysis"
 import { StudyRecommendations } from "./study-recommendations"
 import { FixedActionBar } from "./fixed-action-bar"
 import { SummaryInfo } from "./summary-info"
+import { usePracticeTest } from "@/hooks"
 
 export interface TestData {
   testTitle: string
@@ -44,6 +45,7 @@ interface TestResultPageProps {
 
 export function TestResultPage({ data }: TestResultPageProps) {
   const [activeSection, setActiveSection] = useState<"analysis" | "review">("analysis")
+  const { resultTest } = usePracticeTest();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50/30 to-white pb-24">

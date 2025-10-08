@@ -65,7 +65,7 @@ export const submitTest = async (
   }
 };
 
-export const useSubmitTestResult = () => {
+export const  useSubmitTestResult = () => {
   return useMutation({
     mutationFn: (attemptId: string) => submitTest(attemptId),
   });

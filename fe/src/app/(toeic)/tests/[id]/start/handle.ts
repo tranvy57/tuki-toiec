@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   useAddAttemptAnswer,
   useStartTestPractice,
-  useSubmitTestResult
+  useSubmitTestResult,
 } from "@/api/useAttempt";
 
 // Store
@@ -53,7 +53,7 @@ export const useTestData = (fullTest: any) => {
 
       parts.push({
         partNumber: part.partNumber,
-        ...part
+        ...part,
       });
     });
 
@@ -137,27 +137,30 @@ export const useTestLogic = () => {
       !fullTest
     ) {
       setIsInitialized(true);
-      startTestMutation.mutate({
-        testId: testId,
-      }, {
-        onSuccess: (data) => {
-          setFullTest(data);
-          setAttemptId(data.id);
-          // Set timer from test duration if available
-          const startTime = new Date(data.startedAt);
-          const now = new Date();
-          const elapsed = Math.floor(
-            (now.getTime() - startTime.getTime()) / 1000
-          );
-          const remaining = Math.max(0, TEST_DURATION - elapsed);
-          setTimeRemaining(remaining);
+      startTestMutation.mutate(
+        {
+          testId: testId,
         },
-        onError: (error) => {
-          console.error("Failed to start test:", error);
-          setIsInitialized(false); // Reset on error
-          router.push(`/tests/${testId}`);
-        },
-      });
+        {
+          onSuccess: (data) => {
+            setFullTest(data);
+            setAttemptId(data.id);
+            // Set timer from test duration if available
+            const startTime = new Date(data.startedAt);
+            const now = new Date();
+            const elapsed = Math.floor(
+              (now.getTime() - startTime.getTime()) / 1000
+            );
+            const remaining = Math.max(0, TEST_DURATION - elapsed);
+            setTimeRemaining(remaining);
+          },
+          onError: (error) => {
+            console.error("Failed to start test:", error);
+            setIsInitialized(false); // Reset on error
+            router.push(`/tests/${testId}`);
+          },
+        }
+      );
     }
   }, []);
 
@@ -165,16 +168,20 @@ export const useTestLogic = () => {
   const handleSubmit = useCallback(
     async (auto = false) => {
       if (auto) {
-        // router.push(`/tests/${testId}/result?attemptId=${attemptId}`);
-        const result = await submitTest(fullTest?.id || "");
+        router.push(`/tests/${testId}/result?attemptId=${attemptId}`);
+        const result = await submitTest(attemptId || "");
         if (isError) {
           console.error("Error submitting test:", error);
           alert("There was an error submitting your test. Please try again.");
           return;
         }
+        console.log(
+          "Redirecting to:",
+          `/tests/${fullTest?.id}/result?attemptId=${attemptId}`
+        );
 
         setResultTest(result);
-        // router.replace("/(tabs)/(tests)/[id]/result");
+        router.replace(`/tests/${fullTest?.id}/result?attemptId=${attemptId}`);
       } else {
         setOpen(true); // mở modal
       }
@@ -191,8 +198,8 @@ export const useTestLogic = () => {
     }
 
     setResultTest(result);
-    router.replace("/");
-
+    router.replace(`/tests/${fullTest?.id}/result?attemptId=${attemptId}`);
+    
   }, [router, testId, attemptId]);
 
   // Countdown timer
