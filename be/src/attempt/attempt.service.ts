@@ -437,7 +437,7 @@ export class AttemptService {
         wrongCount,
         skippedCount,
         accuracy,
-        test: attempt,
+        test: attempt.parts,
       },
       { excludeExtraneousValues: true },
     );
