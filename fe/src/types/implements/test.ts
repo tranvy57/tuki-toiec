@@ -120,6 +120,12 @@ export const ResultTestResponseSchema = z.object({
   startedAt: z.string(),
   finishAt: z.string().nullable(),
   totalScore: z.number().nullable(),
+  listeningScore: z.number().nullable().optional(),
+  readingScore: z.number().nullable().optional(),
+  accuracy: z.number().nullable().optional(),
+  correctCount: z.number().nullable(),
+  wrongCount: z.number().nullable(),
+  skippedCount: z.number().nullable(),
   status: z.enum(["in_progress", "submitted"]),
 });
 

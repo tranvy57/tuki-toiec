@@ -4,12 +4,9 @@ import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import type { TestData } from "./test-result-page";
 import { CheckCircle2, XCircle, MinusCircle, Flag } from "lucide-react";
+import { ResultTestResponse } from "@/types";
 
-interface PerformanceSummaryProps {
-  data: TestData;
-}
-
-export function PerformanceSummary({ data }: PerformanceSummaryProps) {
+export function PerformanceSummary({ data }: { data: ResultTestResponse }) {
   const stats = [
     {
       icon: CheckCircle2,
@@ -22,7 +19,7 @@ export function PerformanceSummary({ data }: PerformanceSummaryProps) {
     {
       icon: XCircle,
       label: "Câu trả lời sai",
-      value: data.incorrectCount,
+      value: data.wrongCount,
       subtitle: "câu trả lời không chính xác",
       color: "text-red-500",
       bg: "bg-red-50",
