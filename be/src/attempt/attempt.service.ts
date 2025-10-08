@@ -368,22 +368,45 @@ export class AttemptService {
     let listeningScore = 0;
     let readingScore = 0;
 
+    const updatedAttemptAnswers: AttemptAnswer[] = [];
+
     for (const q of allQuestions) {
       const ans = answerMap.get(q.id);
-      const score = q['score'] ?? 1;
+      const score = Number(q.score ?? 1);
 
       if (!ans) {
         skippedCount++;
-      } else if (ans.answer?.isCorrect) {
+        continue;
+      }
+
+      // Nếu có câu trả lời nhưng chưa load relation answer => bỏ qua an toàn
+      if (!ans.answer) {
+        skippedCount++;
+        continue;
+      }
+
+      const isCorrect = ans.answer.isCorrect === true;
+
+      // cập nhật lại attemptAnswer nếu trước đó chưa chấm (isCorrect=null)
+      if (ans.isCorrect !== isCorrect) {
+        ans.isCorrect = isCorrect;
+        updatedAttemptAnswers.push(ans);
+      }
+
+      if (isCorrect) {
         totalScore += score;
         correctCount++;
-
         if (q.partNumber <= 4) listeningScore += score;
         else readingScore += score;
       } else {
         wrongCount++;
       }
     }
+
+    if (updatedAttemptAnswers.length > 0) {
+      await this.attemptAnswerRepo.save(updatedAttemptAnswers);
+    }
+
     const accuracy = correctCount / allQuestions.length;
 
     Object.assign(attempt, {

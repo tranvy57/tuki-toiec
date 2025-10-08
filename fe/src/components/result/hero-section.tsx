@@ -5,10 +5,7 @@ import { AnimatedCounter } from "./animated-counter";
 import { FloatingParticles } from "./floating-particles";
 import { Badge } from "@/components/ui/badge";
 import type { TestData } from "./test-result-page";
-
-interface HeroSectionProps {
-  data: TestData;
-}
+import { ResultTestResponse } from "@/types";
 
 function getBandLevel(score: number): string {
   if (score >= 945) return "Chuyên gia";
@@ -18,8 +15,8 @@ function getBandLevel(score: number): string {
   return "Sơ cấp";
 }
 
-export function HeroSection({ data }: HeroSectionProps) {
-  const bandLevel = getBandLevel(data.totalScore);
+export function HeroSection({ data }: { data: ResultTestResponse }) {
+  const bandLevel = getBandLevel(data.totalScore || 0);
 
   return (
     <motion.section
@@ -65,7 +62,7 @@ export function HeroSection({ data }: HeroSectionProps) {
           className="mb-10"
         >
           <div className="text-7xl md:text-8xl font-extrabold text-gray-900 tracking-tight drop-shadow-sm">
-            <AnimatedCounter value={data.totalScore} duration={2000} />
+            <AnimatedCounter value={data.totalScore || 0} duration={2000} />
           </div>
         </motion.div>
 
@@ -81,7 +78,10 @@ export function HeroSection({ data }: HeroSectionProps) {
             <div className="text-3xl mb-1">🎧</div>
             <div className="text-sm text-gray-600 mb-1 font-medium">Nghe</div>
             <div className="text-2xl font-bold text-gray-900">
-              <AnimatedCounter value={data.listeningScore} duration={2000} />
+              <AnimatedCounter
+                value={data.listeningScore || 0}
+                duration={2000}
+              />
             </div>
           </div>
 
@@ -90,7 +90,7 @@ export function HeroSection({ data }: HeroSectionProps) {
             <div className="text-3xl mb-1">📖</div>
             <div className="text-sm text-gray-600 mb-1 font-medium">Đọc</div>
             <div className="text-2xl font-bold text-gray-900">
-              <AnimatedCounter value={data.readingScore} duration={2000} />
+              <AnimatedCounter value={data.readingScore || 0} duration={2000} />
             </div>
           </div>
         </motion.div>

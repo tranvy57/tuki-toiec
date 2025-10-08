@@ -11,6 +11,7 @@ import { StudyRecommendations } from "./study-recommendations"
 import { FixedActionBar } from "./fixed-action-bar"
 import { SummaryInfo } from "./summary-info"
 import { usePracticeTest } from "@/hooks"
+import { getDurationString } from "@/utils"
 
 export interface TestData {
   testTitle: string
@@ -47,22 +48,26 @@ export function TestResultPage({ data }: TestResultPageProps) {
   const [activeSection, setActiveSection] = useState<"analysis" | "review">("analysis")
   const { resultTest } = usePracticeTest();
 
+  if(resultTest === null) {
+    return <div>Loading...</div>
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50/30 to-white pb-24">
-      <HeroSection data={data} />
+      <HeroSection data={resultTest} />
 
-      {/* <div className="container mx-auto px-4 py-8 space-y-8">
+      <div className="container mx-auto px-4 py-8 space-y-8">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-6">
           <div className="lg:col-span-1">
             <SummaryInfo
               totalQuestions={200}
-              correctCount={data.correctCount}
-              duration={data.duration}
+              correctCount={resultTest.accuracy || 0}
+              duration={getDurationString(resultTest.startedAt, resultTest.finishAt) || "00:00:00"}
             />
           </div>
 
           <div className="lg:col-span-4">
-            <PerformanceSummary data={data} />
+            <PerformanceSummary data={resultTest} />
           </div>
         </div>
 
@@ -71,10 +76,10 @@ export function TestResultPage({ data }: TestResultPageProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
         >
-          <DetailedPartAnalysis parts={data.parts} />
+          {/* <DetailedPartAnalysis data={resultTest} /> */}
         </motion.div>
 
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
@@ -96,10 +101,10 @@ export function TestResultPage({ data }: TestResultPageProps) {
           transition={{ duration: 0.6, delay: 0.6 }}
         >
           <StudyRecommendations recommendations={data.recommendations} />
-        </motion.div>
+        </motion.div> */}
       </div>
 
-      <FixedActionBar /> */}
+      {/* <FixedActionBar /> */}
     </div>
   );
 }
