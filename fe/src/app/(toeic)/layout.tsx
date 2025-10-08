@@ -6,6 +6,9 @@ import { getLocale, getMessages } from "next-intl/server";
 import AppInit from "@/components/AppInit";
 import Header from "@/components/layout/header/header";
 
+
+
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
