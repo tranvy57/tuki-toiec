@@ -25,13 +25,23 @@ export class AttemptDto {
   totalScore: number;
 
   @Expose()
+  listeningScore: number;
+
+  @Expose()
+  readingScore: number;
+
+  @Expose()
+  correctCount: number;
+
+  @Expose()
+  wrongCount: number;
+
+  @Expose()
+  skippedCount: number;
+
+  @Expose()
+  accuracy: number;
+
+  @Expose()
   status: 'in_progress' | 'submitted';
-
-  @Expose()
-  @Type(() => PartDto)
-  parts: PartDto[];
-
-  @Expose()
-  @Type(() => AttemptAnswer)
-  attemptAnswers?: AttemptAnswer[];
 }

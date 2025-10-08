@@ -25,6 +25,8 @@ import { TargetSkill } from 'src/target_skills/entities/target_skill.entity';
 import { UserVocabulary } from 'src/user_vocabularies/entities/user_vocabulary.entity';
 import { Vocabulary } from 'src/vocabulary/entities/vocabulary.entity';
 import { UserProgressService } from 'src/user_progress/user_progress.service';
+import { attempt } from 'joi';
+import { QuestionDto } from 'src/question/dto/question.dto';
 
 @Injectable()
 export class AttemptService {
@@ -48,6 +50,12 @@ export class AttemptService {
 
   private toResponseDto(attempt: Attempt): AttemptDto {
     return plainToInstance(AttemptDto, attempt, {
+      excludeExtraneousValues: true,
+    });
+  }
+
+  private toQuestionDto(question: Question): QuestionDto {
+    return plainToInstance(QuestionDto, question, {
       excludeExtraneousValues: true,
     });
   }
@@ -360,6 +368,8 @@ export class AttemptService {
       ),
     );
 
+    const questionsDto = allQuestions.map((q) => this.toQuestionDto(q));
+
     let totalScore = 0,
       correctCount = 0,
       wrongCount = 0,
@@ -370,16 +380,16 @@ export class AttemptService {
 
     const updatedAttemptAnswers: AttemptAnswer[] = [];
 
-    for (const q of allQuestions) {
+    for (const q of questionsDto) {
       const ans = answerMap.get(q.id);
       const score = Number(q.score ?? 1);
 
       if (!ans) {
         skippedCount++;
+
         continue;
       }
 
-      // Nếu có câu trả lời nhưng chưa load relation answer => bỏ qua an toàn
       if (!ans.answer) {
         skippedCount++;
         continue;
@@ -387,7 +397,6 @@ export class AttemptService {
 
       const isCorrect = ans.answer.isCorrect === true;
 
-      // cập nhật lại attemptAnswer nếu trước đó chưa chấm (isCorrect=null)
       if (ans.isCorrect !== isCorrect) {
         ans.isCorrect = isCorrect;
         updatedAttemptAnswers.push(ans);
@@ -396,8 +405,10 @@ export class AttemptService {
       if (isCorrect) {
         totalScore += score;
         correctCount++;
-        if (q.partNumber <= 4) listeningScore += score;
-        else readingScore += score;
+        if (q.partNumber && q.partNumber !== null) {
+          if (q.partNumber <= 4) listeningScore += score;
+          else readingScore += score;
+        }
       } else {
         wrongCount++;
       }
@@ -416,6 +427,19 @@ export class AttemptService {
     });
 
     await this.attemptRepo.save(attempt);
+    
+    const questionMap = new Map(questionsDto.map((q) => [q.id, q]));
+
+    // Gắn thông tin chấm vào từng question trong cấu trúc attempt
+    for (const part of attempt.parts) {
+      for (const group of part.groups) {
+        for (const question of group.questions as any[]) {
+          const qDto = questionMap.get(question.id);
+          question.isCorrect = qDto?.isCorrect ?? null;
+          question.userAnswerId = qDto?.userAnswerId ?? null;
+        }
+      }
+    }
 
     return {
       ...attempt,
@@ -642,7 +666,7 @@ export class AttemptService {
         test: true,
         parts: {
           groups: {
-            questions: true, // load question thôi
+            questions: true,
           },
         },
       },
