@@ -14,7 +14,6 @@ import { Question } from 'src/question/entities/question.entity';
 import { Test } from 'src/test/entities/test.entity';
 import { User } from 'src/user/entities/user.entity';
 import { plainToInstance } from 'class-transformer';
-import { AttemptDto } from './dto/attempt.dto';
 import { AttemptAnswerDto } from 'src/attempt_answers/dto/attempt_answer.dto';
 import { CreateAttemptAnswerDto } from 'src/attempt_answers/dto/create-attempt_answer.dto';
 import { AttemptAnswer } from 'src/attempt_answers/entities/attempt_answer.entity';
@@ -27,6 +26,7 @@ import { Vocabulary } from 'src/vocabulary/entities/vocabulary.entity';
 import { UserProgressService } from 'src/user_progress/user_progress.service';
 import { attempt } from 'joi';
 import { QuestionDto } from 'src/question/dto/question.dto';
+import { AttemptDto } from './dto/submit-attempt-response.dto';
 
 @Injectable()
 export class AttemptService {
@@ -332,93 +332,85 @@ export class AttemptService {
   }
 
   async submitAttempt(attemptId: string, user: User) {
-    const attempt = await this.attemptRepo.findOne({
-      where: { id: attemptId },
-      relations: {
-        user: true,
-        parts: {
-          groups: {
-            questions: { answers: true, questionTags: { skill: true } },
-          },
+    const [attempt, attemptAnswers] = await Promise.all([
+      this.attemptRepo.findOne({
+        where: { id: attemptId },
+        relations: {
+          user: true,
+          parts: { groups: { questions: { answers: true } } },
         },
-      },
-      order: {
-        parts: {
-          partNumber: 'ASC',
+        order: { parts: { partNumber: 'ASC' } },
+      }),
+
+      this.attemptAnswerRepo.find({
+        where: { attempt: { id: attemptId } },
+        relations: {
+          answer: true,
+          question: { questionTags: { skill: true } },
         },
-      },
-    });
+      }),
+    ]);
 
     if (!attempt) throw new NotFoundException('Attempt not found!');
     if (attempt.user.id !== user.id)
       throw new UnauthorizedException('You do not have permission!');
 
-    const attemptAnswers = await this.attemptAnswerRepo.find({
-      where: { attempt: { id: attemptId } },
-      relations: { answer: true, question: true },
-    });
-
     const answerMap = new Map(attemptAnswers.map((aa) => [aa.question.id, aa]));
-    const allQuestions = attempt.parts.flatMap((p) =>
-      p.groups.flatMap((g) =>
-        g.questions.map((q) => ({
-          ...q,
-          partNumber: p.partNumber, // gắn thêm info part
-        })),
-      ),
-    );
 
-    const questionsDto = allQuestions.map((q) => this.toQuestionDto(q));
-
-    let totalScore = 0,
-      correctCount = 0,
-      wrongCount = 0,
-      skippedCount = 0;
-
+    let totalScore = 0;
+    let correctCount = 0;
+    let wrongCount = 0;
+    let skippedCount = 0;
     let listeningScore = 0;
     let readingScore = 0;
 
     const updatedAttemptAnswers: AttemptAnswer[] = [];
 
-    for (const q of questionsDto) {
-      const ans = answerMap.get(q.id);
-      const score = Number(q.score ?? 1);
+    for (const part of attempt.parts) {
+      for (const group of part.groups) {
+        for (const question of group.questions as any[]) {
+          const ans = answerMap.get(question.id);
+          const score = Number(question.score ?? 1);
 
-      if (!ans) {
-        skippedCount++;
+          let isCorrect: boolean | null = null;
+          let userAnswerId: string | null = null;
 
-        continue;
-      }
+          if (!ans || !ans.answer) {
+            skippedCount++;
+          } else {
+            isCorrect = ans.answer.isCorrect;
+            userAnswerId = ans.answer.id;
+            if (ans.isCorrect !== isCorrect) {
+              ans.isCorrect = isCorrect;
+              updatedAttemptAnswers.push(ans);
+            }
 
-      if (!ans.answer) {
-        skippedCount++;
-        continue;
-      }
+            if (isCorrect) {
+              totalScore += score;
+              correctCount++;
+              if (part.partNumber <= 4) listeningScore += score;
+              else readingScore += score;
+            } else {
+              wrongCount++;
+            }
+          }
 
-      const isCorrect = ans.answer.isCorrect === true;
-
-      if (ans.isCorrect !== isCorrect) {
-        ans.isCorrect = isCorrect;
-        updatedAttemptAnswers.push(ans);
-      }
-
-      if (isCorrect) {
-        totalScore += score;
-        correctCount++;
-        if (q.partNumber && q.partNumber !== null) {
-          if (q.partNumber <= 4) listeningScore += score;
-          else readingScore += score;
+          question.isCorrect = isCorrect;
+          question.userAnswerId = userAnswerId;
+          question.skills =
+            ans?.question?.questionTags?.map((qt) => qt.skill) ?? [];
         }
-      } else {
-        wrongCount++;
       }
     }
 
-    if (updatedAttemptAnswers.length > 0) {
-      await this.attemptAnswerRepo.save(updatedAttemptAnswers);
-    }
+    if (updatedAttemptAnswers.length)
+      await this.attemptAnswerRepo.save(updatedAttemptAnswers, { chunk: 500 });
 
-    const accuracy = correctCount / allQuestions.length;
+    const totalQuestions = attempt.parts.reduce(
+      (sum, p) => sum + p.groups.reduce((s2, g) => s2 + g.questions.length, 0),
+      0,
+    );
+    const accuracy = totalQuestions > 0 ? correctCount / totalQuestions : 0;
 
     Object.assign(attempt, {
       status: 'submitted',
@@ -427,31 +419,29 @@ export class AttemptService {
     });
 
     await this.attemptRepo.save(attempt);
-    
-    const questionMap = new Map(questionsDto.map((q) => [q.id, q]));
 
-    // Gắn thông tin chấm vào từng question trong cấu trúc attempt
-    for (const part of attempt.parts) {
-      for (const group of part.groups) {
-        for (const question of group.questions as any[]) {
-          const qDto = questionMap.get(question.id);
-          question.isCorrect = qDto?.isCorrect ?? null;
-          question.userAnswerId = qDto?.userAnswerId ?? null;
-        }
-      }
-    }
+    const result = plainToInstance(
+      AttemptDto,
+      {
+        id: attempt.id,
+        mode: attempt.mode,
+        status: attempt.status,
+        startedAt: attempt.startedAt,
+        finishAt: attempt.finishAt,
+        totalScore,
+        listeningScore,
+        readingScore,
+        totalQuestions,
+        correctCount,
+        wrongCount,
+        skippedCount,
+        accuracy,
+        test: attempt,
+      },
+      { excludeExtraneousValues: true },
+    );
 
-    return {
-      ...attempt,
-      listeningScore,
-      readingScore,
-      totalQuestions: allQuestions.length,
-      correctCount,
-      wrongCount,
-      skippedCount,
-      totalScore,
-      accuracy,
-    };
+    return result;
   }
 
   async submitAttemptReview(attemptId: string, user: User) {
