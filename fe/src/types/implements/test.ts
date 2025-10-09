@@ -85,7 +85,10 @@ export const SubmitQuestionSchema = z.object({
   explanation: z.string().nullable().optional(),
   answers: z.array(AnswerSchema), // các đáp án
   userAnswer: UserAnswerSchema.optional().nullable(),
-  questionTags: z.array(questionTagsSchema).optional(), // các thẻ tag
+  questionTags: z.array(questionTagsSchema).optional(),
+  isCorrect: z.boolean().nullable().optional(),
+  userAnswerId: z.string().nullable().optional(),
+  skills: z.array(SkillSchema).optional(),
 });
 
 export const SubmitGroupSchema = z.object({
@@ -144,6 +147,7 @@ export type Question = z.infer<typeof QuestionSchema>;
 export type Group = z.infer<typeof GroupSchema>;
 export type Part = z.infer<typeof PartSchema>;
 export type Test = z.infer<typeof TestSchema>;
+export type SubmitPart = z.infer<typeof SubmitPartSchema>;
 export type PracticeTestResponse = z.infer<typeof PracticeTestResponseSchema>;
 export type ResultTestResponse = z.infer<typeof ResultTestResponseSchema>;
 export type FullTestResponse = z.infer<typeof FullTestResponseSchema>;

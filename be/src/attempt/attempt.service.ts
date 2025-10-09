@@ -338,7 +338,7 @@ export class AttemptService {
         where: { id: attemptId },
         relations: {
           user: true,
-          parts: { groups: { questions: { answers: true } } },
+          parts: { groups: { questions: { answers: true, questionTags: {skill: true} } } },
         },
         order: { parts: { partNumber: 'ASC' } },
       }),
@@ -347,7 +347,7 @@ export class AttemptService {
         where: { attempt: { id: attemptId } },
         relations: {
           answer: true,
-          question: { questionTags: { skill: true } },
+          question: true,
         },
       }),
     ]);
@@ -398,11 +398,12 @@ export class AttemptService {
 
           question.isCorrect = isCorrect;
           question.userAnswerId = userAnswerId;
-          question.skills =
-            ans?.question?.questionTags?.map((qt) => qt.skill) ?? [];
+          
         }
       }
     }
+
+    console.log(attempt.parts);
 
     if (updatedAttemptAnswers.length)
       await this.attemptAnswerRepo.save(updatedAttemptAnswers, { chunk: 500 });

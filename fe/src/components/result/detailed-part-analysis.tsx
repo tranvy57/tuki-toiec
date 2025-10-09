@@ -5,53 +5,74 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle2, XCircle, Circle } from "lucide-react";
+import { ResultTestResponse, SubmitPart } from "@/types";
 
-interface PartDetail {
-  type: string;
-  correct: number;
-  wrong: number;
-  skipped: number;
-  questionIds: number[];
-}
 
-interface Part {
-  part: number;
-  name: string;
-  accuracy: number;
-  details: PartDetail[];
-}
-
-interface DetailedPartAnalysisProps {
-  parts: Part[];
-}
-
-export function DetailedPartAnalysis({ parts }: DetailedPartAnalysisProps) {
+export function DetailedPartAnalysis({ data }: { data: ResultTestResponse }) {
   const [activeTab, setActiveTab] = useState("overview");
 
-  const renderQuestionCircles = (detail: PartDetail) => {
-    const total = detail.correct + detail.wrong + detail.skipped;
+
+  const renderQuestionCircles = (
+    questions: { isCorrect: boolean | null }[]
+  ) => {
     return (
       <div className="flex flex-wrap gap-1">
-        {Array.from({ length: detail.correct }).map((_, i) => (
-          <CheckCircle2
-            key={`correct-${i}`}
-            className="w-4 h-4 text-green-500"
-          />
-        ))}
-        {Array.from({ length: detail.wrong }).map((_, i) => (
-          <XCircle key={`wrong-${i}`} className="w-4 h-4 text-red-500" />
-        ))}
-        {Array.from({ length: detail.skipped }).map((_, i) => (
-          <Circle key={`skipped-${i}`} className="w-4 h-4 text-gray-300" />
-        ))}
+        {questions.map((q, index) => {
+          if (q.isCorrect === true) {
+            return (
+              <CheckCircle2
+                key={index}
+                className="w-4 h-4 text-green-500"
+              />
+            );
+          } else if (q.isCorrect === false) {
+            return (
+              <XCircle
+                key={index}
+                className="w-4 h-4 text-red-500"
+              />
+            );
+          } else {
+            return (
+              <Circle
+                key={index}
+                className="w-4 h-4 text-gray-300"
+              />
+            );
+          }
+        })}
       </div>
     );
   };
 
-  const renderPartTable = (part: Part) => {
-    const totalCorrect = part.details.reduce((sum, d) => sum + d.correct, 0);
-    const totalWrong = part.details.reduce((sum, d) => sum + d.wrong, 0);
-    const totalSkipped = part.details.reduce((sum, d) => sum + d.skipped, 0);
+
+  const renderPartTable = (part: SubmitPart) => {
+    const allQuestions = part.groups.flatMap((g) => g.questions);
+
+    const groupedBySkill = allQuestions.reduce((acc, q) => {
+      const skill = q.skills?.[0]?.name || "Unknown Skill";
+      console.log(q.skills);
+      if (!acc[skill]) acc[skill] = [];
+      acc[skill].push(q);
+      return acc;
+    }, {} as Record<string, typeof allQuestions>);
+
+    const details = Object.entries(groupedBySkill).map(
+      ([skillName, questions]) => {
+        const correct = questions.filter((q) => q.isCorrect === true).length;
+        const wrong = questions.filter((q) => q.isCorrect === false).length;
+        const skipped = questions.filter((q) => q.isCorrect == null).length;
+        return { skillName, correct, wrong, skipped, questions };
+      }
+    );
+
+    const totalCorrect = allQuestions.filter(
+      (q) => q.isCorrect === true
+    ).length;
+    const totalWrong = allQuestions.filter((q) => q.isCorrect === false).length;
+    const totalSkipped = allQuestions.filter((q) => q.isCorrect == null).length;
+    const partAccuracy =
+      allQuestions.length > 0 ? (totalCorrect / allQuestions.length) * 100 : 0;
 
     return (
       <div className="overflow-x-auto">
@@ -59,7 +80,7 @@ export function DetailedPartAnalysis({ parts }: DetailedPartAnalysisProps) {
           <thead>
             <tr className="border-b border-gray-200">
               <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">
-                Loại
+                Kỹ năng
               </th>
               <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700">
                 Đúng
@@ -79,7 +100,7 @@ export function DetailedPartAnalysis({ parts }: DetailedPartAnalysisProps) {
             </tr>
           </thead>
           <tbody>
-            {part.details.map((detail, index) => {
+            {details.map((detail, index) => {
               const total = detail.correct + detail.wrong + detail.skipped;
               const accuracy =
                 total > 0 ? Math.round((detail.correct / total) * 100) : 0;
@@ -89,7 +110,7 @@ export function DetailedPartAnalysis({ parts }: DetailedPartAnalysisProps) {
                   className="border-b border-gray-100 hover:bg-pink-50 transition-colors"
                 >
                   <td className="py-3 px-4 text-sm text-gray-900">
-                    [Part {part.part}] {detail.type}
+                    [Part {part.partNumber}] {detail.skillName}
                   </td>
                   <td className="text-center py-3 px-4 text-sm text-green-600 font-medium">
                     {detail.correct}
@@ -103,7 +124,9 @@ export function DetailedPartAnalysis({ parts }: DetailedPartAnalysisProps) {
                   <td className="text-center py-3 px-4 text-sm font-semibold text-gray-900">
                     {accuracy}%
                   </td>
-                  <td className="py-3 px-4">{renderQuestionCircles(detail)}</td>
+                  <td className="py-3 px-4">
+                    {renderQuestionCircles(detail.questions)}
+                  </td>
                 </tr>
               );
             })}
@@ -119,7 +142,7 @@ export function DetailedPartAnalysis({ parts }: DetailedPartAnalysisProps) {
                 {totalSkipped}
               </td>
               <td className="text-center py-3 px-4 text-sm text-gray-900">
-                {Math.round(part.accuracy)}%
+                {Math.round(partAccuracy)}%
               </td>
               <td className="py-3 px-4"></td>
             </tr>
@@ -129,17 +152,29 @@ export function DetailedPartAnalysis({ parts }: DetailedPartAnalysisProps) {
     );
   };
 
+
+
   const renderOverview = () => {
+    // Tính accuracy cho từng part
+    const partsWithAccuracy = data.parts.map((part) => {
+      const allQuestions = part.groups.flatMap((group) => group.questions);
+      const total = allQuestions.length;
+      const correct = allQuestions.filter((q) => q.isCorrect).length;
+      const accuracy = total > 0 ? (correct / total) * 100 : 0;
+      return { ...part, accuracy };
+    });
+
+    // Render UI
     return (
       <div className="space-y-4">
-        {parts.map((part) => (
+        {partsWithAccuracy.map((part) => (
           <div
-            key={part.part}
+            key={part.partNumber}
             className="border-b border-gray-100 pb-4 last:border-0"
           >
             <div className="flex items-center justify-between mb-2">
               <h4 className="font-semibold text-gray-900">
-                Part {part.part}: {part.name}
+                Part {part.partNumber}
               </h4>
               <span className="text-sm font-semibold text-primary">
                 {Math.round(part.accuracy)}%
@@ -157,6 +192,7 @@ export function DetailedPartAnalysis({ parts }: DetailedPartAnalysisProps) {
     );
   };
 
+
   return (
     <Card className="bg-white/70 backdrop-blur-sm border border-primary/10 p-6">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">
@@ -166,9 +202,9 @@ export function DetailedPartAnalysis({ parts }: DetailedPartAnalysisProps) {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6 flex-wrap h-auto">
           <TabsTrigger value="overview">Tổng quan</TabsTrigger>
-          {parts.map((part) => (
-            <TabsTrigger key={part.part} value={`part-${part.part}`}>
-              Part {part.part}
+          {data.parts.map((part) => (
+            <TabsTrigger key={part.partNumber} value={`part-${part.partNumber}`}>
+              Part {part.partNumber}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -186,14 +222,14 @@ export function DetailedPartAnalysis({ parts }: DetailedPartAnalysisProps) {
             </motion.div>
           </TabsContent>
 
-          {parts.map((part) => (
+          {data.parts.map((part) => (
             <TabsContent
-              key={part.part}
-              value={`part-${part.part}`}
+              key={part.partNumber}
+              value={`part-${part.partNumber}`}
               className="mt-0"
             >
               <motion.div
-                key={`part-${part.part}`}
+                key={`part-${part.partNumber}`}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}

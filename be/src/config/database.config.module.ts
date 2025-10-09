@@ -19,7 +19,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         // autoLoadEntities: true,
         synchronize: true,
         // dropSchema: true,
-        ssl: { rejectUnauthorized: false },
+        ssl: false,
       }),
     }),
   ],
