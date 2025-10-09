@@ -1,6 +1,6 @@
 import { Expose, Type } from 'class-transformer';
 import { AnswerDto } from 'src/answers/dto/answer.dto';
-import { SkillDto } from 'src/skill/dto/skill.dto';
+import { QuestionTagDto } from 'src/question_tags/dto/question_tag.dto';
 
 export class QuestionDto {
   @Expose()
@@ -27,11 +27,11 @@ export class QuestionDto {
 
   @Expose()
   userAnswerId?: string | null;
-  
+
   @Expose()
   partNumber?: number | null;
 
   @Expose()
-  @Type(() => SkillDto)
-  skills?: SkillDto[];
+  @Type(() => QuestionTagDto)
+  questionTags?: QuestionTagDto[];
 }

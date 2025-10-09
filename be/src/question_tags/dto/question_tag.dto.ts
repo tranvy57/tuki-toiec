@@ -1,4 +1,4 @@
-import { Expose } from "class-transformer";
+import { Expose, Type } from "class-transformer";
 import { BaseResponseDto } from "src/common/dto/base-response.dto";
 import { QuestionDto } from "src/question/dto/question.dto";
 import { SkillDto } from "src/skill/dto/skill.dto";
@@ -9,6 +9,7 @@ export class QuestionTagDto extends BaseResponseDto {
     @Expose()
     question?: QuestionDto;
     @Expose()
+    @Type(() => SkillDto)
     skill?: SkillDto;
     @Expose()
     difficulty?: number;

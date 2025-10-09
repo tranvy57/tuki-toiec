@@ -403,8 +403,6 @@ export class AttemptService {
       }
     }
 
-    console.log(attempt.parts);
-
     if (updatedAttemptAnswers.length)
       await this.attemptAnswerRepo.save(updatedAttemptAnswers, { chunk: 500 });
 
