@@ -4,20 +4,27 @@ import createNextIntlPlugin from "next-intl/plugin";
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
+      // Ảnh thật từ Study4
       {
         protocol: "https",
-        hostname: "**",
+        hostname: "study4.com",
       },
       {
         protocol: "https",
-        hostname: "tukitoeic.app", 
+        hostname: "www.study4.com",
+      },
+      // Ảnh qua proxy hoặc FE của bạn
+      {
+        protocol: "https",
+        hostname: "tukitoeic.app",
       },
       {
         protocol: "http",
-        hostname: "localhost", 
+        hostname: "localhost",
       },
     ],
   },
+
   eslint: {
     ignoreDuringBuilds: true, // không fail build vì ESLint
   },

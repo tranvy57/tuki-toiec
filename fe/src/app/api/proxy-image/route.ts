@@ -1,8 +1,8 @@
+// src/app/api/proxy-image/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
   try {
-    // Lấy param url (Next.js tự encode trong _next/image)
     const rawUrl = req.nextUrl.searchParams.get("url");
     if (!rawUrl) {
       return NextResponse.json(
@@ -11,10 +11,10 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Decode đúng 1 lần
+    // Decode để lấy URL thật
     const decodedUrl = decodeURIComponent(rawUrl);
 
-    // Kiểm tra nguồn hợp lệ (Study4)
+    // Chỉ cho phép ảnh từ study4
     if (
       !decodedUrl.startsWith("https://study4.com") &&
       !decodedUrl.startsWith("https://www.study4.com")
@@ -22,29 +22,33 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Invalid source" }, { status: 403 });
     }
 
-    // Fetch ảnh, thêm header Referer để vượt hotlink block
-    const res = await fetch(decodedUrl, {
-      headers: { Referer: "https://study4.com" },
+    // Gửi header Referer để vượt qua hotlink block
+    const response = await fetch(decodedUrl, {
+      headers: {
+        Referer: "https://study4.com",
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
+      },
     });
 
-    if (!res.ok) {
-      console.error("Failed to fetch image:", decodedUrl, res.status);
+    if (!response.ok) {
+      console.error("Fetch failed", response.status, decodedUrl);
       return NextResponse.json(
-        { error: "Failed to fetch image" },
-        { status: res.status }
+        { error: "Upstream fetch failed" },
+        { status: response.status }
       );
     }
 
-    const contentType = res.headers.get("content-type") || "image/jpeg";
-    const arrayBuffer = await res.arrayBuffer();
+    const arrayBuffer = await response.arrayBuffer();
+    const contentType = response.headers.get("content-type") || "image/jpeg";
 
     return new NextResponse(Buffer.from(arrayBuffer), {
       headers: {
         "Content-Type": contentType,
-        "Cache-Control": "public, max-age=86400", // cache 1 ngày
+        "Cache-Control": "public, max-age=86400",
       },
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error("Proxy image error:", err);
     return NextResponse.json(
       { error: "Internal Server Error" },
