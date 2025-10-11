@@ -190,7 +190,6 @@ export const usePracticeTest = create<PracticeTestState>()(
             currentGroupQuestion: prevGroup.questions,
           });
         } else {
-          // Move to previous part's last group
           const prevPart = partCache.get(currentPart.partNumber - 1);
           if (prevPart && prevPart.groups.length > 0) {
             const lastGroup = prevPart.groups[prevPart.groups.length - 1];

@@ -353,9 +353,18 @@ export default function TestDetailPage() {
                     }}
                   >
                     <Button
-                      // disabled={selectedParts.length === 0}
-                      onClick={() => router.push(`/tests/${testData?.id}/start`)}
-                      className="w-full py-6 text-lg font-bold bg-gradient-to-r from-pink-400 to-primary hover:from-pink-500  hover:to-pink-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={() => {
+                        try {
+                          localStorage.removeItem("practice-test-storage");
+                        } catch (e) {
+                          console.warn(
+                            "Không thể xóa cache practice-test-storage:",
+                            e
+                          );
+                        }
+                        router.push(`/tests/${testData?.id}/start`);
+                      }}
+                      className="w-full py-6 text-lg font-bold bg-gradient-to-r from-pink-400 to-primary hover:from-pink-500 hover:to-pink-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Bắt đầu Bài thi đầy đủ (120 phút)
                     </Button>

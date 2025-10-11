@@ -85,7 +85,7 @@ export function TestResultPage({ data }: TestResultPageProps) {
           transition={{ duration: 0.6, delay: 0.4 }}
         >
           <AnswerReview parts={data.parts} />
-        </motion.div>
+        </motion.div> */}
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -101,7 +101,7 @@ export function TestResultPage({ data }: TestResultPageProps) {
           transition={{ duration: 0.6, delay: 0.6 }}
         >
           <StudyRecommendations recommendations={data.recommendations} />
-        </motion.div> */}
+        </motion.div>
       </div>
 
       {/* <FixedActionBar /> */}
