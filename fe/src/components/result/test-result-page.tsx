@@ -47,6 +47,26 @@ interface TestResultPageProps {
 export function TestResultPage({ data }: TestResultPageProps) {
   const [activeSection, setActiveSection] = useState<"analysis" | "review">("analysis")
   const { resultTest } = usePracticeTest();
+   const [analysis, setAnalysis] = useState<any>(null);
+   const [loading, setLoading] = useState(false);
+
+   const handleAnalyze = async () => {
+     try {
+       setLoading(true);
+       const res = await fetch("/api/analyze-test", {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify(resultTest),
+       });
+
+       const data = await res.json();
+       setAnalysis(data); 
+     } catch (err) {
+       console.error("AI analysis error:", err);
+     } finally {
+       setLoading(false);
+     }
+   };
 
   if(resultTest === null) {
     return <div>Loading...</div>
@@ -62,7 +82,10 @@ export function TestResultPage({ data }: TestResultPageProps) {
             <SummaryInfo
               totalQuestions={200}
               correctCount={resultTest.accuracy || 0}
-              duration={getDurationString(resultTest.startedAt, resultTest.finishAt) || "00:00:00"}
+              duration={
+                getDurationString(resultTest.startedAt, resultTest.finishAt) ||
+                "00:00:00"
+              }
             />
           </div>
 
@@ -92,7 +115,20 @@ export function TestResultPage({ data }: TestResultPageProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
         >
-          <AIAnalysis analysis={data.aiAnalysis} />
+          <button
+            onClick={handleAnalyze}
+            disabled={loading}
+            className="bg-primary text-white px-6 py-3 rounded-lg hover:opacity-90 disabled:opacity-50"
+          >
+            {loading ? "Đang phân tích..." : "Phân tích bằng AI"}
+          </button>
+
+          {/* Khi có kết quả AI, hiển thị component */}
+          {analysis && (
+            <div className="mt-8">
+              <AIAnalysis analysis={analysis} />
+            </div>
+          )}
         </motion.div>
 
         <motion.div
