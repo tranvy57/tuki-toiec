@@ -72,10 +72,11 @@ export function QuestionRenderer({
         {/* Ảnh nếu có */}
         {activeGroup?.imageUrl && (
           <div className="relative h-44 w-full mb-6">
-            <img
-              src={`/api/proxy-image?url=${activeGroup.imageUrl}`}
+            <Image
+              src={activeGroup.imageUrl}
               alt="Question Image"
-              className="object-contain object-left"
+              fill
+              className="object-contain rounded-lg"
             />
           </div>
         )}

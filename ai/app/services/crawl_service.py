@@ -11,6 +11,16 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
+import cloudinary
+import cloudinary.uploader
+
+cloudinary.config(
+    cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.environ.get("CLOUDINARY_API_KEY"),
+    api_secret=os.environ.get("CLOUDINARY_API_SECRET"),
+)
+
+
 COOKIES = {
     "_tt_enable_cookie": os.environ.get("STUDY4_COOKIE__TT_ENABLE_COOKIE"),
     "_ttp": os.environ.get("STUDY4_COOKIE__TTP"),
@@ -203,7 +213,11 @@ def crawl_to_entities(soup, audio_main, title=None, soup_audio=None) -> Tuple[Te
             collapse_tag = node_trans.select_one(".collapse") if node_trans else None
             para_trans = collapse_tag.decode_contents() if collapse_tag else None
             img_urls = [normalize_url(img.get("src")) for img in elm.find_all("img") if img and img.get("src")]
-            img_url = img_urls[0] if img_urls else None
+            img_url = None
+            if img_urls:
+                uploaded = upload_image_to_cloudinary(img_urls[0])
+                img_url = uploaded or img_urls[0]
+
 
             # part lấy theo câu đầu tiên trong group (q_order hiện tại)
             pn = part_number_by_qindex(q_order)
@@ -237,7 +251,10 @@ def crawl_to_entities(soup, audio_main, title=None, soup_audio=None) -> Tuple[Te
             node_trans = elm.find(class_="question-explanation-wrapper")
             para_trans = txt(node_trans.select_one(".collapse")) if node_trans else None
             img_tag = elm.find("img")
-            img_url = normalize_url(img_tag.get("src")) if img_tag and img_tag.get("src") else None
+            img_url = None
+            if img_tag and img_tag.get("src"):
+                uploaded = upload_image_to_cloudinary(normalize_url(img_tag.get("src")))
+                img_url = uploaded or normalize_url(img_tag.get("src"))
 
             pn = part_number_by_qindex(q_order)
             part_instance = part_map[pn]
@@ -471,6 +488,41 @@ def import_test(url: str, db: Session) -> Tests:
         db.rollback()
         print(f"Error importing test from {url}: {e}")
         raise
+
+def upload_image_to_cloudinary(url: str) -> Optional[str]:
+    """
+    Tải ảnh từ Study4 và upload lên Cloudinary.
+    Trả về URL Cloudinary nếu thành công, hoặc None nếu lỗi.
+    """
+    if not url:
+        return None
+    try:
+        # Normalize absolute URL
+        if url.startswith("//"):
+            url = "https:" + url
+        elif url.startswith("/"):
+            url = "https://study4.com" + url
+
+        resp = requests.get(url, headers=HEADERS, cookies=COOKIES, timeout=15)
+        
+        if resp.status_code != 200:
+            print(f"❌ Cannot fetch image: {url} ({resp.status_code})")
+            return None
+        
+        # Upload binary lên Cloudinary
+        upload_result = cloudinary.uploader.upload(
+            resp.content,
+            folder=os.environ.get("CLOUDINARY_FOLDER", "toeic-study4"),
+            resource_type="image",
+            overwrite=True
+        )
+        secure_url = upload_result.get("secure_url")
+        print(f"✅ Uploaded to Cloudinary: {secure_url}")
+        return secure_url
+    except Exception as e:
+        print(f"⚠️ Error uploading {url}: {e}")
+        return None
+
 
 if __name__ == "__main__":
     from app.db.session import SessionLocal

@@ -292,9 +292,10 @@ export function QuestionRenderer({
                 <div className="space-y-4">
                   {groupData?.group.imageUrl ? (
                     <div className="relative h-96 w-full flex justify-start items-start">
-                      <img
-                        src={`/api/proxy-image?url=${groupData.group.imageUrl}`}
+                      <Image
+                        src={groupData.group.imageUrl}
                         alt="Question Image"
+                        fill
                         className="object-contain object-left"
                       />
                     </div>
