@@ -5,57 +5,37 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle2, XCircle, Circle } from "lucide-react";
-import { ResultTestResponse, SubmitPart } from "@/types";
-
+import { ResultTestResponse, SubmitPart, SubmitQuestion } from "@/types";
+import QuestionReviewCircles from "./question-review-circle";
 
 export function DetailedPartAnalysis({ data }: { data: ResultTestResponse }) {
   const [activeTab, setActiveTab] = useState("overview");
 
-
   const renderQuestionCircles = (
-    questions: { isCorrect: boolean | null }[]
+    questions: SubmitQuestion[]
   ) => {
     return (
-      <div className="flex flex-wrap gap-1">
-        {questions.map((q, index) => {
-          if (q.isCorrect === true) {
-            return (
-              <CheckCircle2
-                key={index}
-                className="w-4 h-4 text-green-500"
-              />
-            );
-          } else if (q.isCorrect === false) {
-            return (
-              <XCircle
-                key={index}
-                className="w-4 h-4 text-red-500"
-              />
-            );
-          } else {
-            return (
-              <Circle
-                key={index}
-                className="w-4 h-4 text-gray-300"
-              />
-            );
-          }
-        })}
-      </div>
+      <QuestionReviewCircles questions={questions} />
     );
   };
-
 
   const renderPartTable = (part: SubmitPart) => {
     const allQuestions = part.groups.flatMap((g) => g.questions);
 
     const groupedBySkill = allQuestions.reduce((acc, q) => {
-      const skill = q.skills?.[0]?.name || "Unknown Skill";
-      console.log(q.skills);
-      if (!acc[skill]) acc[skill] = [];
-      acc[skill].push(q);
+      if (q.questionTags?.length) {
+        q.questionTags.forEach((tag) => {
+          const skillName = tag.skill?.name || "Unknown Skill";
+          if (!acc[skillName]) acc[skillName] = [];
+          acc[skillName].push(q);
+        });
+      } else {
+        const fallback = "Unknown Skill";
+        if (!acc[fallback]) acc[fallback] = [];
+        acc[fallback].push(q);
+      }
       return acc;
-    }, {} as Record<string, typeof allQuestions>);
+    }, {} as Record<string, SubmitQuestion[]>);
 
     const details = Object.entries(groupedBySkill).map(
       ([skillName, questions]) => {
@@ -110,7 +90,7 @@ export function DetailedPartAnalysis({ data }: { data: ResultTestResponse }) {
                   className="border-b border-gray-100 hover:bg-pink-50 transition-colors"
                 >
                   <td className="py-3 px-4 text-sm text-gray-900">
-                    [Part {part.partNumber}] {detail.skillName}
+                    {detail.skillName}
                   </td>
                   <td className="text-center py-3 px-4 text-sm text-green-600 font-medium">
                     {detail.correct}
@@ -152,8 +132,6 @@ export function DetailedPartAnalysis({ data }: { data: ResultTestResponse }) {
     );
   };
 
-
-
   const renderOverview = () => {
     // Tính accuracy cho từng part
     const partsWithAccuracy = data.parts.map((part) => {
@@ -192,7 +170,6 @@ export function DetailedPartAnalysis({ data }: { data: ResultTestResponse }) {
     );
   };
 
-
   return (
     <Card className="bg-white/70 backdrop-blur-sm border border-primary/10 p-6">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">
@@ -203,7 +180,10 @@ export function DetailedPartAnalysis({ data }: { data: ResultTestResponse }) {
         <TabsList className="mb-6 flex-wrap h-auto">
           <TabsTrigger value="overview">Tổng quan</TabsTrigger>
           {data.parts.map((part) => (
-            <TabsTrigger key={part.partNumber} value={`part-${part.partNumber}`}>
+            <TabsTrigger
+              key={part.partNumber}
+              value={`part-${part.partNumber}`}
+            >
               Part {part.partNumber}
             </TabsTrigger>
           ))}

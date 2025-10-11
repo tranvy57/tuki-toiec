@@ -8,6 +8,14 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "**",
       },
+      {
+        protocol: "https",
+        hostname: "tukitoeic.app", 
+      },
+      {
+        protocol: "http",
+        hostname: "localhost", 
+      },
     ],
   },
   eslint: {

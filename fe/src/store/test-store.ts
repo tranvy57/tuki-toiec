@@ -30,6 +30,7 @@ interface PracticeTestState {
   setCurrentPart: (partNumber: number) => void;
   setCurrentGroup: (groupId: string) => void;
   setAnswer: (questionId: string, answerKey: string) => void;
+  findGroupByQuestionId: (questionId: string) => Group | null;
   
   // Navigation
   nextPart: () => void;
@@ -119,6 +120,16 @@ export const usePracticeTest = create<PracticeTestState>()(
             currentGroupQuestion: group.questions,
           });
         }
+      },
+
+      findGroupByQuestionId: (questionId) => {
+        const { groupCache } = get();
+        for (let group of groupCache.values()) {
+          if (group.questions.some((q) => q.id === questionId)) {
+            return group;
+          } 
+        }
+        return null;
       },
 
       nextPart: () => {
