@@ -62,10 +62,10 @@ const Footer = () => {
             <ul className="space-y-4">
               {[
                 { name: "Trang chủ", href: "/" },
-                { name: "Tính năng", href: "/features" },
-                { name: "Bảng giá", href: "/pricing" },
-                { name: "Blog", href: "/blog" },
-                { name: "Liên hệ", href: "/contact" },
+                { name: "Tính năng", href: "/" },
+                { name: "Bảng giá", href: "/" },
+                { name: "Blog", href: "/" },
+                { name: "Liên hệ", href: "/" },
               ].map((item) => (
                 <li key={item.name}>
                   <Link
