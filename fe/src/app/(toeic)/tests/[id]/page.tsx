@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useTestById } from "@/api/useTest";
+import { usePracticeTest } from "@/hooks";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -52,6 +53,8 @@ export default function TestDetailPage() {
     isError,
   } = useTestById(params.id as string);
   const router = useRouter();
+
+  const { clearPersistedState } = usePracticeTest()
 
   const [selectedParts, setSelectedParts] = useState<string[]>([]);
   const [openParts, setOpenParts] = useState<string[]>([
@@ -355,7 +358,7 @@ export default function TestDetailPage() {
                     <Button
                       onClick={() => {
                         try {
-                          localStorage.removeItem("practice-test-storage");
+                          clearPersistedState();
                         } catch (e) {
                           console.warn(
                             "Không thể xóa cache practice-test-storage:",
