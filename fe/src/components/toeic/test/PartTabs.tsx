@@ -26,7 +26,7 @@ export function PartTabs({ parts, currentPart, onPartChange }: PartTabsProps) {
             size="sm"
             className={cn(
               "h-8 text-xs px-3 transition-all duration-200",
-              part.partNumber === currentPart && "bg-blue-500 text-white hover:bg-blue-600"
+              part.partNumber === currentPart && "bg-pink-400 text-white hover:bg-blue-600"
             )}
             onClick={() => handlePartClick(part)}
           >

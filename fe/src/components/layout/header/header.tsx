@@ -65,17 +65,40 @@ export default function Header() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {TOEIC_NAVIGATION.map((item) => (
-              <Link key={item.name} href={item.href} className="relative group">
-                <span className="text-gray-700 hover:text-primary transition-colors font-medium">
+              <div key={item.name} className="relative group">
+                {/* Mục chính */}
+                <Link
+                  href={item.href || "#"}
+                  className="text-gray-700 hover:text-primary font-medium flex items-center gap-1"
+                >
                   {item.name}
-                </span>
-                <motion.span
-                  className="absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-blue-600 to-orange-500"
-                  initial={{ width: 0 }}
-                  whileHover={{ width: "100%" }}
-                  transition={{ duration: 0.3 }}
-                />
-              </Link>
+                  {item.sub && (
+                    <span className="text-gray-400 group-hover:text-primary">
+                      ▾
+                    </span>
+                  )}
+                </Link>
+
+                {/* Sub menu */}
+                {item.sub && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    whileHover={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute left-0 top-full hidden group-hover:block bg-white rounded-xl shadow-lg border border-gray-100 py-2 w-52"
+                  >
+                    {item.sub.map((sub) => (
+                      <Link
+                        key={sub.name}
+                        href={sub.href}
+                        className="block px-4 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
+                      >
+                        {sub.name}
+                      </Link>
+                    ))}
+                  </motion.div>
+                )}
+              </div>
             ))}
           </div>
 
@@ -133,22 +156,45 @@ export default function Header() {
               className="md:hidden overflow-hidden"
             >
               <div className="py-4 space-y-4">
-                {TOEIC_NAVIGATION.map((item, index) => (
-                  <motion.div
-                    key={item.name}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <Link
-                      href={item.href}
-                      className="block py-2 text-gray-700 hover:text-blue-600 transition-colors font-medium"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      {item.name}
-                    </Link>
-                  </motion.div>
-                ))}
+                <div className="hidden md:flex items-center space-x-8">
+                  {TOEIC_NAVIGATION.map((item) => (
+                    <div key={item.name} className="relative group">
+                      {/* Mục chính */}
+                      <Link
+                        href={item.href || "#"}
+                        className="text-gray-700 hover:text-primary font-medium flex items-center gap-1"
+                      >
+                        {item.name}
+                        {item.sub && (
+                          <span className="text-gray-400 group-hover:text-primary">
+                            ▾
+                          </span>
+                        )}
+                      </Link>
+
+                      {/* Sub menu */}
+                      {item.sub && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          whileHover={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute left-0 top-full hidden group-hover:block bg-white rounded-xl shadow-lg border border-gray-100 py-2 w-52"
+                        >
+                          {item.sub.map((sub) => (
+                            <Link
+                              key={sub.name}
+                              href={sub.href}
+                              className="block px-4 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
+                            >
+                              {sub.name}
+                            </Link>
+                          ))}
+                        </motion.div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
                 <div className="pt-4 border-t border-gray-200 space-y-3">
                   {isLoggedIn ? (
                     <div className="flex items-center space-x-3">

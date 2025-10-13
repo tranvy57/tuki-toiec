@@ -44,7 +44,7 @@ export default async function RootLayout({
         <Providers locale={locale} messages={messages} timeZone={timeZone}>
           <AppInit />
           <Header />
-          <div className="mt-16">{children}</div>
+          <div className="mt-18">{children}</div>
         </Providers>
       </body>
     </html>

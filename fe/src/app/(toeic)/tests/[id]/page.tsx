@@ -54,7 +54,7 @@ export default function TestDetailPage() {
   } = useTestById(params.id as string);
   const router = useRouter();
 
-  const { clearPersistedState } = usePracticeTest()
+  const { clearPersistedState } = usePracticeTest();
 
   const [selectedParts, setSelectedParts] = useState<string[]>([]);
   const [openParts, setOpenParts] = useState<string[]>([
@@ -86,14 +86,13 @@ export default function TestDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
-        {/* Header Section */}
+    <div className="bg-gradient-to-b from-slate-50 via-white to-slate-50/50 min-h-full py-5">
+      <div className="container mx-auto px-8 py-6 max-w-5xl bg-white border border-gray-200 shadow-lg rounded-2xl ">
         <motion.div
           initial="hidden"
           animate="visible"
           variants={fadeInUp}
-          className="mb-8"
+          className="mb-8  my-5"
         >
           <div className="flex items-center gap-2 mb-4">
             <Badge className="bg-gradient-to-r from-pink-500 to-primary text-white border-0 shadow-sm">
@@ -101,12 +100,12 @@ export default function TestDetailPage() {
             </Badge>
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-pink-500 via-rose-400 to-primary bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-primary bg-clip-text text-transparent">
             {testData?.title}
           </h1>
           {/* Info Box */}
-          <Card className="bg-white/80 backdrop-blur-sm border-gray-200 shadow-lg rounded-xl">
-            <CardContent className="pt-6">
+          <div className="">
+            <div className="pt-6">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="flex items-center gap-2">
                   <Clock className="w-5 h-5 text-blue-500" />
@@ -139,9 +138,134 @@ export default function TestDetailPage() {
                   ĐỦ.
                 </AlertDescription>
               </Alert>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </motion.div>
+
+        <div className="overflow-x-auto mb-5 border border-gray-300">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">
+                  Ngày làm
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">
+                  Kết quả
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">
+                  Thời gian làm bài
+                </th>
+                <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700">
+                  Hành động
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <td className="py-3 px-4">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-gray-900">
+                      07/10/2025
+                    </span>
+                    <Badge className="w-fit mt-1 bg-green-100 text-green-800 border-green-200 text-xs">
+                      Full test
+                    </Badge>
+                  </div>
+                </td>
+                <td className="py-3 px-4">
+                  <span className="text-sm font-medium text-gray-900">
+                    0/200
+                  </span>
+                </td>
+                <td className="py-3 px-4">
+                  <span className="text-sm text-gray-600">0:00:09</span>
+                </td>
+                <td className="py-3 px-4 text-center">
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    Xem chi tiết
+                  </Button>
+                </td>
+              </tr>
+
+              <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <td className="py-3 px-4">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-gray-900">
+                      20/09/2025
+                    </span>
+                    <Badge className="w-fit mt-1 bg-green-100 text-green-800 border-green-200 text-xs">
+                      Full test
+                    </Badge>
+                  </div>
+                </td>
+                <td className="py-3 px-4">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-gray-900">
+                      1/200
+                    </span>
+                    <span className="text-xs text-gray-500">(Điểm: 15)</span>
+                  </div>
+                </td>
+                <td className="py-3 px-4">
+                  <span className="text-sm text-gray-600">0:00:12</span>
+                </td>
+                <td className="py-3 px-4 text-center">
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    Xem chi tiết
+                  </Button>
+                </td>
+              </tr>
+
+              <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <td className="py-3 px-4">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-gray-900">
+                      09/08/2025
+                    </span>
+                    <Badge className="w-fit mt-1 bg-green-100 text-green-800 border-green-200 text-xs">
+                      Full test
+                    </Badge>
+                  </div>
+                </td>
+                <td className="py-3 px-4">
+                  <span className="text-sm font-medium text-gray-900">
+                    0/200
+                  </span>
+                </td>
+                <td className="py-3 px-4">
+                  <span className="text-sm text-gray-600">0:00:07</span>
+                </td>
+                <td className="py-3 px-4 text-center">
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    Xem chi tiết
+                  </Button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Empty state nếu không có kết quả */}
+        {/* <div className="text-center py-8">
+                      <div className="text-gray-400 mb-2">
+                        <FileText className="w-12 h-12 mx-auto" />
+                      </div>
+                      <p className="text-gray-500 text-sm">
+                        Bạn chưa có kết quả làm bài nào. Hãy bắt đầu làm bài thi để xem kết quả.
+                      </p>
+                    </div> */}
 
         {/* Tabs Section */}
         <motion.div
@@ -154,16 +278,17 @@ export default function TestDetailPage() {
             <TabsList className="grid w-full grid-cols-2 mb-6 bg-white/80 backdrop-blur-sm p-1 rounded-xl shadow-md">
               <TabsTrigger
                 value="practice"
-                className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-400 data-[state=active]:to-primary data-[state=active]:text-white"
+                className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:bg-pink-400 data-[state=active]:text-white"
               >
                 Chế độ Luyện tập
               </TabsTrigger>
               <TabsTrigger
                 value="fulltest"
-                className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-400 data-[state=active]:to-primary data-[state=active]:text-white"
+                className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:bg-pink-400 data-[state=active]:text-white"
               >
                 Chế độ Thi đầy đủ
               </TabsTrigger>
+              
             </TabsList>
 
             <TabsContent value="practice" className="space-y-6">
@@ -280,8 +405,7 @@ export default function TestDetailPage() {
                                   >
                                     <Badge
                                       variant="secondary"
-                                      className="bg-gradient-to-r from-pink-100 to-orange-100 text-shadow-blue-600 border-0 
-             hover:from-pink-200 hover:to-orange-200 transition-colors"
+                                      className="bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 transition-colors"
                                     >
                                       {skill.name}
                                     </Badge>
@@ -316,7 +440,7 @@ export default function TestDetailPage() {
                 >
                   <Button
                     disabled={selectedParts.length === 0}
-                    className="w-full py-6 text-lg font-bold bg-gradient-to-r from-pink-400 to-primary hover:from-blue-700 hover:via-purple-600 hover:to-pink-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full py-6 text-lg font-bold bg-pink-400 to-primary hover:bg-pink-300 text-white shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Bắt đầu Phần đã chọn ({selectedParts.length})
                   </Button>
@@ -325,19 +449,9 @@ export default function TestDetailPage() {
             </TabsContent>
 
             <TabsContent value="fulltest" className="space-y-6">
-              <Card className="bg-white/80 backdrop-blur-sm border-gray-200 shadow-lg rounded-xl">
-                <CardHeader>
-                  <CardTitle className="text-2xl font-bold text-gray-900">
-                    Chế độ Thi đầy đủ
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-gray-700 leading-relaxed">
-                    Hoàn thành tất cả 7 phần (200 câu hỏi) trong 120 phút để
-                    nhận điểm TOEIC chuẩn của bạn. Chế độ này mô phỏng trải
-                    nghiệm thi thật với thời gian nghiêm ngặt và không có thời
-                    gian nghỉ giữa các phần.
-                  </p>
+              <div className="">
+                <div className="space-y-4">
+                 
                   <Alert className="border-blue-200 bg-blue-50">
                     <Info className="h-4 w-4 text-blue-600" />
                     <AlertDescription className="text-blue-700">
@@ -367,13 +481,13 @@ export default function TestDetailPage() {
                         }
                         router.push(`/tests/${testData?.id}/start`);
                       }}
-                      className="w-full py-6 text-lg font-bold bg-gradient-to-r from-pink-400 to-primary hover:from-pink-500 hover:to-pink-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full py-6 text-lg font-bold bg-pink-400 hover:bg-pink-300 text-white shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Bắt đầu Bài thi đầy đủ (120 phút)
                     </Button>
                   </motion.div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </TabsContent>
           </Tabs>
         </motion.div>

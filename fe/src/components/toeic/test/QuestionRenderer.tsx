@@ -23,11 +23,9 @@ export function QuestionRenderer({
   isTransitioning,
   mode = "test", // Default to test mode
 }: QuestionRendererProps) {
-  // Render question content based on part
   const { currentGroup, currentPart, currentGroupQuestion, fullTest } =
     usePracticeTest();
 
-  // Use provided questions or fallback to current group questions
 
   const renderQuestionContent = (question: Question, group?: any) => {
     switch (currentPart?.partNumber) {
@@ -208,13 +206,15 @@ export function QuestionRenderer({
                     >
                       <div className="flex items-start gap-4">
                         {/* Question number with circle */}
-                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-50 border border-blue-200 text-blue-700 font-semibold text-base">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-pink-50 border border-pink-200 text-pink-500 font-semibold text-base">
                           {question.numberLabel}
                         </div>
 
                         {/* Question content */}
                         <div className="flex-1 space-y-4">
-                          <p className="text-base font-medium text-gray-800 leading-relaxed">
+                          <p
+                            className={`text-base font-medium text-gray-800 leading-relaxed `}
+                          >
                             {question.content}
                           </p>
 
@@ -306,11 +306,15 @@ export function QuestionRenderer({
                 {groupData.questions.map((question) => (
                   <div key={question.id} className="mt-8 pb-6">
                     <div className="flex items-start ">
-                      <div className="text-lg font-semibold min-w-[32px] mt-1 text-blue-600 -translate-y-1.5">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-pink-50 border border-pink-200 text-pink-500 font-semibold text-base">
                         {question.numberLabel}
                       </div>
 
-                      <div className="flex-1 space-y-4">
+                      <div
+                        className={`flex-1 ${
+                          currentPart.partNumber > 2 ? "space-y-4" : "mt-1"
+                        }`}
+                      >
                         {renderQuestionContent(question, groupData.group)}
 
                         {/* Answer options */}
@@ -319,26 +323,43 @@ export function QuestionRenderer({
                           onValueChange={(value) =>
                             onAnswerChange(question.numberLabel, value)
                           }
-                          className=""
+                          className={`${
+                            currentPart.partNumber <= 2
+                              ? "pl-4 translate-y-1"
+                              : ""
+                          }`}
                         >
-                          {question.answers.map((option) => (
-                            <div
-                              key={option.id}
-                              className="flex items-start space-x-3"
-                            >
-                              <RadioGroupItem
-                                value={option.answerKey}
-                                id={`${question.id}-${option.id}`}
-                                className="mt-0.5"
-                              />
+                          {question.answers.map((option) => {
+                            // const isChosen = userAnswer === option.answerKey;
+                            // const isRight =
+                            //   option.answerKey === correctAnswer;
+                            const isChosen = false;
+                            const isRight = false;
+
+                            return (
                               <label
+                                key={option.id}
                                 htmlFor={`${question.id}-${option.id}`}
-                                className="cursor-pointer leading-relaxed flex-1"
+                                className={cn(
+                                  "flex items-start gap-3 p-2 rounded-md cursor-pointer transition-colors border border-transparent",
+                                  isChosen
+                                    ? isRight
+                                      ? "bg-green-50 border-green-300"
+                                      : "bg-red-50 border-red-300"
+                                    : "hover:bg-blue-50/40 hover:border-blue-200"
+                                )}
                               >
-                                {option.content}
+                                <RadioGroupItem
+                                  value={option.answerKey}
+                                  id={`${question.id}-${option.id}`}
+                                  className="mt-0.5"
+                                />
+                                <span className="text-gray-700 text-sm leading-relaxed">
+                                  {option.content}
+                                </span>
                               </label>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </RadioGroup>
                       </div>
                     </div>

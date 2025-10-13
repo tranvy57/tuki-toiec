@@ -15,45 +15,31 @@ export interface NavigationItem {
   href: string;
   icon: LucideIcon;
 }
-
-export const TOEIC_NAVIGATION: NavigationItem[] = [
+// constants/navigation.ts
+export const TOEIC_NAVIGATION = [
+  { name: "Trang chủ", href: "/home" },
   {
-    id: "home",
-    name: "Trang chủ",
-    href: "/",
-    icon: Home,
+    name: "Học tập",
+    sub: [
+      { name: "Khóa học", href: "/courses" },
+      { name: "Lộ trình học", href: "/learning-path" },
+      { name: "Từ vựng", href: "/vocabulary" },
+    ],
   },
   {
-    id: "courses",
-    name: "Khóa học",
-    href: "/courses",
-    icon: BookOpen,
+    name: "Ôn luyện",
+    sub: [
+      { name: "Luyện Listening", href: "/practice/listening" },
+      { name: "Luyện Reading", href: "/practice/reading" },
+      { name: "Luyện Writing", href: "/practice/writing" },
+      { name: "Luyện Speaking", href: "/practice/speaking" },
+    ],
   },
-  {
-    id: "study-plan",
-    name: "Kế hoạch học",
-    href: "/study-plan", 
-    icon: ClipboardList,
-  },
-  {
-    id: "vocabulary",
-    name: "Từ vựng",
-    href: "/vocabulary",
-    icon: BookOpen,
-  },
-  {
-    id: "ai-chat",
-    name: "Trợ lý",
-    href: "/ai-chat",
-    icon: Bot,
-  },
-  {
-    id: "tests",
-    name: "Đề thi",
-    href: "/tests",
-    icon: Users,
-  },
+  { name: "Thi thử", href: "/tests" },
+  { name: "Trợ lý AI", href: "/assistant" },
+  // { name: "Liên hệ", href: "/contact" },
 ];
+
 
 export const NAVIGATION_PATHS = {
   TOEIC_BASE: "/toeic",
