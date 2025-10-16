@@ -1,15 +1,55 @@
 import { Injectable } from '@nestjs/common';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
+import { Repository } from 'typeorm';
+import { Item } from './entities/item.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { GetItemsDto } from './dto/get-item.dto';
 
 @Injectable()
 export class ItemsService {
+  constructor(
+    @InjectRepository(Item)
+    private readonly itemsRepo: Repository<Item>,
+  ) {}
   create(createItemDto: CreateItemDto) {
     return 'This action adds a new item';
   }
 
-  findAll() {
-    return `This action returns all items`;
+  async findAll(query: GetItemsDto) {
+    const { modality, difficulty, limit, offset } = query;
+
+    console.log(query)
+
+    const qb = this.itemsRepo
+      .createQueryBuilder('item')
+      .where('item.status = :status', { status: 'active' })
+      .andWhere('item.is_active = true')
+      .orderBy('item.created_at', 'DESC')
+      .take(limit)
+      .skip(offset);
+
+    if (modality) qb.andWhere('item.modality = :modality', { modality });
+    if (difficulty)
+      qb.andWhere('item.difficulty = :difficulty', { difficulty });
+
+    const [data, total] = await qb.getManyAndCount();
+
+    return {
+      total,
+      count: data.length,
+      offset,
+      limit,
+      items: data.map((item) => ({
+        id: item.id,
+        modality: item.modality,
+        difficulty: item.difficulty,
+        bandHint: item.bandHint,
+        prompt: item.promptJsonb,
+        solution: item.solutionJsonb,
+        rubric: item.rubricJsonb,
+      })),
+    };
   }
 
   findOne(id: number) {
