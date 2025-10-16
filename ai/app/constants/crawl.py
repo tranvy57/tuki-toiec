@@ -131,3 +131,19 @@ DIFFICULTY_BY_SKILL = {
     "[Part 7] Dạng bài: Text message chain - Chuỗi tin nhắn": 0.85,
 }
 
+TOEIC_PART_MODALITIES_MAP = {
+    1: ["describe_picture"],
+    2: ["repeat_sentence", "dictation"],
+    3: ["mcq", "cloze"],
+    4: ["mcq", "cloze", "read_aloud"],
+    5: ["mcq","error_fix"],
+    7: ["cloze"],
+}
+from enum import IntEnum
+
+class COURSE_BAND(IntEnum):
+    TOEIC_450 = 450
+    TOEIC_550 = 550
+    TOEIC_650 = 650
+    TOEIC_750 = 750
+    TOEIC_850 = 850

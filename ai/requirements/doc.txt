@@ -1,3 +1,5 @@
 -r base.txt
 sphinx~=5.3
 sphinx_rtd_theme~=1.2
+
+sqlacodegen_v2  postgresql+psycopg2://admin:sapassword@34.143.141.5:5432/tuki_toeic > schema_tables.py

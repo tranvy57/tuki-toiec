@@ -5,6 +5,7 @@ import { QuestionTag } from 'src/question_tags/entities/question_tag.entity';
 import { TargetSkill } from 'src/target_skills/entities/target_skill.entity';
 import { LessonSkill } from 'src/lesson_skills/entities/lesson_skill.entity';
 import { Part } from 'src/part/entities/part.entity';
+import { Item } from 'src/item/entities/item.entity';
 
 @Entity('skills')
 export class Skill extends BaseEntity {
@@ -33,4 +34,7 @@ export class Skill extends BaseEntity {
     inverseJoinColumn: { name: 'part_id', referencedColumnName: 'id' },
   })
   parts: Part[];
+
+  @ManyToMany(() => Item, (item) => item.skills)
+  items: Item[];
 }

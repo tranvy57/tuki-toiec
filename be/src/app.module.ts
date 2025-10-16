@@ -38,6 +38,8 @@ import { LessonSkillsModule } from './lesson_skills/lesson_skills.module';
 import { CoursesModule } from './courses/courses.module';
 import { UserCoursesModule } from './user_courses/user_courses.module';
 import { LessonContentModule } from './lesson_content/lesson_content.module';
+import { ItemsModule } from './item/items.module';
+import { LessonItemModule } from './lesson_item/lesson_item.module';
 
 @Module({
   imports: [
@@ -73,6 +75,8 @@ import { LessonContentModule } from './lesson_content/lesson_content.module';
     CoursesModule,
     UserCoursesModule,
     LessonContentModule,
+    ItemsModule,
+    LessonItemModule,
   ],
   controllers: [AppController],
   providers: [
