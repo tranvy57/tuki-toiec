@@ -22,7 +22,6 @@ import {
   Target,
   Bot,
   Zap,
-  Check,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -31,7 +30,6 @@ import Image from "next/image";
 const writingExerciseTypes = [
   {
     id: "1",
-    imageUrl: "https://static.athenaonline.vn//img.tmp/48%20edit.png",
     name: "Mô tả hình ảnh",
     slug: "describe-picture",
     description: "Viết 5 câu mô tả dựa trên hình ảnh cho sẵn",
@@ -43,6 +41,8 @@ const writingExerciseTypes = [
     estimatedTime: "10-15 phút",
     gradient: "from-green-50 to-emerald-50",
     borderColor: "border-green-200",
+    imageUrl:
+      "https://www.google.com/url?sa=i&url=https%3A%2F%2Fathenaonline.vn%2Ftoeic-speaking-part-2-describe-a-picture-idn62&psig=AOvVaw0NmF0EVwbFzDoRZrQ26dM4&ust=1760800831260000&source=images&cd=vfe&opi=89978449&ved=0CBUQjRxqFwoTCLC3xrLEq5ADFQAAAAAdAAAAABAE",
     subTopics: [
       {
         id: "1-1",
@@ -81,8 +81,6 @@ const writingExerciseTypes = [
   },
   {
     id: "2",
-    imageUrl:
-      "https://media-blog.jobsgo.vn/blog/wp-content/uploads/2022/06/cach-viet-email-dung-chuan.jpg",
     name: "Trả lời email",
     slug: "email-response",
     description: "Viết phản hồi cho một email về công việc hoặc yêu cầu",
@@ -94,6 +92,8 @@ const writingExerciseTypes = [
     estimatedTime: "15-20 phút",
     gradient: "from-blue-50 to-cyan-50",
     borderColor: "border-blue-200",
+    imageUrl:
+      "https://www.google.com/url?sa=i&url=https%3A%2F%2Fathenaonline.vn%2Ftoeic-speaking-part-2-describe-a-picture-idn62&psig=AOvVaw0NmF0EVwbFzDoRZrQ26dM4&ust=1760800831260000&source=images&cd=vfe&opi=89978449&ved=0CBUQjRxqFwoTCLC3xrLEq5ADFQAAAAAdAAAAABAE",
     subTopics: [
       {
         id: "2-1",
@@ -129,8 +129,6 @@ const writingExerciseTypes = [
   },
   {
     id: "3",
-    imageUrl:
-      "https://dotb.vn/wp-content/uploads/2024/08/Ket-qua-hoc-tap-cua-hoc-sinh-thong-bao-ket-qua-hoc-tap-dotb.jpg",
     name: "Viết đoạn nêu quan điểm",
     slug: "opinion-essay",
     description: "Viết đoạn văn 150-200 từ nêu quan điểm cá nhân về một chủ đề",
@@ -142,6 +140,8 @@ const writingExerciseTypes = [
     estimatedTime: "25-30 phút",
     gradient: "from-purple-50 to-pink-50",
     borderColor: "border-purple-200",
+    imageUrl:
+      "https://www.google.com/url?sa=i&url=https%3A%2F%2Fathenaonline.vn%2Ftoeic-speaking-part-2-describe-a-picture-idn62&psig=AOvVaw0NmF0EVwbFzDoRZrQ26dM4&ust=1760800831260000&source=images&cd=vfe&opi=89978449&ved=0CBUQjRxqFwoTCLC3xrLEq5ADFQAAAAAdAAAAABAE",
     subTopics: [
       {
         id: "3-1",
@@ -180,8 +180,6 @@ const writingExerciseTypes = [
   {
     id: "4",
     name: "Sửa câu sai",
-    imageUrl:
-      "https://ila.edu.vn/wp-content/uploads/2023/03/ila-ngu-phap-tieng-anh-co-ban-cho-hoc-sinh-tieu-hoc-3.jpg",
     slug: "grammar-fix",
     description: "Sửa lỗi ngữ pháp trong câu đã cho",
     icon: Edit3,
@@ -192,6 +190,8 @@ const writingExerciseTypes = [
     estimatedTime: "5-10 phút",
     gradient: "from-orange-50 to-amber-50",
     borderColor: "border-orange-200",
+    imageUrl:
+      "https://www.google.com/url?sa=i&url=https%3A%2F%2Fathenaonline.vn%2Ftoeic-speaking-part-2-describe-a-picture-idn62&psig=AOvVaw0NmF0EVwbFzDoRZrQ26dM4&ust=1760800831260000&source=images&cd=vfe&opi=89978449&ved=0CBUQjRxqFwoTCLC3xrLEq5ADFQAAAAAdAAAAABAE",
     subTopics: [
       {
         id: "4-1",
@@ -249,11 +249,11 @@ const itemVariants = {
   },
 };
 
-export default function WritingPracticePage() {
+export default function WritingTopicsPage() {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50/50">
       {/* Floating decorative elements */}
       <motion.div
         className="absolute top-20 left-10 w-20 h-20 bg-pink-400/10 rounded-full blur-xl"
@@ -280,165 +280,141 @@ export default function WritingPracticePage() {
         }}
       />
 
-      <div className="container mx-auto px-4 py-4 relative z-10">
+      <div className="container mx-auto px-4 py-12 relative z-10">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className=""
+          className="text-center mb-6"
         >
-          <div className="flex items-center justify-start gap-3 mb-4">
-            <div className="p-3  rounded-xl ">
-              <Edit3 className="w-4 h-4 " />
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="p-3 bg-gradient-to-r from-pink-400 to-blue-500 rounded-xl shadow-lg">
+              <Edit3 className="w-4 h-4 text-white" />
             </div>
-            <h1 className="text-4xl md:text-3xl font-bold text-[#23085A]">
-              Writting
+            <h1 className="text-4xl md:text-3xl font-bold bg-gradient-to-r from-pink-500 to-blue-600 bg-clip-text text-transparent">
+              Luyện Viết TOEIC
             </h1>
           </div>
-          {/* Mô tả chính */}
-          <p className="pb-4 text-lg">
-            Phát triển khả năng diễn đạt ý tưởng rõ ràng, mạch lạc và tự nhiên
-            theo chuẩn TOEIC. Với Tuki, bạn được luyện tập qua các bài viết mô
-            phỏng đề thi thật, hệ thống sẽ tự động cá nhân hóa nội dung phù hợp
-            với trình độ và mục tiêu điểm số của bạn.
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
+            Rèn luyện khả năng viết câu, email và đoạn văn theo chuẩn TOEIC thực
+            tế. Phát triển kỹ năng viết với phản hồi AI và kiểm tra ngữ pháp tự
+            động.
           </p>
         </motion.div>
 
-        <h1 className="text-4xl md:text-xl font-bold text-[#23085A] pb-4">
-          Danh sách chủ đề:
-        </h1>
-
-        <div className="flex gap-6 ">
-          {/* Exercise Cards Grid */}
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="flex flex-col gap-6 w-[90%]"
-          >
-            {writingExerciseTypes.map((exercise) => (
+        {/* Exercise Cards Grid */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-6 max-w-full mx-auto"
+        >
+          {writingExerciseTypes.map((exercise) => (
+            <motion.div
+              key={exercise.id}
+              variants={itemVariants}
+              onMouseEnter={() => setHoveredCard(exercise.id)}
+              onMouseLeave={() => setHoveredCard(null)}
+            >
               <motion.div
-                key={exercise.id}
-                variants={itemVariants}
-                onMouseEnter={() => setHoveredCard(exercise.id)}
-                onMouseLeave={() => setHoveredCard(null)}
+                whileHover={{ scale: 1.02, y: -5 }}
+                transition={{ duration: 0.2 }}
               >
-                <Link
-                  href={`/practice/writing/${exercise.slug}`}
-                  className="block"
+                <Card
+                  className={`h-full bg-gradient-to-br ${exercise.gradient} border ${exercise.borderColor} shadow-md hover:shadow-xl transition-all duration-300 rounded-xl overflow-hidden group`}
                 >
-                  <motion.div
-                    whileHover={{ scale: 1.02, y: -5 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <div className="flex items-stretch   transition-all duration-300 rounded-lg overflow-hidden group bg-white">
-                      <div className="w-80 flex flex-col justify-between border-l bg-white">
-                        {exercise.imageUrl && (
-                          <Image
-                            src={exercise.imageUrl}
-                            width={600}
-                            height={600}
-                            alt={exercise.name}
-                            className="object-cover w-full h-40"
-                          />
-                        )}
-
-                        {/* <div className="p-4">
-                      <Link href={`/practice/writing/${exercise.slug}/topics`}>
-                        <Button
-                          className="w-full bg-white hover:bg-gray-100 text-gray-800 font-semibold border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300"
-                          size="lg"
-                        >
-                          <span>Chọn chủ đề</span>
-                          <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-                        </Button>
-                      </Link>
+                  <CardHeader className="">
+                    {/* <div className="flex items-start justify-between mb-3">
+                      <Badge
+                        className={`${exercise.difficultyColor} border-0 font-medium px-3 py-1`}
+                      >
+                        {exercise.difficulty}
+                      </Badge>
                     </div> */}
+                    <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-gray-800 transition-colors flex items-center gap-3">
+                      <div
+                        className={`p-3 bg-white/80 rounded-lg shadow-sm border ${exercise.borderColor} group-hover:scale-110 transition-transform duration-300`}
+                      >
+                        <exercise.icon className="w-6 h-6 text-gray-700" />
                       </div>
-                      <div className="flex-1 p-5 flex flex-col justify-between">
-                        {/* Header */}
-                        <div>
-                          <div className="flex items-center gap-3 mb-3">
-                            {/* <div className="p-3 bg-gray-50 rounded-lg border shadow-sm group-hover:scale-110 transition-transform duration-300">
-                          <exercise.icon className="w-6 h-6 text-gray-700" />
-                        </div> */}
-                            <h3 className="text-xl font-semibold text-[#23085A]  group-hover:text-gray-800 transition-colors">
-                              {exercise.name}
-                            </h3>
-                          </div>
+                      {exercise.name}
+                    </CardTitle>
+                  </CardHeader>
 
-                          {/* Description */}
-                          <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                            {exercise.description}
-                          </p>
-
-                          {/* Info */}
-                          <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                            <div className="flex items-center gap-1.5">
-                              <Target className="w-4 h-4" />
-                              <span>{exercise.exerciseCount} bài tập</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <Clock className="w-4 h-4" />
-                              <span>{exercise.estimatedTime}</span>
-                            </div>
-                          </div>
-                        </div>
-                        {/* Progress */}
-                        {/* <div className="mt-4">
-                      <div className="flex justify-between text-xs text-gray-600 mb-1">
-                        <span>Tiến độ</span>
-                        <span>0/{exercise.exerciseCount}</span>
+                  <CardContent className="space-y-4 pb-4">
+                    heheh
+                    <p className="text-gray-600 leading-relaxed text-sm h-12">
+                      {exercise.description}
+                    </p>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <Target className="w-4 h-4" />
+                        <span>{exercise.exerciseCount} bài tập</span>
                       </div>
-                      <div className="w-full bg-gray-100 rounded-full h-2">
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <Clock className="w-4 h-4" />
+                        <span>{exercise.estimatedTime}</span>
+                      </div>
+                    </div>
+                    {/* Progress placeholder */}
+                    <div className="bg-white/60 rounded-lg p-3 border border-white/50">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs font-medium text-gray-600">
+                          Tiến độ
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          0/{exercise.exerciseCount}
+                        </span>
+                      </div>
+                      <div className="w-full bg-white/80 rounded-full h-2">
                         <div className="bg-gradient-to-r from-pink-400 to-blue-500 h-2 rounded-full w-0 transition-all duration-300" />
                       </div>
-                    </div> */}
-                      </div>
-
-                      {/* RIGHT IMAGE + BUTTON */}
                     </div>
-                  </motion.div>
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
+                  </CardContent>
 
-          <div className="p-4 round-sm bg-white bg-white w-100">
-            <h3 className="text-lg font-semibold text-[#23085A] mb-3">
-              🎯 Mục tiêu đạt được
-            </h3>
-            <ul className="space-y-2 text-gray-800">
-              <li className="flex items-start gap-2">
-                <Check className="w-5 h-5 text-[#23085A] mt-0.5" />
-                <span>
-                  Nâng cao khả năng diễn đạt ý tưởng mạch lạc và logic.
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="w-5 h-5 text-[#23085A] mt-0.5" />
-                <span>Sử dụng từ vựng và cấu trúc câu chuẩn TOEIC.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="w-5 h-5 text-[#23085A] mt-0.5" />
-                <span>Viết tự nhiên, đúng ngữ pháp và dễ hiểu.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="w-5 h-5 text-[#23085A] mt-0.5" />
-                <span>
-                  Nhận phản hồi chi tiết từ AI giúp cải thiện từng bài viết.
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="w-5 h-5 text-[#23085A] mt-0.5" />
-                <span>
-                  Tự đánh giá tiến bộ và điều chỉnh chiến lược học phù hợp.
-                </span>
-              </li>
-            </ul>
-          </div>
-        </div>
+                  {/* <CardFooter>
+                    <Link
+                      href={`/practice/writing/${exercise.slug}`}
+                      className="w-full"
+                    >
+                      <Button
+                        className="w-full bg-white/90 hover:bg-white text-gray-800 hover:text-gray-900 font-semibold shadow-md hover:shadow-lg transition-all duration-300 group-hover:scale-[1.02] border border-white/50"
+                        size="lg"
+                      >
+                        <span>Bắt đầu luyện tập</span>
+                        <ArrowRight
+                          className={`ml-2 w-4 h-4 transition-transform duration-300 ${
+                            hoveredCard === exercise.id ? "translate-x-1" : ""
+                          }`}
+                        />
+                      </Button>
+                    </Link>
+                  </CardFooter> */}
+
+                  <CardFooter>
+                    <Link
+                      href={`/practice/writing/${exercise.slug}/topics`}
+                      className="w-full"
+                    >
+                      <Button
+                        className="w-full bg-white/90 hover:bg-white text-gray-800 hover:text-gray-900 font-semibold shadow-md hover:shadow-lg transition-all duration-300 group-hover:scale-[1.02] border border-white/50"
+                        size="lg"
+                      >
+                        <span>Chọn chủ đề</span>
+                        <ArrowRight
+                          className={`ml-2 w-4 h-4 transition-transform duration-300 ${
+                            hoveredCard === exercise.id ? "translate-x-1" : ""
+                          }`}
+                        />
+                      </Button>
+                    </Link>
+                  </CardFooter>
+                </Card>
+              </motion.div>
+            </motion.div>
+          ))}
+        </motion.div>
 
         {/* AI Features Section */}
         <motion.div
