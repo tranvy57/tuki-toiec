@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Mic, MicOff, Play, Pause, Download } from "lucide-react";
 import { toast } from "sonner";
+import { SpeechRecognition } from "@/types";
 
 interface SpeakingRecorderProps {
   onTranscriptChange: (transcript: string) => void;
@@ -36,13 +37,13 @@ export default function SpeakingRecorder({
   // Initialize Speech Recognition
   useEffect(() => {
     if (typeof window !== "undefined" && ("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
-      const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = true;
-      recognitionRef.current.interimResults = true;
-      recognitionRef.current.lang = "en-US";
+      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+      const rec = new SpeechRecognition();
+      rec.continuous = true;
+      rec.interimResults = true;
+      rec.lang = "en-US";
 
-      recognitionRef.current.onresult = (event) => {
+      rec.onresult = (event: any) => {
         let finalTranscript = "";
         let interimTranscript = "";
         
@@ -60,18 +61,20 @@ export default function SpeakingRecorder({
         onTranscriptChange(fullTranscript);
       };
 
-      recognitionRef.current.onerror = (event) => {
+      rec.onerror = (event: any) => {
         console.error("Speech recognition error:", event.error);
         toast.error("Speech recognition error. Please try again.");
         stopListening();
       };
 
-      recognitionRef.current.onend = () => {
+      rec.onend = () => {
         if (isListening) {
           // Restart recognition if it should still be listening
-          recognitionRef.current?.start();
+          rec.start();
         }
       };
+
+      recognitionRef.current = rec;
     }
   }, [isListening, onTranscriptChange]);
 

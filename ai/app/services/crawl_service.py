@@ -540,7 +540,11 @@ def upload_image_to_cloudinary(url: str) -> Optional[str]:
         print(f"⚠️ Error uploading {url}: {e}")
         return None
 
+import re
+import random
+
 def generate_listening_cloze(text: str, blank_ratio: float = 0.3):
+    # Tách từ và dấu câu riêng biệt, ví dụ: ["He", "is", "running", "."]
     tokens = re.findall(r"\w+|[^\w\s]", text, re.UNICODE)
     word_indices = [i for i, t in enumerate(tokens) if re.match(r"\w+", t)]
     total_words = len(word_indices)
@@ -548,18 +552,32 @@ def generate_listening_cloze(text: str, blank_ratio: float = 0.3):
     if total_words < 5:
         return text, []
 
+    # Xác định số lượng từ cần ẩn
     n_blanks = int(total_words * blank_ratio)
     n_blanks = max(1, min(n_blanks, total_words))
 
+    # Chọn ngẫu nhiên các từ để ẩn
     blank_indices = set(random.sample(word_indices, n_blanks))
 
     blanks = []
     for i in blank_indices:
-        blanks.append(tokens[i])
-        tokens[i] = "____"
+        word = tokens[i]
+        blanks.append(word)
+        tokens[i] = "_" * len(word)   # 👈 số lượng dấu _ bằng đúng số ký tự trong từ
 
-    prompt_text = " ".join(tokens).replace(" ,", ",").replace(" .", ".")
+    # Ghép lại chuỗi, giữ dấu câu sát chữ
+    prompt_text = " ".join(tokens)
+    prompt_text = (
+        prompt_text.replace(" ,", ",")
+        .replace(" .", ".")
+        .replace(" !", "!")
+        .replace(" ?", "?")
+        .replace(" ;", ";")
+        .replace(" :", ":")
+    )
+
     return prompt_text, blanks
+
 
 def get_band_hint(part_number: int, difficulty: str):
     mapping = {
