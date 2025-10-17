@@ -82,7 +82,7 @@ const writingExerciseTypes = [
     estimatedTime: "5-10 phút",
     gradient: "from-orange-50 to-amber-50",
     borderColor: "border-orange-200",
-  },
+  }
 ];
 
 const containerVariants = {

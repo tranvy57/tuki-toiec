@@ -1,6 +1,7 @@
 import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { BaseEntity } from 'src/common/entities/base.entity';
 import { Role } from 'src/role/entities/role.entity';
+import { SpeakingAttempt } from 'src/speaking-attempt/entities/speaking-attempt.entity';
 import { UserCourse } from 'src/user_courses/entities/user_course.entity';
 import { UserVocabulary } from 'src/user_vocabularies/entities/user_vocabulary.entity';
 import { Vocabulary } from 'src/vocabulary/entities/vocabulary.entity';
@@ -51,4 +52,7 @@ export class User extends BaseEntity {
 
   @OneToMany(() => UserCourse, (uc) => uc.user)
   userCourses?: UserCourse[];
+
+  @OneToMany(() => SpeakingAttempt, (sa) => sa.user)
+  speakingAttempts?: SpeakingAttempt[];
 }

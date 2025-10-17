@@ -1,26 +1,24 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { motion } from "framer-motion";
 import {
   ArrowLeft,
-  Play,
-  Volume2,
-  Headphones,
   Edit,
-  List,
   Eye,
+  Headphones,
   MessageSquare,
+  Play,
+  Volume2
 } from "lucide-react";
+import { useState } from "react";
 import MultipleChoiceListening from "./exercises/MultipleChoiceListening";
 // import ClozeListening from "./exercises/ClozeListening";
-import OrderingListening from "./exercises/OrderingListening";
-import WordDiscrimination from "./exercises/WordDiscriminationNew";
-import DictationListening from "./exercises/DictationListening";
 import ClozeDemoPage from "./exercises/ClozeDemoPage";
+import DictationListening from "./exercises/DictationListening";
+import WordDiscrimination from "./exercises/WordDiscriminationNew";
 
 // Mock data for different question types
 const mockMCQQuestions = [
@@ -164,26 +162,26 @@ const exerciseTypes = [
 //     questions: mockClozeQuestions,
 //     type: "cloze" as const,
 //   },
-  {
-    id: "ordering",
-    name: "Sentence Ordering",
-    description: "Arrange sentences in the correct order",
-    icon: List,
-    color: "purple" as const,
-    component: OrderingListening,
-    questions: mockOrderingQuestions,
-    type: "ordering" as const,
-  },
-  {
-    id: "discrimination",
-    name: "Word Discrimination",
-    description: "Distinguish between similar sounds",
-    icon: Volume2,
-    color: "orange" as const,
-    component: WordDiscrimination,
-    questions: mockWordDiscriminationQuestions,
-    type: "discrimination" as const,
-  },
+  // {
+  //   id: "ordering",
+  //   name: "Sentence Ordering",
+  //   description: "Arrange sentences in the correct order",
+  //   icon: List,
+  //   color: "purple" as const,
+  //   component: OrderingListening,
+  //   questions: mockOrderingQuestions,
+  //   type: "ordering" as const,
+  // },
+  // {
+  //   id: "discrimination",
+  //   name: "Word Discrimination",
+  //   description: "Distinguish between similar sounds",
+  //   icon: Volume2,
+  //   color: "orange" as const,
+  //   component: WordDiscrimination,
+  //   questions: mockWordDiscriminationQuestions,
+  //   type: "discrimination" as const,
+  // },
   {
     id: "dictation",
     name: "Dictation",
@@ -197,7 +195,7 @@ const exerciseTypes = [
   {
     id: "cloze-enhanced",
     name: "Enhanced Cloze Exercise",
-    description: "Advanced fill-in-the-blank with dynamic input sizing",
+    description: "Advanced fill-in-the-blank",
     icon: Edit,
     color: "purple" as const,
     component: ClozeDemoPage,
@@ -276,30 +274,19 @@ export default function InteractiveListeningDemo({
       //       streakCount={3}
       //     />
         // );
-      case "ordering":
-        return (
-          <ExerciseComponent
-            questions={selectedExerciseData.questions as any}
-            currentQuestionIndex={currentQuestionIndex}
-            onAnswer={handleAnswer}
-            onNext={handleNextQuestion}
-            onBack={handleBackToSelection}
-            totalQuestions={selectedExerciseData.questions.length}
-            streakCount={3}
-          />
-        );
-      case "discrimination":
-        return (
-          <ExerciseComponent
-            questions={selectedExerciseData.questions as any}
-            currentQuestionIndex={currentQuestionIndex}
-            onAnswer={handleAnswer}
-            onNext={handleNextQuestion}
-            onBack={handleBackToSelection}
-            totalQuestions={selectedExerciseData.questions.length}
-            streakCount={3}
-          />
-        );
+      // po
+      // case "discrimination":
+      //   return (
+      //     <ExerciseComponent
+      //       questions={selectedExerciseData.questions as any}
+      //       currentQuestionIndex={currentQuestionIndex}
+      //       onAnswer={handleAnswer}
+      //       onNext={handleNextQuestion}
+      //       onBack={handleBackToSelection}
+      //       totalQuestions={selectedExerciseData.questions.length}
+      //       streakCount={3}
+      //     />
+      //   );
       case "dictation":
         return (
           <ExerciseComponent
@@ -390,11 +377,7 @@ export default function InteractiveListeningDemo({
                             ? "bg-purple-100 text-purple-600"
                             : ""
                         }
-                        ${
-                          exercise.color === "orange"
-                            ? "bg-orange-100 text-orange-600"
-                            : ""
-                        }
+                        
                         ${
                           exercise.color === "red"
                             ? "bg-red-100 text-red-600"

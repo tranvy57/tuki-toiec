@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import GrammarHighlightTextarea from "@/components/GrammarHighlightTextarea";
 import { Progress } from "@/components/ui/progress";
 import {
   Dialog,
@@ -485,53 +486,14 @@ export default function WritingExercisePage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Writing Area */}
-                <div className="relative">
-                  <Textarea
-                    ref={textareaRef}
-                    value={userInput}
-                    onChange={(e) => setUserInput(e.target.value)}
-                    placeholder="Bắt đầu viết câu trả lời của bạn..."
-                    className="min-h-[300px] resize-none text-base leading-relaxed"
-                  />
-
-                  {/* Grammar Error Highlights */}
-                  {isGrammarChecked && grammarErrors.length > 0 && (
-                    <div className="absolute inset-0 pointer-events-none">
-                      {/* This would contain highlighted text overlays */}
-                    </div>
-                  )}
-                </div>
-
-                {/* Grammar Errors Display */}
-                <AnimatePresence>
-                  {isGrammarChecked && grammarErrors.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="space-y-2"
-                    >
-                      <h5 className="text-sm font-medium text-red-600 flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4" />
-                        Lỗi ngữ pháp được phát hiện:
-                      </h5>
-                      {grammarErrors.map((error, index) => (
-                        <div
-                          key={index}
-                          className="bg-red-50 border border-red-200 rounded-lg p-3"
-                        >
-                          <p className="text-sm text-red-700">
-                            {error.message}
-                          </p>
-                          <p className="text-xs text-red-600 mt-1">
-                            Gợi ý: {error.replacements.join(", ")}
-                          </p>
-                        </div>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                {/* Smart Writing Area with Grammar Check */}
+                <GrammarHighlightTextarea
+                  value={userInput}
+                  onChange={setUserInput}
+                  placeholder="Bắt đầu viết câu trả lời của bạn... (Kiểm tra ngữ pháp tự động sẽ hoạt động khi bạn gõ)"
+                  maxLength={exerciseData.wordLimit.max * 8} // Rough character estimate
+                  className="min-h-[300px]"
+                />
 
                 {/* Action Buttons */}
                 <div className="flex flex-wrap gap-2">
