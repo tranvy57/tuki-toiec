@@ -40,6 +40,8 @@ import { UserCoursesModule } from './user_courses/user_courses.module';
 import { LessonContentModule } from './lesson_content/lesson_content.module';
 import { ItemsModule } from './item/items.module';
 import { LessonItemModule } from './lesson_item/lesson_item.module';
+import { SpeakingAttemptModule } from './speaking-attempt/speaking-attempt.module';
+import { GcsModule } from './gcs/gcs.module';
 
 @Module({
   imports: [
@@ -77,6 +79,8 @@ import { LessonItemModule } from './lesson_item/lesson_item.module';
     LessonContentModule,
     ItemsModule,
     LessonItemModule,
+    SpeakingAttemptModule,
+    GcsModule,
   ],
   controllers: [AppController],
   providers: [

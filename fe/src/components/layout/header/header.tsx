@@ -66,7 +66,6 @@ export default function Header() {
           <div className="hidden md:flex items-center space-x-8">
             {TOEIC_NAVIGATION.map((item) => (
               <div key={item.name} className="relative group">
-                {/* Mục chính */}
                 <Link
                   href={item.href || "#"}
                   className="text-gray-700 hover:text-primary font-medium flex items-center gap-1"
