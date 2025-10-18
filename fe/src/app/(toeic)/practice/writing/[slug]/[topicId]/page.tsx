@@ -32,106 +32,89 @@ import {
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { useAIFeatures } from "@/hooks/useAIFeatures";
+import { useAIFeatures } from "@/hooks/use-ai-features";
 import type {
   EvaluateEmailRequest,
   EvaluateImageDescriptionRequest,
   EvaluateOpinionEssayRequest,
   GenerateEmailRequest,
 } from "@/types/ai-features";
+import { writingExerciseTypes } from "../page";
 
 // Mock data cho từng loại bài tập
-const mockExerciseData = {
-  "describe-picture": {
-    id: "1",
-    name: "Mô tả hình ảnh",
-    title: "Mô tả hình ảnh dưới đây",
-    prompt:
-      "Nhìn vào hình ảnh của một người đàn ông đang làm việc trên laptop trong quán cà phê. Viết năm câu mô tả những gì bạn nhìn thấy.",
-    attachmentUrl: "/images/writing_picture_1.jpg",
-    difficulty: "Easy",
-    difficultyColor: "bg-green-100 text-green-800",
-    wordLimit: { min: 50, max: 80 },
-    timeLimit: "10 phút",
-    instructions: [
-      "Viết 5 câu hoàn chỉnh mô tả hình ảnh",
-      "Sử dụng thì hiện tại tiếp diễn (Present Continuous)",
-      "Mô tả vị trí, hành động và đồ vật trong hình",
-    ],
-    sampleAnswer:
-      "A man is sitting at a wooden table using his laptop. He is wearing glasses and drinking coffee. The cafe has a cozy atmosphere with warm lighting. There are other customers in the background. He appears to be concentrated on his work.",
-  },
-  "email-response": {
-    id: "2",
-    name: "Trả lời email",
-    title: "Trả lời email yêu cầu này",
-    prompt:
-      "Bạn nhận được email này: 'Could you confirm your availability for the meeting tomorrow morning at 10 AM? Please let me know if you need to reschedule.' Viết một câu trả lời lịch sự (50-80 từ).",
-    difficulty: "Medium",
-    difficultyColor: "bg-yellow-100 text-yellow-800",
-    wordLimit: { min: 50, max: 80 },
-    timeLimit: "15 phút",
-    instructions: [
-      "Bắt đầu với lời chào phù hợp",
-      "Xác nhận hoặc đề xuất thời gian khác",
-      "Kết thúc một cách lịch sự và chuyên nghiệp",
-    ],
-    sampleAnswer:
-      "Thank you for your message. I confirm my availability for tomorrow's meeting at 10 AM. I look forward to our discussion. Please let me know if there are any materials I should prepare in advance. Best regards.",
-  },
-  "opinion-essay": {
-    id: "3",
-    name: "Viết đoạn nêu quan điểm",
-    title: "Viết đoạn văn nêu quan điểm",
-    prompt:
-      "Bạn có nghĩ rằng làm việc tại nhà tốt hơn làm việc tại văn phòng không? Viết một đoạn văn ngắn (150-200 từ) đưa ra quan điểm và lý do của bạn.",
-    difficulty: "Hard",
-    difficultyColor: "bg-red-100 text-red-800",
-    wordLimit: { min: 150, max: 200 },
-    timeLimit: "25 phút",
-    instructions: [
-      "Đưa ra quan điểm rõ ràng trong câu chủ đề",
-      "Cung cấp 2-3 lý do cụ thể",
-      "Sử dụng các từ nối để liên kết ý tưởng",
-      "Kết luận khẳng định lại quan điểm",
-    ],
-    sampleAnswer:
-      "I believe working from home offers significant advantages over traditional office work. Firstly, remote work eliminates commuting time, allowing employees to have better work-life balance and reduced stress. Moreover, the home environment often provides fewer distractions than busy offices, leading to increased productivity. However, I acknowledge that office work facilitates face-to-face collaboration and team building. Nevertheless, with modern communication tools, remote workers can maintain effective collaboration while enjoying the flexibility and comfort of their home workspace. Overall, the benefits of working from home outweigh the drawbacks in today's digital age.",
-  },
-  "grammar-fix": {
-    id: "4",
-    name: "Sửa câu sai",
-    title: "Sửa câu sau đây",
-    prompt: "He don't has any time for do his homework yesterday night.",
-    difficulty: "Easy",
-    difficultyColor: "bg-green-100 text-green-800",
-    wordLimit: { min: 10, max: 20 },
-    timeLimit: "5 phút",
-    instructions: [
-      "Xác định lỗi ngữ pháp trong câu",
-      "Sửa các lỗi về thì, động từ, giới từ",
-      "Đảm bảo câu có ý nghĩa rõ ràng",
-    ],
-    correctAnswer: "He didn't have any time to do his homework last night.",
-    commonErrors: [
-      {
-        error: "don't has",
-        correction: "doesn't have / didn't have",
-        explanation: "Lỗi chia động từ",
-      },
-      {
-        error: "for do",
-        correction: "to do",
-        explanation: "Sử dụng sai giới từ",
-      },
-      {
-        error: "yesterday night",
-        correction: "last night",
-        explanation: "Cách diễn đạt thời gian",
-      },
-    ],
-  },
-};
+// const mockExerciseData = {
+//   // "describe-picture": {
+//   //   id: "1",
+//   //   name: "Mô tả hình ảnh",
+//   //   title: "Mô tả hình ảnh dưới đây",
+//   //   prompt:
+//   //     "Nhìn vào hình ảnh của một người đàn ông đang làm việc trên laptop trong quán cà phê. Viết năm câu mô tả những gì bạn nhìn thấy.",
+//   //   attachmentUrl: "/images/writing_picture_1.jpg",
+//   //   difficulty: "Easy",
+//   //   difficultyColor: "bg-green-100 text-green-800",
+//   //   wordLimit: { min: 50, max: 80 },
+//   //   timeLimit: "10 phút",
+//   //   instructions: [
+//   //     "Viết 5 câu hoàn chỉnh mô tả hình ảnh",
+//   //     "Sử dụng thì hiện tại tiếp diễn (Present Continuous)",
+//   //     "Mô tả vị trí, hành động và đồ vật trong hình",
+//   //   ],
+//   //   sampleAnswer:
+//   //     "A man is sitting at a wooden table using his laptop. He is wearing glasses and drinking coffee. The cafe has a cozy atmosphere with warm lighting. There are other customers in the background. He appears to be concentrated on his work.",
+//   // },
+//   "email-response": {
+//     id: "2",
+//     name: "Trả lời email",
+//     title: "Trả lời email yêu cầu này",
+//     context: "reply email",
+//     prompt:
+//       "Bạn nhận được email này: 'Could you confirm your availability for the meeting tomorrow morning at 10 AM? Please let me know if you need to reschedule.' Viết một câu trả lời lịch sự (50-80 từ).",
+//     difficulty: "Medium",
+//     difficultyColor: "bg-yellow-100 text-yellow-800",
+//     wordLimit: { min: 50, max: 80 },
+//     timeLimit: "15 phút",
+//     instructions: [
+//       "Bắt đầu với lời chào phù hợp",
+//       "Xác nhận hoặc đề xuất thời gian khác",
+//       "Kết thúc một cách lịch sự và chuyên nghiệp",
+//     ],
+//   },
+//   "opinion-essay": {
+//     id: "3",
+//     name: "Viết đoạn nêu quan điểm",
+//     title: "Viết đoạn văn nêu quan điểm",
+//     prompt:
+//       "Bạn có nghĩ rằng làm việc tại nhà tốt hơn làm việc tại văn phòng không? Viết một đoạn văn ngắn (150-200 từ) đưa ra quan điểm và lý do của bạn.",
+//     difficulty: "Hard",
+//     difficultyColor: "bg-red-100 text-red-800",
+//     wordLimit: { min: 150, max: 200 },
+//     timeLimit: "25 phút",
+//     context: "opinion",
+//     instructions: [
+//       "Đưa ra quan điểm rõ ràng trong câu chủ đề",
+//       "Cung cấp 2-3 lý do cụ thể",
+//       "Sử dụng các từ nối để liên kết ý tưởng",
+//       "Kết luận khẳng định lại quan điểm",
+//     ],
+//   },
+//   "grammar-fix": {
+//     id: "4",
+//     name: "Sửa câu sai",
+//     title: "Sửa câu sau đây",
+//     prompt: "He don't has any time for do his homework yesterday night.",
+//     difficulty: "Easy",
+//     difficultyColor: "bg-green-100 text-green-800",
+//     wordLimit: { min: 10, max: 20 },
+//     context: "grammar correction",
+//     timeLimit: "5 phút",
+//     instructions: [
+//       "Xác định lỗi ngữ pháp trong câu",
+//       "Sửa các lỗi về thì, động từ, giới từ",
+//       "Đảm bảo câu có ý nghĩa rõ ràng",
+//     ],
+//     correctAnswer: "He didn't have any time to do his homework last night.",
+//   },
+// };
 
 // Mock feedback AI
 const mockAIFeedback = {
@@ -165,17 +148,22 @@ export default function WritingExercisePage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Initialize AI features
-  const {
-    evaluateEmail,
-    evaluateImageDescription,
-    evaluateOpinionEssay,
-    generateEmail,
-  } = useAIFeatures();
+  const { evaluateWriting, evaluateImageDescription, generateEmail } =
+    useAIFeatures();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  const topicId = params.topicId as string;
   const slug = params.slug as string;
-  const exerciseData = mockExerciseData[slug as keyof typeof mockExerciseData];
+  const exerciseData = writingExerciseTypes.find(
+    (exercise) => exercise.slug === slug
+  );
 
+  const subTopic = exerciseData?.subTopics.find((sub) => sub.id === topicId);
+
+  // Nếu cần fallback an toàn
+  if (!subTopic) {
+    console.warn("Subtopic not found:", topicId);
+  }
   useEffect(() => {
     // Timer
     intervalRef.current = setInterval(() => {
@@ -196,14 +184,14 @@ export default function WritingExercisePage() {
     setWordCount(words.length);
 
     // Calculate progress based on word count
-    if (exerciseData?.wordLimit) {
+    if (subTopic?.wordLimit) {
       const progressPercent = Math.min(
-        (words.length / exerciseData.wordLimit.min) * 100,
+        (words.length / subTopic.wordLimit) * 100,
         100
       );
       setProgress(progressPercent);
     }
-  }, [userInput, exerciseData?.wordLimit]);
+  }, [userInput, subTopic?.wordLimit]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -222,38 +210,42 @@ export default function WritingExercisePage() {
       let result;
 
       switch (slug) {
-        case "describe-picture":
-          result = await evaluateImageDescription.evaluateImageDescription({
-            description: userInput,
-            expectedElements: ["person", "laptop", "cafe", "table", "work"],
-            descriptionType: "basic",
-          });
-          break;
+        // case "describe-picture":
+        //   result = await evaluateImageDescription.evaluateImageDescription({
+        //     description: userInput,
+        //     expectedElements: ["person", "laptop", "cafe", "table", "work"],
+        //     descriptionType: "basic",
+        //   });
+        //   break;
 
         case "email-response":
-          result = await evaluateEmail.evaluateEmail({
-            subject: "Re: Meeting Confirmation",
-            body: userInput,
-            purpose: "Confirm meeting availability",
-            targetRecipient: "Colleague/Manager",
+          result = await evaluateWriting.evaluateWriting({
+            type: "email",
+            title: subTopic?.title,
+            content: userInput,
+            topic: subTopic?.topic,
+            context: subTopic?.context || "Colleague/Manager",
           });
           break;
 
         case "opinion-essay":
-          result = await evaluateOpinionEssay.evaluateOpinionEssay({
-            essay: userInput,
-            topic: exerciseData.prompt,
-            requiredLength: exerciseData.wordLimit?.max || 200,
-            essayType: "opinion",
+          result = await evaluateWriting.evaluateWriting({
+            type: "opinion-essay",
+            content: userInput,
+            topic: subTopic?.topic,
+            requiredLength: subTopic?.wordLimit || 200,
+            context: subTopic?.context || "opinion",
           });
           break;
 
         case "grammar-fix":
-          // For grammar fix, we can use email evaluation as a general text evaluator
-          result = await evaluateEmail.evaluateEmail({
-            subject: "Grammar Check",
-            body: userInput,
-            purpose: "Grammar correction exercise",
+          // For grammar fix, we can use the writing evaluation as a general text evaluator
+          result = await evaluateWriting.evaluateWriting({
+            type: "email",
+            content: userInput,
+            title: "Grammar Check",
+            topic: subTopic?.topic,
+            context: "Grammar practice",
           });
           break;
 
@@ -267,14 +259,14 @@ export default function WritingExercisePage() {
       }
     } catch (error) {
       console.error("AI evaluation failed:", error);
-      alert("Đánh giá AI thất bại. Vui lòng thử lại.");
+      // alert("Đánh giá AI thất bại. Vui lòng thử lại.");
     } finally {
       setIsEvaluating(false);
     }
   };
 
   const handleGenerateExample = async () => {
-    if (slug !== "email-response") return;
+    if (topicId !== "email-response") return;
 
     setIsGenerating(true);
     setGeneratedSample(null);
@@ -379,8 +371,16 @@ export default function WritingExercisePage() {
                 {exerciseData.name}
               </h1>
               <div className="flex items-center gap-4 mt-1">
-                <Badge className={exerciseData.difficultyColor}>
-                  {exerciseData.difficulty}
+                <Badge
+                  className={
+                    subTopic?.level === "Easy"
+                      ? "bg-green-100 text-green-800"
+                      : subTopic?.level === "Medium"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-red-100 text-red-800"
+                  }
+                >
+                  {subTopic?.level}
                 </Badge>
                 <div className="flex items-center gap-1 text-sm text-gray-500">
                   <Clock className="w-4 h-4" />
@@ -410,12 +410,12 @@ export default function WritingExercisePage() {
             <Card className="h-fit sticky top-6">
               <CardHeader>
                 <CardTitle className="text-lg font-semibold text-gray-900">
-                  {exerciseData.title}
+                  {subTopic?.title}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Image for picture description */}
-                {slug === "describe-picture" && (
+                {topicId === "describe-picture" && (
                   <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden">
                     <div className="flex items-center justify-center h-full text-gray-500">
                       <FileText className="w-12 h-12" />
@@ -427,12 +427,12 @@ export default function WritingExercisePage() {
                 {/* Prompt */}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <p className="text-gray-700 leading-relaxed">
-                    {exerciseData.prompt}
+                    {subTopic?.topic}
                   </p>
                 </div>
 
                 {/* Instructions */}
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <h4 className="font-medium text-gray-900 flex items-center gap-2">
                     <Target className="w-4 h-4" />
                     Hướng dẫn:
@@ -448,22 +448,19 @@ export default function WritingExercisePage() {
                       </li>
                     ))}
                   </ul>
-                </div>
+                </div> */}
 
                 {/* Requirements */}
-                <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                  <div className="flex items-center gap-1">
-                    <FileText className="w-4 h-4" />
-                    <span>
-                      {exerciseData.wordLimit.min}-{exerciseData.wordLimit.max}{" "}
-                      từ
-                    </span>
+                {subTopic?.wordLimit && (
+                  <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                    <div className="flex items-center gap-1">
+                      <FileText className="w-4 h-4" />
+                      <span>
+                        {subTopic?.wordLimit - 20}-{subTopic?.wordLimit + 20} từ
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    <span>{exerciseData.timeLimit}</span>
-                  </div>
-                </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>
@@ -481,7 +478,7 @@ export default function WritingExercisePage() {
                     Viết câu trả lời
                   </CardTitle>
                   <div className="text-sm text-gray-600">
-                    {wordCount}/{exerciseData.wordLimit.max} từ
+                    {wordCount}/{subTopic?.wordLimit} từ
                   </div>
                 </div>
               </CardHeader>
@@ -491,7 +488,7 @@ export default function WritingExercisePage() {
                   value={userInput}
                   onChange={setUserInput}
                   placeholder="Bắt đầu viết câu trả lời của bạn... (Kiểm tra ngữ pháp tự động sẽ hoạt động khi bạn gõ)"
-                  maxLength={exerciseData.wordLimit.max * 8} // Rough character estimate
+                  maxLength={(subTopic?.wordLimit ?? 200) * 8} // Rough character estimate
                   className="min-h-[300px]"
                 />
 
@@ -522,7 +519,7 @@ export default function WritingExercisePage() {
                     {isEvaluating ? "Đang đánh giá..." : "Đánh giá AI"}
                   </Button>
 
-                  {slug === "email-response" && (
+                  {topicId === "email-response" && (
                     <Button
                       onClick={handleGenerateExample}
                       disabled={isGenerating}
@@ -566,8 +563,8 @@ export default function WritingExercisePage() {
                     <span className="text-sm text-gray-600">Số từ</span>
                     <span
                       className={`text-sm font-medium ${
-                        wordCount >= exerciseData.wordLimit.min &&
-                        wordCount <= exerciseData.wordLimit.max
+                        wordCount >= (subTopic?.wordLimit ?? 200) - 20 &&
+                        wordCount <= (subTopic?.wordLimit ?? 200) + 20
                           ? "text-green-600"
                           : "text-red-600"
                       }`}
@@ -578,14 +575,14 @@ export default function WritingExercisePage() {
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
                       className={`h-2 rounded-full transition-all duration-300 ${
-                        wordCount >= exerciseData.wordLimit.min &&
-                        wordCount <= exerciseData.wordLimit.max
+                        wordCount >= (subTopic?.wordLimit ?? 200) - 20 &&
+                        wordCount <= (subTopic?.wordLimit ?? 200) + 20
                           ? "bg-green-500"
                           : "bg-red-500"
                       }`}
                       style={{
                         width: `${Math.min(
-                          (wordCount / exerciseData.wordLimit.max) * 100,
+                          (wordCount / (subTopic?.wordLimit ?? 200)) * 100,
                           100
                         )}%`,
                       }}
@@ -648,7 +645,7 @@ export default function WritingExercisePage() {
                   </div>
 
                   {/* TOEIC Score (for opinion essay) */}
-                  {slug === "opinion-essay" &&
+                  {topicId === "opinion-essay" &&
                     aiEvaluation.estimatedTOEICWritingScore && (
                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                         <h4 className="font-semibold text-blue-800 mb-2">

@@ -9,58 +9,59 @@ import Link from "next/link";
 import { Check, Edit3 } from "lucide-react";
 
 // Mock data tương tự phần bạn có
-const writingExerciseTypes = [
-  {
-    slug: "describe-picture",
-    name: "Mô tả hình ảnh",
-    imageUrl: "https://static.athenaonline.vn//img.tmp/48%20edit.png",
-    instruction: [
-      "Quan sát bức ảnh cẩn thận: xác định bối cảnh, đối tượng chính và hành động trong hình.",
-      "Bắt đầu bằng câu giới thiệu tổng quát (e.g. 'The picture shows...').",
-      "Sử dụng thì hiện tại tiếp diễn (Present Continuous) để mô tả hành động đang diễn ra.",
-      "Tập trung vào các yếu tố chính: người, vật, địa điểm, và hoạt động.",
-      "Tránh liệt kê rời rạc — hãy kết nối các câu mô tả bằng logic tự nhiên.",
-      "Kiểm tra lại ngữ pháp và chính tả sau khi viết.",
-    ],
-    subTopics: [
-      {
-        id: "1-1",
-        title: "Địa điểm công cộng",
-        description:
-          "Luyện viết mô tả các địa điểm như công viên, thư viện, nhà hàng...",
+export const writingExerciseTypes = [
+  // {
+  //   slug: "describe-picture",
+  //   name: "Mô tả hình ảnh",
+  //   imageUrl: "https://static.athenaonline.vn//img.tmp/48%20edit.png",
+  //   instruction: [
+  //     "Quan sát bức ảnh cẩn thận: xác định bối cảnh, đối tượng chính và hành động trong hình.",
+  //     "Bắt đầu bằng câu giới thiệu tổng quát (e.g. 'The picture shows...').",
+  //     "Sử dụng thì hiện tại tiếp diễn (Present Continuous) để mô tả hành động đang diễn ra.",
+  //     "Tập trung vào các yếu tố chính: người, vật, địa điểm, và hoạt động.",
+  //     "Tránh liệt kê rời rạc — hãy kết nối các câu mô tả bằng logic tự nhiên.",
+  //     "Kiểm tra lại ngữ pháp và chính tả sau khi viết.",
+  //   ],
+  //   subTopics: [
+  //     {
+  //       id: "1-1",
+  //       title: "Địa điểm công cộng",
+  //       description:
+  //         "Luyện viết mô tả các địa điểm như công viên, thư viện, nhà hàng...",
 
-        level: "Easy",
-        progress: 2,
-        total: 10,
-        gradient: "from-green-50 to-emerald-50",
-      },
-      {
-        id: "1-2",
-        title: "Hoạt động thường ngày",
-        description:
-          "Mô tả hành động của con người trong cuộc sống thường nhật.",
+  //       level: "Easy",
+  //       progress: 2,
+  //       total: 10,
+  //       gradient: "from-green-50 to-emerald-50",
+  //     },
+  //     {
+  //       id: "1-2",
+  //       title: "Hoạt động thường ngày",
+  //       description:
+  //         "Mô tả hành động của con người trong cuộc sống thường nhật.",
 
-        level: "Medium",
-        progress: 0,
-        total: 8,
-        gradient: "from-lime-50 to-green-50",
-      },
-      {
-        id: "1-3",
-        title: "Tình huống tại nơi làm việc",
-        description:
-          "Viết mô tả nhân viên đang họp, sử dụng máy tính, hoặc giao tiếp.",
+  //       level: "Medium",
+  //       progress: 0,
+  //       total: 8,
+  //       gradient: "from-lime-50 to-green-50",
+  //     },
+  //     {
+  //       id: "1-3",
+  //       title: "Tình huống tại nơi làm việc",
+  //       description:
+  //         "Viết mô tả nhân viên đang họp, sử dụng máy tính, hoặc giao tiếp.",
 
-        level: "Medium",
-        progress: 0,
-        total: 7,
-        gradient: "from-emerald-50 to-teal-50",
-      },
-    ],
-  },
+  //       level: "Medium",
+  //       progress: 0,
+  //       total: 7,
+  //       gradient: "from-emerald-50 to-teal-50",
+  //     },
+  //   ],
+  // },
   {
     slug: "email-response",
     name: "Trả lời email",
+    type: "email",
     imageUrl:
       "https://media-blog.jobsgo.vn/blog/wp-content/uploads/2022/06/cach-viet-email-dung-chuan.jpg",
     instruction: [
@@ -73,37 +74,34 @@ const writingExerciseTypes = [
     ],
     subTopics: [
       {
-        id: "2-1",
+        id: "item21",
         title: "Giao tiếp công việc",
-        description: "Phản hồi email từ đồng nghiệp hoặc cấp trên.",
+        topic: "Phản hồi email từ đồng nghiệp hoặc cấp trên.",
         imageUrl:
           "https://media-blog.jobsgo.vn/blog/wp-content/uploads/2025/09/tra-loi-email-tham-gia-phong-van-image-1.jpg",
         level: "Medium",
-        progress: 3,
-        total: 10,
-        gradient: "from-blue-50 to-cyan-50",
+        context: "Colleauge",
+        wordLimit: 150,
       },
       {
-        id: "2-2",
+        id: "item22",
         title: "Sắp lịch và lời mời",
-        description: "Viết email đặt lịch, mời họp, hoặc xác nhận tham dự.",
+        topic: "Viết email đặt lịch, mời họp, hoặc xác nhận tham dự.",
         imageUrl:
           "https://www.nhanlucdaiduong.com.vn/uploads/email-tu-choi-phong-van-5.jpg",
         level: "Easy",
-        progress: 0,
-        total: 8,
-        gradient: "from-sky-50 to-blue-50",
+        context: "Schedule Meeting",
+        wordLimit: 100,
       },
       {
-        id: "2-3",
+        id: "item23",
         title: "Phản hồi khách hàng",
-        iamgeUrl:
+        imageUrl:
           "https://www.shutterstock.com/image-photo/two-businesswomen-handshake-agreement-smiling-600nw-2658451829.jpg",
-        description: "Trả lời câu hỏi, khiếu nại hoặc xác nhận đơn hàng.",
+        topic: "Trả lời câu hỏi, khiếu nại hoặc xác nhận đơn hàng.",
         level: "Hard",
-        progress: 1,
-        total: 6,
-        gradient: "from-indigo-50 to-blue-50",
+        context: "Customer",
+        wordLimit: 200,
       },
     ],
   },
@@ -114,34 +112,28 @@ const writingExerciseTypes = [
       "https://dotb.vn/wp-content/uploads/2024/08/Ket-qua-hoc-tap-cua-hoc-sinh-thong-bao-ket-qua-hoc-tap-dotb.jpg",
     subTopics: [
       {
-        id: "3-1",
+        id: "item31",
         title: "Công nghệ và đời sống",
-        description:
-          "Viết về tác động của công nghệ trong công việc và cuộc sống.",
-
+        topic: "Viết về tác động của công nghệ trong công việc và cuộc sống.",
         level: "Medium",
-        progress: 0,
-        total: 6,
-        gradient: "from-purple-50 to-pink-50",
+        context: "Technology",
+        wordLimit: 150,
       },
       {
-        id: "3-2",
+        id: "item32",
         title: "Giáo dục và học tập",
-        description:
-          "Trình bày quan điểm về học online, bằng cấp, kỹ năng mềm.",
+        topic: "Trình bày quan điểm về học online, bằng cấp, kỹ năng mềm.",
         level: "Hard",
-        progress: 0,
-        total: 5,
-        gradient: "from-pink-50 to-fuchsia-50",
+        context: "Education",
+        wordLimit: 200,
       },
       {
-        id: "3-3",
+        id: "item33",
         title: "Môi trường và xã hội",
-        description: "Nêu ý kiến về bảo vệ môi trường và trách nhiệm cá nhân.",
+        topic: "Nêu ý kiến về bảo vệ môi trường và trách nhiệm cá nhân.",
         level: "Medium",
-        progress: 0,
-        total: 4,
-        gradient: "from-fuchsia-50 to-rose-50",
+        context: "Environment",
+        wordLimit: 150,
       },
     ],
   },
@@ -152,32 +144,28 @@ const writingExerciseTypes = [
       "https://ila.edu.vn/wp-content/uploads/2023/03/ila-ngu-phap-tieng-anh-co-ban-cho-hoc-sinh-tieu-hoc-3.jpg",
     subTopics: [
       {
-        id: "4-1",
+        id: "item41",
         title: "Thì và động từ",
-        description: "Tập trung sửa lỗi thì động từ và dạng V-ing/to V.",
+        topic: "Tập trung sửa lỗi thì động từ và dạng V-ing/to V.",
         level: "Easy",
-        progress: 5,
-        total: 12,
-        gradient: "from-amber-50 to-orange-50",
+        context: "Tenses and Verbs",
+        wordLimit: 30,
       },
       {
-        id: "4-2",
+        id: "item42",
         title: "Giới từ và danh từ",
-        description: "Sửa lỗi dùng sai giới từ, danh từ số ít/số nhiều.",
+        topic: "Sửa lỗi dùng sai giới từ, danh từ số ít/số nhiều.",
         level: "Medium",
-        progress: 2,
-        total: 10,
-        gradient: "from-orange-50 to-yellow-50",
+        context: "Prepositions and Nouns",
+        wordLimit: 30,
       },
       {
-        id: "4-3",
+        id: "item43",
         title: "Cấu trúc phức tạp",
-        description:
-          "Chỉnh lỗi trong câu điều kiện, mệnh đề quan hệ, câu ghép.",
+        topic: "Chỉnh lỗi trong câu điều kiện, mệnh đề quan hệ, câu ghép.",
         level: "Hard",
-        progress: 0,
-        total: 8,
-        gradient: "from-yellow-50 to-amber-50",
+        context: "Complex Structures",
+        wordLimit: 30,
       },
     ],
   },
@@ -314,7 +302,7 @@ export default function WritingTopicsPage() {
                 onMouseLeave={() => setHoveredCard(null)}
               >
                 <Link
-                  href={`/practice/writing/${exercise.slug}`}
+                  href={`/practice/writing/${params.slug}/${topic.id}`}
                   className="block"
                 >
                   <motion.div
