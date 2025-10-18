@@ -101,32 +101,32 @@ const mockExerciseData = {
       feedback:
         "You missed 'has' and 'of'. Try slowing down a little to catch all words.",
     },
-  },
-  "describe-picture": {
-    id: "3",
-    name: "Describe a Picture",
-    vietnameseName: "Mô tả hình ảnh",
-    title: "Mô tả hình ảnh trong 30 giây",
-    prompt: "Nhìn vào hình ảnh và mô tả chi tiết những gì bạn nhìn thấy.",
-    difficulty: "Medium",
-    difficultyColor: "bg-yellow-100 text-yellow-800",
-    duration: 30,
-    timeLimit: "30 giây",
-    image_url: "/images/airport_waiting.jpg",
-    instructions: [
-      "Quan sát kỹ tất cả chi tiết trong hình",
-      "Mô tả người, vật, hành động rõ ràng",
-      "Sử dụng từ vựng phong phú và chính xác",
-      "Tổ chức ý tưởng logic và mạch lạc",
-    ],
-    sample_feedback: {
-      grammar_score: 89,
-      vocabulary_score: 76,
-      fluency_score: 84,
-      pronunciation_score: 82,
-      feedback:
-        "Good pronunciation and fluency. Try adding more descriptive vocabulary like 'busy', 'crowded', or specific clothing details.",
-    },
+  // },
+  // "describe-picture": {
+  //   id: "3",
+  //   name: "Describe a Picture",
+  //   vietnameseName: "Mô tả hình ảnh",
+  //   title: "Mô tả hình ảnh trong 30 giây",
+  //   prompt: "Nhìn vào hình ảnh và mô tả chi tiết những gì bạn nhìn thấy.",
+  //   difficulty: "Medium",
+  //   difficultyColor: "bg-yellow-100 text-yellow-800",
+  //   duration: 30,
+  //   timeLimit: "30 giây",
+  //   image_url: "/images/airport_waiting.jpg",
+  //   instructions: [
+  //     "Quan sát kỹ tất cả chi tiết trong hình",
+  //     "Mô tả người, vật, hành động rõ ràng",
+  //     "Sử dụng từ vựng phong phú và chính xác",
+  //     "Tổ chức ý tưởng logic và mạch lạc",
+  //   ],
+    // sample_feedback: {
+    //   grammar_score: 89,
+    //   vocabulary_score: 76,
+    //   fluency_score: 84,
+    //   pronunciation_score: 82,
+    //   feedback:
+    //     "Good pronunciation and fluency. Try adding more descriptive vocabulary like 'busy', 'crowded', or specific clothing details.",
+    // },
   },
 };
 
