@@ -29,8 +29,6 @@ import Image from "next/image";
 
 import { writingExerciseTypes } from "@/data/mockDataWritting";
 
-// Mock data cho các loại bài tập viết
-// const writingExerciseTypes = [
 //   {
 //     id: "1",
 //     imageUrl: "https://static.athenaonline.vn//img.tmp/48%20edit.png",
@@ -406,7 +404,7 @@ export default function WritingPracticePage() {
             ))}
           </motion.div>
 
-          <div className="p-4 round-sm bg-white bg-white w-100">
+          <div className="p-4 round-sm bg-white  w-100">
             <h3 className="text-lg font-semibold text-[#23085A] mb-3">
               🎯 Mục tiêu đạt được
             </h3>
