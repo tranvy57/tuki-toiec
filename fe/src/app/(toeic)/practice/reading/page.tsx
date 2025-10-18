@@ -245,7 +245,7 @@ export default function SpeakingPracticePage() {
           </div>
         </div>
 
-        {/* AI Features Section */
+        {/* AI Features Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
