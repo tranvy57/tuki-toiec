@@ -241,46 +241,7 @@ const GrammarHighlightTextarea: React.FC<GrammarHighlightTextareaProps> = ({
     <div className="space-y-4">
       {/* Grammar Status Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
-            ) : visibleMatches.length === 0 && value.length > 10 ? (
-              <CheckCircle className="w-4 h-4 text-green-500" />
-            ) : visibleMatches.length > 0 ? (
-              <AlertTriangle className="w-4 h-4 text-yellow-500" />
-            ) : null}
-
-            <span className="text-sm font-medium text-gray-700">
-              {loading
-                ? "Checking grammar..."
-                : visibleMatches.length === 0 && value.length > 10
-                ? "No issues found"
-                : visibleMatches.length > 0
-                ? `${visibleMatches.length} issue${
-                    visibleMatches.length > 1 ? "s" : ""
-                  } found`
-                : "Grammar Check"}
-            </span>
-          </div>
-
-          {grammarScore !== null && (
-            <Badge
-              variant="outline"
-              className={`${
-                grammarScore >= 90
-                  ? "bg-green-50 text-green-700 border-green-200"
-                  : grammarScore >= 70
-                  ? "bg-yellow-50 text-yellow-700 border-yellow-200"
-                  : "bg-red-50 text-red-700 border-red-200"
-              }`}
-            >
-              Score: {grammarScore}%
-            </Badge>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           {visibleMatches.length > 0 && (
             <Button
               onClick={applyAllSuggestions}
@@ -300,7 +261,7 @@ const GrammarHighlightTextarea: React.FC<GrammarHighlightTextareaProps> = ({
           >
             <RefreshCw className="w-3 h-3" />
           </Button>
-        </div>
+        </div> */}
       </div>
 
       {/* Textarea */}
@@ -325,6 +286,45 @@ const GrammarHighlightTextarea: React.FC<GrammarHighlightTextareaProps> = ({
             {value.length}/{maxLength}
           </div>
         )}
+      </div>
+
+      <div className="flex items-center gap-2">
+        {loading ? (
+          <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+        ) : visibleMatches.length === 0 && value.length > 10 ? (
+          <CheckCircle className="w-4 h-4 text-green-500" />
+        ) : visibleMatches.length > 0 ? (
+          <AlertTriangle className="w-4 h-4 text-yellow-500" />
+        ) : null}
+
+        <span className="text-sm font-medium text-gray-700">
+          {loading
+            ? "Checking grammar..."
+            : visibleMatches.length === 0 && value.length > 10
+            ? "No issues found"
+            : visibleMatches.length > 0
+            ? `${visibleMatches.length} issue${
+                visibleMatches.length > 1 ? "s" : ""
+              } found`
+            : "Grammar Check"}
+        </span>
+
+        <div className="flex items-center gap-3">
+          {grammarScore !== null && (
+            <Badge
+              variant="outline"
+              className={`${
+                grammarScore >= 90
+                  ? "bg-green-50 text-green-700 border-green-200"
+                  : grammarScore >= 70
+                  ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+                  : "bg-red-50 text-red-700 border-red-200"
+              }`}
+            >
+              Score: {grammarScore}%
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Error Display */}

@@ -161,6 +161,7 @@ export default function WritingExercisePage() {
   const [aiEvaluation, setAiEvaluation] = useState<any>(null);
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [generatedSample, setGeneratedSample] = useState<any>(null);
+  const [generatedSampleModal, setGeneratedSampleModal] = useState<any>(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -217,6 +218,7 @@ export default function WritingExercisePage() {
 
     setIsEvaluating(true);
     setAiEvaluation(null);
+    handleGenerateExample();
 
     try {
       let result;
@@ -340,6 +342,8 @@ export default function WritingExercisePage() {
     setIsGrammarChecked(false);
     setGrammarErrors([]);
     setProgress(0);
+    setShowAIFeedback(false);
+    setGeneratedSample("");
   };
 
   if (!exerciseData) {
@@ -374,8 +378,8 @@ export default function WritingExercisePage() {
               <ArrowLeft className="w-4 h-4" />
               Quay lại
             </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+            <div className="flex gap-6">
+              <h1 className="text-2xl font-bold text-[#23085A]">
                 {exerciseData.name}
               </h1>
               <div className="flex items-center gap-4 mt-1">
@@ -400,20 +404,20 @@ export default function WritingExercisePage() {
         </motion.div>
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="flex flex-col gap-6">
           {/* Left Side - Prompt */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Card className="h-fit sticky top-6">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-gray-900">
+            <div className="h-fit sticky top-6 bg-white border p-4 rounded-sm">
+              <div>
+                <div className="text-lg font-semibold text-gray-900">
                   {exerciseData.title}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+                </div>
+              </div>
+              <div className="space-y-4">
                 {/* Image for picture description */}
                 {slug === "describe-picture" && (
                   <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden">
@@ -464,8 +468,8 @@ export default function WritingExercisePage() {
                     <span>{exerciseData.timeLimit}</span>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </motion.div>
 
           {/* Right Side - Writing Editor */}
@@ -474,55 +478,26 @@ export default function WritingExercisePage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Card className="h-fit">
-              <CardHeader>
+            <div className="h-fit p-4 border rounded-sm bg-white">
+              <div>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-semibold">
-                    Viết câu trả lời
-                  </CardTitle>
-                  <div className="text-sm text-gray-600">
-                    {wordCount}/{exerciseData.wordLimit.max} từ
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Smart Writing Area with Grammar Check */}
-                <GrammarHighlightTextarea
-                  value={userInput}
-                  onChange={setUserInput}
-                  placeholder="Bắt đầu viết câu trả lời của bạn... (Kiểm tra ngữ pháp tự động sẽ hoạt động khi bạn gõ)"
-                  maxLength={exerciseData.wordLimit.max * 8} // Rough character estimate
-                  className="min-h-[300px]"
-                />
+                  <div className="text-lg font-semibold flex justify-between w-full">
+                    Bài làm
+                    <div className="flex flex-wrap gap-2 justify-end items-center">
+                      <div className="text-sm text-gray-600 w-20">
+                        {wordCount}/{exerciseData.wordLimit.max} từ
+                      </div>
+                      <Button
+                        onClick={handleGrammarCheck}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        Kiểm tra ngữ pháp
+                      </Button>
 
-                {/* Action Buttons */}
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    onClick={handleGrammarCheck}
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    Kiểm tra ngữ pháp
-                  </Button>
-
-                  <Button
-                    onClick={handleAIEvaluation}
-                    disabled={isEvaluating || !userInput.trim()}
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2 bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200 hover:from-purple-100 hover:to-pink-100"
-                  >
-                    {isEvaluating ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Bot className="w-4 h-4" />
-                    )}
-                    {isEvaluating ? "Đang đánh giá..." : "Đánh giá AI"}
-                  </Button>
-
-                  {slug === "email-response" && (
+                      {/* {slug === "email-response" && (
                     <Button
                       onClick={handleGenerateExample}
                       disabled={isGenerating}
@@ -537,9 +512,24 @@ export default function WritingExercisePage() {
                       )}
                       {isGenerating ? "Đang tạo..." : "Tạo mẫu email"}
                     </Button>
-                  )}
+                  )} */}
 
-                  <Button
+                      <Button
+                        onClick={handleAIEvaluation}
+                        disabled={isEvaluating || !userInput.trim()}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2 bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200 hover:from-purple-100 hover:to-pink-100"
+                      >
+                        {isEvaluating ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Bot className="w-4 h-4" />
+                        )}
+                        {isEvaluating ? "Đang đánh giá..." : "Nộp bài"}
+                      </Button>
+
+                      {/* <Button
                     onClick={handleSave}
                     variant="outline"
                     size="sm"
@@ -547,309 +537,260 @@ export default function WritingExercisePage() {
                   >
                     <Save className="w-4 h-4" />
                     Lưu bài
-                  </Button>
+                  </Button> */}
 
-                  <Button
-                    onClick={handleReset}
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                    Làm lại
-                  </Button>
+                      <Button
+                        onClick={handleReset}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                        Làm lại
+                      </Button>
+                    </div>
+                  </div>
                 </div>
+              </div>
+              <div className="space-y-4">
+                {/* Smart Writing Area with Grammar Check */}
+                <GrammarHighlightTextarea
+                  value={userInput}
+                  onChange={setUserInput}
+                  placeholder="Bắt đầu viết câu trả lời của bạn... (Kiểm tra ngữ pháp tự động sẽ hoạt động khi bạn gõ)"
+                  maxLength={exerciseData.wordLimit.max * 8} // Rough character estimate
+                  className="min-h-[300px]"
+                />
+
+                {/* Action Buttons */}
 
                 {/* Word Count Progress */}
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-600">Số từ</span>
-                    <span
-                      className={`text-sm font-medium ${
-                        wordCount >= exerciseData.wordLimit.min &&
-                        wordCount <= exerciseData.wordLimit.max
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {wordCount}
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full transition-all duration-300 ${
-                        wordCount >= exerciseData.wordLimit.min &&
-                        wordCount <= exerciseData.wordLimit.max
-                          ? "bg-green-500"
-                          : "bg-red-500"
-                      }`}
-                      style={{
-                        width: `${Math.min(
-                          (wordCount / exerciseData.wordLimit.max) * 100,
-                          100
-                        )}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </motion.div>
         </div>
 
-        {/* AI Feedback Modal */}
-        <Dialog open={showAIFeedback} onOpenChange={setShowAIFeedback}>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Bot className="w-5 h-5 text-purple-500" />
-                Đánh giá AI - {exerciseData.name}
-              </DialogTitle>
-              <DialogDescription>
-                Đánh giá chi tiết và gợi ý cải thiện bài viết của bạn
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-6">
-              {aiEvaluation ? (
-                <>
-                  {/* Overall Score */}
-                  <div className="text-center">
-                    <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full px-6 py-3">
-                      <Star className="w-5 h-5 text-yellow-500" />
-                      <span className="text-2xl font-bold text-purple-700">
-                        {aiEvaluation.overallScore}/100
-                      </span>
-                      <span className="text-purple-600">Điểm tổng</span>
-                    </div>
+        {showAIFeedback && (
+          <div className="space-y-6 mt-8">
+            {aiEvaluation ? (
+              <>
+                {/* Overall Score */}
+                <div className="text-center">
+                  <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full px-6 py-3">
+                    <Star className="w-5 h-5 text-yellow-500" />
+                    <span className="text-2xl font-bold text-purple-700">
+                      {aiEvaluation.overallScore}/100
+                    </span>
+                    <span className="text-purple-600">Điểm tổng</span>
                   </div>
+                </div>
 
-                  {/* Score Breakdown */}
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {Object.entries(aiEvaluation.breakdown || {}).map(
-                      ([key, value]) => (
-                        <div
-                          key={key}
-                          className="text-center p-3 bg-gray-50 rounded-lg"
-                        >
-                          <div className="text-xl font-bold text-blue-600">
-                            {Number(value)}
-                          </div>
-                          <div className="text-xs text-gray-600 capitalize">
-                            {key.replace(/([A-Z])/g, " $1")}
-                          </div>
-                          <Progress
-                            value={Number(value)}
-                            className="h-2 mt-2"
-                          />
+                {/* Score Breakdown */}
+                <div className="flex gap-4">
+                  {Object.entries(aiEvaluation.breakdown || {}).map(
+                    ([key, value]) => (
+                      <div
+                        key={key}
+                        className="text-center p-3 bg-gray-50 rounded-lg flex-1"
+                      >
+                        <div className="text-xl font-bold text-blue-600">
+                          {Number(value)}
                         </div>
-                      )
-                    )}
-                  </div>
-
-                  {/* TOEIC Score (for opinion essay) */}
-                  {slug === "opinion-essay" &&
-                    aiEvaluation.estimatedTOEICWritingScore && (
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <h4 className="font-semibold text-blue-800 mb-2">
-                          Ước tính điểm TOEIC Writing
-                        </h4>
-                        <div className="text-3xl font-bold text-blue-600">
-                          {aiEvaluation.estimatedTOEICWritingScore}/200
+                        <div className="text-xs text-gray-600 capitalize">
+                          {key.replace(/([A-Z])/g, " $1")}
                         </div>
+                        <Progress value={Number(value)} className="h-2 mt-2" />
                       </div>
-                    )}
+                    )
+                  )}
+                </div>
 
-                  {/* Strengths & Weaknesses */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <h4 className="font-semibold text-green-700 flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4" />
-                        Điểm mạnh
+                {/* TOEIC Score (for opinion essay) */}
+                {slug === "opinion-essay" &&
+                  aiEvaluation.estimatedTOEICWritingScore && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h4 className="font-semibold text-blue-800 mb-2">
+                        Ước tính điểm TOEIC Writing
                       </h4>
-                      <ul className="space-y-1">
-                        {aiEvaluation.strengths?.map(
-                          (strength: string, index: number) => (
-                            <li
-                              key={index}
-                              className="text-sm text-green-600 flex items-start gap-2"
-                            >
-                              <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-2 flex-shrink-0" />
-                              {strength}
-                            </li>
-                          )
-                        )}
-                      </ul>
-                    </div>
-
-                    <div className="space-y-2">
-                      <h4 className="font-semibold text-orange-700 flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4" />
-                        Cần cải thiện
-                      </h4>
-                      <ul className="space-y-1">
-                        {aiEvaluation.weaknesses?.map(
-                          (weakness: string, index: number) => (
-                            <li
-                              key={index}
-                              className="text-sm text-orange-600 flex items-start gap-2"
-                            >
-                              <div className="w-1.5 h-1.5 bg-orange-500 rounded-full mt-2 flex-shrink-0" />
-                              {weakness}
-                            </li>
-                          )
-                        )}
-                      </ul>
-                    </div>
-                  </div>
-
-                  {/* Grammar Errors */}
-                  {aiEvaluation.grammarErrors &&
-                    aiEvaluation.grammarErrors.length > 0 && (
-                      <div className="space-y-2">
-                        <h4 className="font-semibold text-red-700 flex items-center gap-2">
-                          <Target className="w-4 h-4" />
-                          Lỗi ngữ pháp cần sửa
-                        </h4>
-                        <div className="space-y-2">
-                          {aiEvaluation.grammarErrors.map(
-                            (error: any, index: number) => (
-                              <div
-                                key={index}
-                                className="bg-red-50 border border-red-200 rounded-lg p-3"
-                              >
-                                <p className="text-sm">
-                                  <span className="line-through text-red-600">
-                                    {error.error}
-                                  </span>
-                                  <span className="mx-2">→</span>
-                                  <span className="text-green-600 font-medium">
-                                    {error.correction}
-                                  </span>
-                                </p>
-                                <p className="text-xs text-gray-600 mt-1">
-                                  {error.explanation}
-                                </p>
-                              </div>
-                            )
-                          )}
-                        </div>
+                      <div className="text-3xl font-bold text-blue-600">
+                        {aiEvaluation.estimatedTOEICWritingScore}/200
                       </div>
-                    )}
+                    </div>
+                  )}
 
-                  {/* Improvement Suggestions */}
+                {/* Strengths & Weaknesses */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <h4 className="font-semibold text-purple-700 flex items-center gap-2">
-                      <Zap className="w-4 h-4" />
-                      Gợi ý cải thiện
+                    <h4 className="font-semibold text-green-700 flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4" />
+                      Điểm mạnh
                     </h4>
                     <ul className="space-y-1">
-                      {aiEvaluation.improvementSuggestions?.map(
-                        (suggestion: string, index: number) => (
+                      {aiEvaluation.strengths?.map(
+                        (strength: string, index: number) => (
                           <li
                             key={index}
-                            className="text-sm text-purple-600 flex items-start gap-2"
+                            className="text-sm flex items-start gap-2"
                           >
-                            <div className="w-1.5 h-1.5 bg-purple-500 rounded-full mt-2 flex-shrink-0" />
-                            {suggestion}
+                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-2 flex-shrink-0" />
+                            {strength}
                           </li>
                         )
                       )}
                     </ul>
                   </div>
 
-                  {/* Sample Improved Version */}
-                  {(aiEvaluation.sampleImprovedDescription ||
-                    aiEvaluation.sampleImprovedParagraph) && (
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-orange-700 flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4" />
+                      Cần cải thiện
+                    </h4>
+                    <ul className="space-y-1">
+                      {aiEvaluation.weaknesses?.map(
+                        (weakness: string, index: number) => (
+                          <li
+                            key={index}
+                            className="text-sm text-orange-600 flex items-start gap-2"
+                          >
+                            <div className="w-1.5 h-1.5 bg-orange-500 rounded-full mt-2 flex-shrink-0" />
+                            {weakness}
+                          </li>
+                        )
+                      )}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Grammar Errors */}
+                {aiEvaluation.grammarErrors &&
+                  aiEvaluation.grammarErrors.length > 0 && (
                     <div className="space-y-2">
-                      <h4 className="font-semibold text-blue-700 flex items-center gap-2">
-                        <FileText className="w-4 h-4" />
-                        Mẫu cải thiện
+                      <h4 className="font-semibold text-red-700 flex items-center gap-2">
+                        <Target className="w-4 h-4" />
+                        Gợi ý cải thiện văn phong:
                       </h4>
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <p className="text-sm text-blue-800 italic">
-                          {aiEvaluation.sampleImprovedDescription ||
-                            aiEvaluation.sampleImprovedParagraph}
-                        </p>
+                      <div className="space-y-2">
+                        {aiEvaluation.grammarErrors.map(
+                          (error: any, index: number) => (
+                            <div
+                              key={index}
+                              className="bg-red-50 border border-red-200 rounded-lg p-3"
+                            >
+                              <p className="text-sm">
+                                <span className="line-through text-red-600">
+                                  {error.error}
+                                </span>
+                                <span className="mx-2">→</span>
+                                <span className="text-green-600 font-medium">
+                                  {error.correction}
+                                </span>
+                              </p>
+                              <p className="text-xs text-gray-600 mt-1">
+                                {error.explanation}
+                              </p>
+                            </div>
+                          )
+                        )}
                       </div>
                     </div>
                   )}
-                </>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">
-                    Chưa có đánh giá nào. Vui lòng nhấn "Đánh giá AI" để bắt
-                    đầu.
-                  </p>
-                </div>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
 
-        {/* Generated Email Sample Modal */}
-        <Dialog
-          open={!!generatedSample}
-          onOpenChange={() => setGeneratedSample(null)}
-        >
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-blue-500" />
-                Mẫu Email được tạo
-              </DialogTitle>
-              <DialogDescription>
-                Email mẫu được tạo bởi AI dựa trên yêu cầu
-              </DialogDescription>
-            </DialogHeader>
-
-            {generatedSample && (
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-blue-600">
-                    Subject:
-                  </label>
-                  <p className="font-medium bg-blue-50 p-2 rounded">
-                    {generatedSample.subject}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-blue-600">
-                    Body:
-                  </label>
-                  <div className="bg-gray-50 p-4 rounded-lg whitespace-pre-wrap">
-                    {generatedSample.body}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-blue-600">
-                    Key Phrases:
-                  </label>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {generatedSample.keyPhrases?.map(
-                      (phrase: string, index: number) => (
-                        <Badge key={index} variant="secondary">
-                          {phrase}
-                        </Badge>
+                {/* Improvement Suggestions */}
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-purple-700 flex items-center gap-2">
+                    <Zap className="w-4 h-4" />
+                    Gợi ý cải thiện
+                  </h4>
+                  <ul className="space-y-1">
+                    {aiEvaluation.improvementSuggestions?.map(
+                      (suggestion: string, index: number) => (
+                        <li
+                          key={index}
+                          className="text-sm text-purple-600 flex items-start gap-2"
+                        >
+                          <div className="w-1.5 h-1.5 bg-purple-500 rounded-full mt-2 flex-shrink-0" />
+                          {suggestion}
+                        </li>
                       )
                     )}
-                  </div>
+                  </ul>
                 </div>
 
-                <div>
-                  <label className="text-sm font-medium text-blue-600">
-                    Tone Analysis:
-                  </label>
-                  <p className="text-sm text-gray-600 bg-blue-50 p-2 rounded">
-                    {generatedSample.toneAnalysis}
-                  </p>
-                </div>
+                {/* Sample Improved Version */}
+                {(aiEvaluation.sampleImprovedDescription ||
+                  aiEvaluation.sampleImprovedParagraph) && (
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-blue-700 flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      Mẫu cải thiện
+                    </h4>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <p className="text-sm text-blue-800 italic">
+                        {aiEvaluation.sampleImprovedDescription ||
+                          aiEvaluation.sampleImprovedParagraph}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500">
+                  Chưa có đánh giá nào. Vui lòng nhấn "Đánh giá AI" để bắt đầu.
+                </p>
               </div>
             )}
-          </DialogContent>
-        </Dialog>
+          </div>
+        )}
+
+        {generatedSample && (
+          <div className="space-y-4 mt-4">
+            <h1 className="text-[#23085A] font-bold text-lg">
+              Mẫu tham khảo:{" "}
+            </h1>
+            <div>
+              <label className="text-sm font-medium text-[#23085A]">
+                Subject:
+              </label>
+              <p className="font-medium bg-blue-50 p-2 rounded">
+                {generatedSample.subject}
+              </p>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-[#23085A]">
+                Body:
+              </label>
+              <div className="bg-gray-50 p-4 rounded-lg whitespace-pre-wrap">
+                {generatedSample.body}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-[#23085A]">
+                Key Phrases:
+              </label>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {generatedSample.keyPhrases?.map(
+                  (phrase: string, index: number) => (
+                    <Badge key={index} variant="secondary">
+                      {phrase}
+                    </Badge>
+                  )
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-[#23085A]">
+                Tone Analysis:
+              </label>
+              <p className="text-sm text-gray-600 bg-blue-50 p-2 rounded">
+                {generatedSample.toneAnalysis}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
