@@ -395,14 +395,14 @@ export default function WritingTopicsPage() {
             ))}
           </div>
 
-          <div className="p-4 round-sm bg-white bg-white  w-80">
+          <div className="p-4 round-sm bg-white  w-80">
             <h3 className="text-lg font-semibold text-[#23085A] mb-3">
               🎯 Các dạng khác
             </h3>
             <ul className="space-y-4 text-gray-800">
               {writingExerciseTypes.map((item) => {
                 return (
-                  <Link href={"abc"}>
+                  <Link href={"abc"} key={item.slug}>
                     <li className="flex items-start gap-2 hover:underline">
                       <Check className="w-5 h-5 text-[#23085A] mt-0.5" />
                       <span>{item?.name}</span>

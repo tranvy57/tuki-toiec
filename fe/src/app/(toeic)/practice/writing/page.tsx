@@ -405,7 +405,7 @@ export default function WritingPracticePage() {
             ))}
           </motion.div>
 
-          <div className="p-4 round-sm bg-white bg-white w-100">
+          <div className="p-4 round-sm bg-white  w-100">
             <h3 className="text-lg font-semibold text-[#23085A] mb-3">
               🎯 Mục tiêu đạt được
             </h3>

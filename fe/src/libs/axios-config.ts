@@ -6,7 +6,7 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 10000,
+  timeout: 20000,
 });
 
 // Hàm kiểm tra token còn < 2 phút thì nên refresh
