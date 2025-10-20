@@ -8,7 +8,6 @@ export class VnpayController {
   constructor(private readonly vnpay: VnpayService) {}
 
   @Get('create')
-  @Public()
   async create(
     @Query('code') code: string,
     @Query('amount') amount: string,

@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
+import api from "@/libs/axios-config";
 
 // Types
 export interface CreatePaymentRequest {
@@ -40,21 +41,8 @@ export const useCreatePayment = () => {
         ...(data.userId && { userId: data.userId }),
       });
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}vnpay/create?${queryParams}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to create payment");
-      }
-
-      return response.json();
+      const response = await api.get(`/vnpay/create?${queryParams}`);
+      return response.data;
     },
   });
 };
@@ -64,22 +52,10 @@ export const useGetOrderStatus = (code: string) => {
   return useQuery<OrderStatus, Error>({
     queryKey: ["order-status", code],
     queryFn: async () => {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}orders/${code}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to get order status");
-      }
-
-      return response.json();
+      const response = await api.get(`/orders/${code}`);
+      return response.data;
     },
     enabled: !!code,
-    refetchInterval: 5000, // Poll every 5 seconds
+    refetchInterval: 5000, 
   });
 };
