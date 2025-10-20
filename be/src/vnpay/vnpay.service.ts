@@ -50,6 +50,7 @@ export class VnpayService {
       process.env.vnp_HashSecret!,
       process.env.vnp_Url!,
     );
+    console.log(paymentUrl)
     return paymentUrl;
   }
 
