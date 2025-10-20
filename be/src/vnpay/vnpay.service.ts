@@ -32,6 +32,8 @@ export class VnpayService {
       vnp_OrderType: 'other',
       vnp_Locale: 'vn',
       vnp_IpAddr: clientIp,
+      vnp_IpnUrl:
+        process.env.VNP_IPN_URL || 'https://api.tukitoeic.app/vnpay/ipn',
       vnp_ReturnUrl: 'https://tukitoeic.app/payment/result',
       vnp_CreateDate: formatDate(new Date()),
       vnp_ExpireDate: formatDate(new Date(Date.now() + 15 * 60 * 1000)),
