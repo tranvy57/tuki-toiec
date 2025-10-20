@@ -60,6 +60,12 @@ export class VnpayService {
         .map(([k, v]) => `${k}=${v}`)
         .join('&');
       const signed = hmacSHA512(this.secret, signData);
+
+      console.log('VNPay verify >>>');
+      console.log('signData:', signData);
+      console.log('local:', signed);
+      console.log('remote:', vnp_SecureHash);
+
       return (vnp_SecureHash || '').toLowerCase() === signed.toLowerCase();
     } catch (error) {
       console.error('Error verifying checksum:', error);
