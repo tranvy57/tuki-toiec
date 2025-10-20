@@ -1,5 +1,5 @@
 // src/vnpay/vnpay.controller.ts
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, Req } from '@nestjs/common';
 import { VnpayService } from './vnpay.service';
 import { Public } from 'src/common/decorator/public.decorator';
 
@@ -23,7 +23,6 @@ export class VnpayController {
     return { paymentUrl: url };
   }
 
-
   @Get('return')
   async handleReturn(@Query() query: Record<string, string>) {
     const valid = this.vnpay.verifyChecksum(query);
@@ -42,8 +41,11 @@ export class VnpayController {
 
   @Get('ipn')
   @Public()
-  async handleIpn(@Query() query: Record<string, string>) {
-    const result = await this.vnpay.confirmIpn(query);
-    return result; 
+  async handleIpn(@Query() query: Record<string, string>, @Req() req: any) {
+    const rawUrl = req.raw?.url || req.url || '';
+    const rawQuery = rawUrl.split('?')[1] || '';
+
+    const params = Object.fromEntries(new URLSearchParams(rawQuery));
+    return this.vnpay.confirmIpn(params);
   }
 }
