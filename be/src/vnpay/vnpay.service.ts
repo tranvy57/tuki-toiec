@@ -48,7 +48,7 @@ export class VnpayService {
       process.env.vnp_HashSecret!,
       process.env.vnp_Url!,
     );
-    console.log(paymentUrl)
+    console.log(paymentUrl);
     return paymentUrl;
   }
 
@@ -71,7 +71,6 @@ export class VnpayService {
       console.error('Error verifying checksum:', error);
       return false;
     }
-    
   }
 
   async confirmIpn(params: Record<string, string>) {

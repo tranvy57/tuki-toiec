@@ -41,11 +41,13 @@ export class VnpayController {
 
   @Get('ipn')
   @Public()
-  async handleIpn(@Query() query: Record<string, string>, @Req() req: any) {
-    const rawUrl = req.raw?.url || req.url || '';
-    const rawQuery = rawUrl.split('?')[1] || '';
+  async handleIpn(@Query() query: Record<string, string>) {
+    // Khôi phục dấu + đã bị decode thành khoảng tắng
+    const restoredQuery = Object.fromEntries(
+      Object.entries(query).map(([k, v]) => [k, v.replace(/ /g, '+')]),
+    );
 
-    const params = Object.fromEntries(new URLSearchParams(rawQuery));
-    return this.vnpay.confirmIpn(params);
+    const result = await this.vnpay.confirmIpn(restoredQuery);
+    return result;
   }
 }
