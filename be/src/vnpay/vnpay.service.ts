@@ -53,16 +53,24 @@ export class VnpayService {
   }
 
   verifyChecksum(allParams: Record<string, string>) {
-    const { vnp_SecureHash, vnp_SecureHashType, ...rest } = allParams;
-    const sorted = sortObject(rest);
-    const signData = Object.entries(sorted)
-      .map(([k, v]) => `${k}=${v}`)
-      .join('&');
-    const signed = hmacSHA512(this.secret, signData);
-    return (vnp_SecureHash || '').toLowerCase() === signed.toLowerCase();
+    try {
+      const { vnp_SecureHash, vnp_SecureHashType, ...rest } = allParams;
+      const sorted = sortObject(rest);
+      const signData = Object.entries(sorted)
+        .map(([k, v]) => `${k}=${v}`)
+        .join('&');
+      const signed = hmacSHA512(this.secret, signData);
+      console.log('checkkkkkk');
+      return (vnp_SecureHash || '').toLowerCase() === signed.toLowerCase();
+    } catch (error) {
+      console.error('Error verifying checksum:', error);
+      return false;
+    }
+    
   }
 
   async confirmIpn(params: Record<string, string>) {
+    console.log("checkkkk")
     const valid = this.verifyChecksum(params);
     console.log(valid);
     if (!valid) return { RspCode: '97', Message: 'Invalid signature' };
