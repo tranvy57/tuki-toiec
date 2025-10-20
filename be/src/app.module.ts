@@ -42,6 +42,10 @@ import { ItemsModule } from './item/items.module';
 import { LessonItemModule } from './lesson_item/lesson_item.module';
 import { SpeakingAttemptModule } from './speaking-attempt/speaking-attempt.module';
 import { GcsModule } from './gcs/gcs.module';
+import { VnpayModule } from './vnpay/vnpay.module';
+import { OrderModule } from './order/order.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Order } from './order/entities/order.entity';
 
 @Module({
   imports: [
@@ -81,6 +85,9 @@ import { GcsModule } from './gcs/gcs.module';
     LessonItemModule,
     SpeakingAttemptModule,
     GcsModule,
+    OrderModule,
+    VnpayModule,
+    TypeOrmModule.forFeature([Order]),
   ],
   controllers: [AppController],
   providers: [
