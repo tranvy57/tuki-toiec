@@ -41,8 +41,8 @@ export class VnpayController {
   }
 
   @Get('ipn')
+  @Public()
   async handleIpn(@Query() query: Record<string, string>) {
-    console.log("check1")
     const result = await this.vnpay.confirmIpn(query);
     return result; 
   }

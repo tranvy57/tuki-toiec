@@ -60,7 +60,6 @@ export class VnpayService {
         .map(([k, v]) => `${k}=${v}`)
         .join('&');
       const signed = hmacSHA512(this.secret, signData);
-      console.log('checkkkkkk');
       return (vnp_SecureHash || '').toLowerCase() === signed.toLowerCase();
     } catch (error) {
       console.error('Error verifying checksum:', error);
@@ -70,7 +69,6 @@ export class VnpayService {
   }
 
   async confirmIpn(params: Record<string, string>) {
-    console.log("checkkkk")
     const valid = this.verifyChecksum(params);
     console.log(valid);
     if (!valid) return { RspCode: '97', Message: 'Invalid signature' };
@@ -78,10 +76,8 @@ export class VnpayService {
     const code = params['vnp_TxnRef'];
     const rsp = params['vnp_ResponseCode'];
     const amountFromVNPay = Number(params['vnp_Amount'] || 0) / 100;
-    console.log(code, rsp, amountFromVNPay);
 
     const order = await this.orderRepo.findOne({ where: { code } });
-    console.log(order);
     if (!order) return { RspCode: '01', Message: 'Order not found' };
 
     if (order.amount !== amountFromVNPay) {
