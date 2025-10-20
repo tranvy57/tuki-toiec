@@ -3,7 +3,12 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Order } from 'src/order/entities/order.entity';
 import { Repository } from 'typeorm';
-import { buildVnpayUrl, formatDate, hmacSHA512, sortObject } from './utils/vnpay.util';
+import {
+  buildVnpayUrl,
+  formatDate,
+  hmacSHA512,
+  sortObject,
+} from './utils/vnpay.util';
 
 @Injectable()
 export class VnpayService {
@@ -60,20 +65,25 @@ export class VnpayService {
 
   async confirmIpn(params: Record<string, string>) {
     const valid = this.verifyChecksum(params);
+    console.log(valid);
     if (!valid) return { RspCode: '97', Message: 'Invalid signature' };
 
     const code = params['vnp_TxnRef'];
-    const rsp = params['vnp_ResponseCode']; 
+    const rsp = params['vnp_ResponseCode'];
     const amountFromVNPay = Number(params['vnp_Amount'] || 0) / 100;
+    console.log(code, rsp, amountFromVNPay);
 
     const order = await this.orderRepo.findOne({ where: { code } });
+    console.log(order);
     if (!order) return { RspCode: '01', Message: 'Order not found' };
 
     if (order.amount !== amountFromVNPay) {
+      console.log(order);
       return { RspCode: '04', Message: 'Invalid amount' };
     }
 
     if (order.status === 'paid') {
+      console.log(order);
       return { RspCode: '02', Message: 'Order already confirmed' };
     }
 
@@ -82,13 +92,17 @@ export class VnpayService {
       order.vnpTransactionNo = params['vnp_TransactionNo'];
       order.bankCode = params['vnp_BankCode'];
       order.vnpPayDate = params['vnp_PayDate'];
+      console.log(order);
       await this.orderRepo.save(order);
       return { RspCode: '00', Message: 'Confirm Success' };
     } else {
       if (order.status === 'pending') {
         order.status = 'failed';
+        console.log(order);
         await this.orderRepo.save(order);
       }
+      console.log(order);
+
       return { RspCode: '00', Message: 'Confirm Failed' };
     }
   }
