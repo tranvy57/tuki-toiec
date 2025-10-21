@@ -21,11 +21,11 @@ export class OrderService {
     return `This action returns all order`;
   }
 
-  async findOne(id: string) {
-    const order = await this.orderRepo.findOne({ where: { id } });
+  async findOne(code: string) {
+    const order = await this.orderRepo.findOne({ where: { code } });
 
     if (!order) {
-      throw new NotFoundException(`Order with ID ${id} not found`);
+      throw new NotFoundException(`Order with code ${code} not found`);
     }
 
     return order;

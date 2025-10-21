@@ -17,14 +17,14 @@ export class OrderController {
     return this.orderService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.orderService.findOne(id);
+  @Get(':code')
+  findOne(@Param('code') code: string) {
+    return this.orderService.findOne(code);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto) {
-    return this.orderService.update(+id, updateOrderDto);
+  @Patch(':code')
+  update(@Param('code') code: string, @Body() updateOrderDto: UpdateOrderDto) {
+    return this.orderService.update(code, updateOrderDto);
   }
 
   @Delete(':id')
