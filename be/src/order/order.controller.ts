@@ -22,10 +22,10 @@ export class OrderController {
     return this.orderService.findOne(code);
   }
 
-  @Patch(':code')
-  update(@Param('code') code: string, @Body() updateOrderDto: UpdateOrderDto) {
-    return this.orderService.update(code, updateOrderDto);
-  }
+  // @Patch(':code')
+  // update(@Param('code') code: string, @Body() updateOrderDto: UpdateOrderDto) {
+  //   return this.orderService.update(code, updateOrderDto);
+  // }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
