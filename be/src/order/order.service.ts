@@ -3,11 +3,13 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { Repository } from 'typeorm';
 import { Order } from './entities/order.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class OrderService {
   constructor(
     // Inject any necessary repositories or services here
+    @InjectRepository(Order)
     private readonly orderRepo: Repository<Order>,
   ) {}
   create(createOrderDto: CreateOrderDto) {
