@@ -39,23 +39,22 @@ export class VnpayService {
     }
 
     const now = new Date();
-    const params = {
-      vnp_Version: '2.1.0',
-      vnp_Command: 'pay',
-      vnp_TmnCode: process.env.vnp_TmnCode!,
-      vnp_Amount: order.amount * 100, // nhân 100 theo quy định VNPay
-      vnp_CurrCode: 'VND',
-      vnp_TxnRef: order.code,
-      vnp_OrderInfo: `Thanh toan don hang ${order.code}`,
-      vnp_OrderType: 'other',
-      vnp_Locale: 'vn',
-      vnp_IpAddr: clientIp,
-      vnp_ReturnUrl: process.env.vnp_ReturnUrl!, // nên để trong env
-      vnp_IpnUrl: process.env.vnp_IpnUrl!, // URL IPN backend của bạn
-      vnp_CreateDate: formatDate(now),
-      vnp_ExpireDate: formatDate(new Date(now.getTime() + 15 * 60 * 1000)),
-      vnp_BankCode: 'NCB',
-    };
+     const params = {
+       vnp_Version: '2.1.0',
+       vnp_Command: 'pay',
+       vnp_TmnCode: 'MCKEOKH1',
+       vnp_Amount: amount * 100,
+       vnp_CurrCode: 'VND',
+       vnp_TxnRef: code,
+       vnp_OrderInfo: `Thanh toan don hang ${code}`,
+       vnp_OrderType: 'other',
+       vnp_Locale: 'vn',
+       vnp_IpAddr: clientIp,
+       vnp_ReturnUrl: 'https://tukitoeic.app/payment/result',
+       vnp_CreateDate: formatDate(new Date()),
+       vnp_ExpireDate: formatDate(new Date(Date.now() + 15 * 60 * 1000)),
+       vnp_BankCode: 'NCB',
+     };
 
     const paymentUrl = buildVnpayUrl(
       params,
