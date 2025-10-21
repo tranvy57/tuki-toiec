@@ -45,12 +45,12 @@ export default function PaymentResultPage() {
   }, []);
 
   useEffect(() => {
-    if (orderStatus?.status === "PAID") {
+    if (orderStatus?.data?.status?.toLowerCase() === "paid") {
       toast.success("Thanh toán thành công!");
-    } else if (orderStatus?.status === "FAILED") {
+    } else if (orderStatus?.data?.status?.toLowerCase() === "failed") {
       toast.error("Thanh toán thất bại!");
     }
-  }, [orderStatus?.status]);
+  }, [orderStatus?.data?.status]);
 
   if (!mounted) {
     return null; // Prevent hydration errors
@@ -114,8 +114,8 @@ export default function PaymentResultPage() {
       };
     }
 
-    switch (orderStatus?.status) {
-      case "PAID":
+    switch (orderStatus?.data?.status?.toLowerCase()) {
+      case "paid":
         return {
           icon: CheckCircle,
           color: "text-green-500",
@@ -127,7 +127,7 @@ export default function PaymentResultPage() {
           badgeVariant: "default" as const,
           status: "PAID",
         };
-      case "FAILED":
+      case "failed":
         return {
           icon: XCircle,
           color: "text-red-500",
@@ -139,7 +139,7 @@ export default function PaymentResultPage() {
           badgeVariant: "destructive" as const,
           status: "FAILED",
         };
-      case "CANCELLED":
+      case "cancelled":
         return {
           icon: XCircle,
           color: "text-orange-500",
@@ -194,7 +194,7 @@ export default function PaymentResultPage() {
             </CardHeader>
 
             <CardContent className="p-6">
-              {orderStatus && (
+              {orderStatus?.data && (
                 <div className="space-y-4">
                   {/* Order Details */}
                   <div className="bg-gray-50 rounded-lg p-4">
@@ -206,13 +206,13 @@ export default function PaymentResultPage() {
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">Mã đơn hàng:</span>
                         <code className="bg-white px-2 py-1 rounded text-sm font-mono">
-                          {orderStatus.code}
+                          {orderStatus.data.code}
                         </code>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">Trạng thái:</span>
                         <Badge variant={statusInfo.badgeVariant}>
-                          {orderStatus.status}
+                          {orderStatus.data.status.toUpperCase()}
                         </Badge>
                       </div>
                       <div className="flex justify-between items-center">
@@ -221,7 +221,7 @@ export default function PaymentResultPage() {
                           Số tiền:
                         </span>
                         <span className="font-semibold text-blue-600">
-                          {orderStatus.amount.toLocaleString("vi-VN")}đ
+                          {orderStatus.data.amount.toLocaleString("vi-VN")}đ
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
@@ -230,20 +230,21 @@ export default function PaymentResultPage() {
                           Ngày tạo:
                         </span>
                         <span className="text-gray-900">
-                          {new Date(orderStatus.createdAt).toLocaleString(
+                          {new Date(orderStatus.data.createdAt).toLocaleString(
                             "vi-VN"
                           )}
                         </span>
                       </div>
-                      {orderStatus.updatedAt !== orderStatus.createdAt && (
+                      {orderStatus.data.updatedAt !==
+                        orderStatus.data.createdAt && (
                         <div className="flex justify-between items-center">
                           <span className="text-gray-600">
                             Cập nhật lần cuối:
                           </span>
                           <span className="text-gray-900">
-                            {new Date(orderStatus.updatedAt).toLocaleString(
-                              "vi-VN"
-                            )}
+                            {new Date(
+                              orderStatus.data.updatedAt
+                            ).toLocaleString("vi-VN")}
                           </span>
                         </div>
                       )}
@@ -251,28 +252,42 @@ export default function PaymentResultPage() {
                   </div>
 
                   {/* VNPay Transaction Details */}
-                  {orderStatus.vnpayData && (
+                  {(orderStatus.data.vnpTransactionNo ||
+                    orderStatus.data.bankCode) && (
                     <div className="bg-blue-50 rounded-lg p-4">
                       <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
                         <CreditCard className="w-4 h-4 mr-2" />
                         Thông tin giao dịch VNPay
                       </h3>
                       <div className="space-y-2 text-sm">
-                        {orderStatus.vnpayData.vnp_TransactionNo && (
+                        {orderStatus.data.vnpTransactionNo && (
                           <div className="flex justify-between">
                             <span className="text-gray-600">
                               Mã giao dịch VNPay:
                             </span>
                             <code className="bg-white px-2 py-1 rounded font-mono">
-                              {orderStatus.vnpayData.vnp_TransactionNo}
+                              {orderStatus.data.vnpTransactionNo}
                             </code>
                           </div>
                         )}
-                        {orderStatus.vnpayData.vnp_BankCode && (
+                        {orderStatus.data.bankCode && (
                           <div className="flex justify-between">
                             <span className="text-gray-600">Ngân hàng:</span>
                             <span className="font-medium">
-                              {orderStatus.vnpayData.vnp_BankCode}
+                              {orderStatus.data.bankCode}
+                            </span>
+                          </div>
+                        )}
+                        {orderStatus.data.vnpPayDate && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">
+                              Thời gian thanh toán:
+                            </span>
+                            <span className="text-gray-900">
+                              {orderStatus.data.vnpPayDate.replace(
+                                /(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/,
+                                "$3/$2/$1 $4:$5:$6"
+                              )}
                             </span>
                           </div>
                         )}

@@ -18,15 +18,23 @@ export interface CreatePaymentResponse {
   statusCode: number;
 }
 
-export interface OrderStatus {
-  code: string;
-  amount: number;
-  status: "PENDING" | "PAID" | "FAILED" | "CANCELLED";
-  courseId?: string;
-  userId?: string;
+export interface OrderStatusData {
+  id: string;
   createdAt: string;
   updatedAt: string;
-  vnpayData?: any;
+  isActive: boolean;
+  code: string;
+  amount: number;
+  status: "pending" | "paid" | "failed" | "cancelled";
+  bankCode?: string;
+  vnpTransactionNo?: string;
+  vnpPayDate?: string;
+}
+
+export interface OrderStatus {
+  statusCode: number;
+  message: string;
+  data: OrderStatusData;
 }
 
 // Create payment
@@ -56,6 +64,6 @@ export const useGetOrderStatus = (code: string) => {
       return response.data;
     },
     enabled: !!code,
-    refetchInterval: 5000, 
+    refetchInterval: 5000,
   });
 };
