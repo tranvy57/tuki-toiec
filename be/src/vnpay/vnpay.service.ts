@@ -17,29 +17,43 @@ export class VnpayService {
   constructor(
     @InjectRepository(Order) private readonly orderRepo: Repository<Order>,
   ) {}
-
   async createPaymentUrl(
     code: string,
     amount: number,
     clientIp: string,
     forceQR = false,
   ) {
-    const now = new Date();
+    let order = await this.orderRepo.findOne({ where: { code } });
 
+    if (!order) {
+      order = this.orderRepo.create({
+        code,
+        amount,
+        status: 'pending',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      await this.orderRepo.save(order);
+    } else if (order.status === 'paid') {
+      throw new Error(`Order ${code} has already been paid.`);
+    }
+
+    const now = new Date();
     const params = {
       vnp_Version: '2.1.0',
       vnp_Command: 'pay',
-      vnp_TmnCode: 'MCKEOKH1',
-      vnp_Amount: amount * 100,
+      vnp_TmnCode: process.env.vnp_TmnCode!,
+      vnp_Amount: order.amount * 100, // nhân 100 theo quy định VNPay
       vnp_CurrCode: 'VND',
-      vnp_TxnRef: code,
-      vnp_OrderInfo: `Thanh toan don hang ${code}`,
+      vnp_TxnRef: order.code,
+      vnp_OrderInfo: `Thanh toan don hang ${order.code}`,
       vnp_OrderType: 'other',
       vnp_Locale: 'vn',
       vnp_IpAddr: clientIp,
-      vnp_ReturnUrl: 'https://tukitoeic.app/payment/result',
-      vnp_CreateDate: formatDate(new Date()),
-      vnp_ExpireDate: formatDate(new Date(Date.now() + 15 * 60 * 1000)),
+      vnp_ReturnUrl: process.env.vnp_ReturnUrl!, // nên để trong env
+      vnp_IpnUrl: process.env.vnp_IpnUrl!, // URL IPN backend của bạn
+      vnp_CreateDate: formatDate(now),
+      vnp_ExpireDate: formatDate(new Date(now.getTime() + 15 * 60 * 1000)),
       vnp_BankCode: 'NCB',
     };
 
@@ -48,7 +62,9 @@ export class VnpayService {
       process.env.vnp_HashSecret!,
       process.env.vnp_Url!,
     );
-    console.log(paymentUrl);
+
+    console.log('VNPay payment URL:', paymentUrl);
+
     return paymentUrl;
   }
 
@@ -118,6 +134,5 @@ export class VnpayService {
       console.error('Error confirming IPN:', error);
       return { RspCode: '99', Message: 'Internal error' };
     }
-    
   }
 }
