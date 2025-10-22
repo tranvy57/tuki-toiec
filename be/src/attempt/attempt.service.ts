@@ -205,6 +205,121 @@ export class AttemptService {
     return this.toAttemptAnswerDto(savedAttemptAnswer);
   }
 
+  async submitAttempt(attemptId: string, user: User) {
+    const [attempt, attemptAnswers] = await Promise.all([
+      this.attemptRepo.findOne({
+        where: { id: attemptId },
+        relations: {
+          user: true,
+          parts: {
+            groups: {
+              questions: { answers: true, questionTags: { skill: true } },
+            },
+          },
+        },
+        order: { parts: { partNumber: 'ASC' } },
+      }),
+
+      this.attemptAnswerRepo.find({
+        where: { attempt: { id: attemptId } },
+        relations: {
+          answer: true,
+          question: true,
+        },
+      }),
+    ]);
+
+    if (!attempt) throw new NotFoundException('Attempt not found!');
+    if (attempt.user.id !== user.id)
+      throw new UnauthorizedException('You do not have permission!');
+
+    const answerMap = new Map(attemptAnswers.map((aa) => [aa.question.id, aa]));
+
+    let totalScore = 0;
+    let correctCount = 0;
+    let wrongCount = 0;
+    let skippedCount = 0;
+    let listeningScore = 0;
+    let readingScore = 0;
+
+    const updatedAttemptAnswers: AttemptAnswer[] = [];
+
+    for (const part of attempt.parts) {
+      for (const group of part.groups) {
+        for (const question of group.questions as any[]) {
+          const ans = answerMap.get(question.id);
+          const score = Number(question.score ?? 1);
+
+          let isCorrect: boolean | null = null;
+          let userAnswerId: string | null = null;
+
+          if (!ans || !ans.answer) {
+            skippedCount++;
+          } else {
+            isCorrect = ans.answer.isCorrect;
+            userAnswerId = ans.answer.id;
+            if (ans.isCorrect !== isCorrect) {
+              ans.isCorrect = isCorrect;
+              updatedAttemptAnswers.push(ans);
+            }
+
+            if (isCorrect) {
+              totalScore += score;
+              correctCount++;
+              if (part.partNumber <= 4) listeningScore += score;
+              else readingScore += score;
+            } else {
+              wrongCount++;
+            }
+          }
+
+          question.isCorrect = isCorrect;
+          question.userAnswerId = userAnswerId;
+        }
+      }
+    }
+
+    if (updatedAttemptAnswers.length)
+      await this.attemptAnswerRepo.save(updatedAttemptAnswers, { chunk: 500 });
+
+    const totalQuestions = attempt.parts.reduce(
+      (sum, p) => sum + p.groups.reduce((s2, g) => s2 + g.questions.length, 0),
+      0,
+    );
+    const accuracy = totalQuestions > 0 ? correctCount / totalQuestions : 0;
+
+    Object.assign(attempt, {
+      status: 'submitted',
+      finishAt: new Date(),
+      totalScore,
+    });
+
+    await this.attemptRepo.save(attempt);
+
+    const result = plainToInstance(
+      AttemptResultDto,
+      {
+        id: attempt.id,
+        mode: attempt.mode,
+        status: attempt.status,
+        startedAt: attempt.startedAt,
+        finishAt: attempt.finishAt,
+        totalScore,
+        listeningScore,
+        readingScore,
+        totalQuestions,
+        correctCount,
+        wrongCount,
+        skippedCount,
+        accuracy,
+        parts: attempt.parts,
+      },
+      { excludeExtraneousValues: true },
+    );
+
+    return result;
+  }
+
   private evaluateAttempt(attempt: Attempt, attemptAnswers: AttemptAnswer[]) {
     const answerMap = new Map(
       attemptAnswers
@@ -330,118 +445,6 @@ export class AttemptService {
 
     const saved = await this.attemptAnswerRepo.save(updates);
     return saved.map((aa) => this.toAttemptAnswerDto(aa));
-  }
-
-  async submitAttempt(attemptId: string, user: User) {
-    const [attempt, attemptAnswers] = await Promise.all([
-      this.attemptRepo.findOne({
-        where: { id: attemptId },
-        relations: {
-          user: true,
-          parts: { groups: { questions: { answers: true, questionTags: {skill: true} } } },
-        },
-        order: { parts: { partNumber: 'ASC' } },
-      }),
-
-      this.attemptAnswerRepo.find({
-        where: { attempt: { id: attemptId } },
-        relations: {
-          answer: true,
-          question: true,
-        },
-      }),
-    ]);
-
-    if (!attempt) throw new NotFoundException('Attempt not found!');
-    if (attempt.user.id !== user.id)
-      throw new UnauthorizedException('You do not have permission!');
-
-    const answerMap = new Map(attemptAnswers.map((aa) => [aa.question.id, aa]));
-
-    let totalScore = 0;
-    let correctCount = 0;
-    let wrongCount = 0;
-    let skippedCount = 0;
-    let listeningScore = 0;
-    let readingScore = 0;
-
-    const updatedAttemptAnswers: AttemptAnswer[] = [];
-
-    for (const part of attempt.parts) {
-      for (const group of part.groups) {
-        for (const question of group.questions as any[]) {
-          const ans = answerMap.get(question.id);
-          const score = Number(question.score ?? 1);
-
-          let isCorrect: boolean | null = null;
-          let userAnswerId: string | null = null;
-
-          if (!ans || !ans.answer) {
-            skippedCount++;
-          } else {
-            isCorrect = ans.answer.isCorrect;
-            userAnswerId = ans.answer.id;
-            if (ans.isCorrect !== isCorrect) {
-              ans.isCorrect = isCorrect;
-              updatedAttemptAnswers.push(ans);
-            }
-
-            if (isCorrect) {
-              totalScore += score;
-              correctCount++;
-              if (part.partNumber <= 4) listeningScore += score;
-              else readingScore += score;
-            } else {
-              wrongCount++;
-            }
-          }
-
-          question.isCorrect = isCorrect;
-          question.userAnswerId = userAnswerId;
-          
-        }
-      }
-    }
-
-    if (updatedAttemptAnswers.length)
-      await this.attemptAnswerRepo.save(updatedAttemptAnswers, { chunk: 500 });
-
-    const totalQuestions = attempt.parts.reduce(
-      (sum, p) => sum + p.groups.reduce((s2, g) => s2 + g.questions.length, 0),
-      0,
-    );
-    const accuracy = totalQuestions > 0 ? correctCount / totalQuestions : 0;
-
-    Object.assign(attempt, {
-      status: 'submitted',
-      finishAt: new Date(),
-      totalScore,
-    });
-
-    await this.attemptRepo.save(attempt);
-
-    const result = plainToInstance(
-      AttemptResultDto,
-      {
-        id: attempt.id,
-        mode: attempt.mode,
-        status: attempt.status,
-        startedAt: attempt.startedAt,
-        finishAt: attempt.finishAt,
-        totalScore,
-        listeningScore,
-        readingScore,
-        totalQuestions,
-        correctCount,
-        wrongCount,
-        skippedCount,
-        accuracy,
-        parts: attempt.parts,
-      },
-      { excludeExtraneousValues: true },
-    );
-
-    return result;
   }
 
   async submitAttemptReview(attemptId: string, user: User) {

@@ -9,6 +9,12 @@ import {
   hmacSHA512,
   sortObject,
 } from './utils/vnpay.util';
+import { User } from 'src/user/entities/user.entity';
+import { Course } from 'src/courses/entities/course.entity';
+import {
+  UserCourse,
+  UserCourseStatus,
+} from 'src/user_courses/entities/user_course.entity';
 
 @Injectable()
 export class VnpayService {
@@ -16,20 +22,27 @@ export class VnpayService {
 
   constructor(
     @InjectRepository(Order) private readonly orderRepo: Repository<Order>,
+    @InjectRepository(Course) private readonly courseRepo: Repository<Course>,
+    @InjectRepository(UserCourse)
+    private readonly userCourseRepo: Repository<UserCourse>,
   ) {}
   async createPaymentUrl(
     code: string,
     amount: number,
     clientIp: string,
-    forceQR = false,
+    courseId: string,
+    user: User,
   ) {
     let order = await this.orderRepo.findOne({ where: { code } });
+    let course = await this.courseRepo.findOne({ where: { id: courseId } });
 
     if (!order) {
       order = this.orderRepo.create({
         code,
         amount,
         status: 'pending',
+        user: user,
+        course: course!,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -39,22 +52,22 @@ export class VnpayService {
     }
 
     const now = new Date();
-     const params = {
-       vnp_Version: '2.1.0',
-       vnp_Command: 'pay',
-       vnp_TmnCode: 'MCKEOKH1',
-       vnp_Amount: amount * 100,
-       vnp_CurrCode: 'VND',
-       vnp_TxnRef: code,
-       vnp_OrderInfo: `Thanh toan don hang ${code}`,
-       vnp_OrderType: 'other',
-       vnp_Locale: 'vn',
-       vnp_IpAddr: clientIp,
-       vnp_ReturnUrl: 'https://tukitoeic.app/payment/result',
-       vnp_CreateDate: formatDate(new Date()),
-       vnp_ExpireDate: formatDate(new Date(Date.now() + 15 * 60 * 1000)),
-       vnp_BankCode: 'NCB',
-     };
+    const params = {
+      vnp_Version: '2.1.0',
+      vnp_Command: 'pay',
+      vnp_TmnCode: 'MCKEOKH1',
+      vnp_Amount: amount * 100,
+      vnp_CurrCode: 'VND',
+      vnp_TxnRef: code,
+      vnp_OrderInfo: `Thanh toan don hang ${code}`,
+      vnp_OrderType: 'other',
+      vnp_Locale: 'vn',
+      vnp_IpAddr: clientIp,
+      vnp_ReturnUrl: 'https://tukitoeic.app/payment/result',
+      vnp_CreateDate: formatDate(new Date()),
+      vnp_ExpireDate: formatDate(new Date(Date.now() + 15 * 60 * 1000)),
+      vnp_BankCode: 'NCB',
+    };
 
     const paymentUrl = buildVnpayUrl(
       params,
@@ -91,7 +104,6 @@ export class VnpayService {
   async confirmIpn(params: Record<string, string>) {
     try {
       const valid = this.verifyChecksum(params);
-      console.log(valid);
       if (!valid) return { RspCode: '97', Message: 'Invalid signature' };
 
       const code = params['vnp_TxnRef'];
@@ -118,6 +130,10 @@ export class VnpayService {
         order.vnpPayDate = params['vnp_PayDate'];
         console.log(order);
         await this.orderRepo.save(order);
+
+        // Tạo user_courses khi thanh toán thành công
+        await this.createUserCourse(order);
+
         return { RspCode: '00', Message: 'Confirm Success' };
       } else {
         if (order.status === 'pending') {
@@ -132,6 +148,72 @@ export class VnpayService {
     } catch (error) {
       console.error('Error confirming IPN:', error);
       return { RspCode: '99', Message: 'Internal error' };
+    }
+  }
+
+  private async createUserCourse(order: Order): Promise<void> {
+    try {
+      const orderWithRelations = await this.orderRepo.findOne({
+        where: { id: order.id },
+        relations: ['user', 'course'],
+      });
+
+      if (!orderWithRelations?.user || !orderWithRelations?.course) {
+        console.error('Order không có user hoặc course:', orderWithRelations);
+        return;
+      }
+
+      const existingUserCourse = await this.userCourseRepo.findOne({
+        where: {
+          user: { id: orderWithRelations.user.id },
+          course: { id: orderWithRelations.course.id },
+        },
+      });
+
+      if (existingUserCourse) {
+        console.log('User đã có course này rồi:', existingUserCourse);
+        // Có thể update status nếu cần
+        existingUserCourse.status = UserCourseStatus.ACTIVE;
+        existingUserCourse.purchaseDate = new Date();
+        // Tính expire date (ví dụ: course duration + 30 ngày)
+        existingUserCourse.expireDate = new Date(
+          Date.now() +
+            (orderWithRelations.course.durationDays || 60) *
+              24 *
+              60 *
+              60 *
+              1000,
+        );
+        await this.userCourseRepo.save(existingUserCourse);
+        return;
+      }
+
+      // Tạo mới user_courses
+      const userCourse = this.userCourseRepo.create({
+        user: orderWithRelations.user,
+        course: orderWithRelations.course,
+        status: UserCourseStatus.ACTIVE,
+        purchaseDate: new Date(),
+        // Tính expire date dựa trên course duration
+        expireDate: new Date(
+          Date.now() +
+            (orderWithRelations.course.durationDays || 60) *
+              24 *
+              60 *
+              60 *
+              1000,
+        ),
+      });
+
+      await this.userCourseRepo.save(userCourse);
+      console.log('✅ Đã tạo user_courses thành công:', {
+        userId: orderWithRelations.user.id,
+        courseId: orderWithRelations.course.id,
+        orderId: order.id,
+      });
+    } catch (error) {
+      console.error('❌ Lỗi khi tạo user_courses:', error);
+      // Không throw error để không ảnh hưởng đến flow thanh toán chính
     }
   }
 }

@@ -1,5 +1,6 @@
 import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { BaseEntity } from 'src/common/entities/base.entity';
+import { Order } from 'src/order/entities/order.entity';
 import { Role } from 'src/role/entities/role.entity';
 import { SpeakingAttempt } from 'src/speaking-attempt/entities/speaking-attempt.entity';
 import { UserCourse } from 'src/user_courses/entities/user_course.entity';
@@ -55,4 +56,7 @@ export class User extends BaseEntity {
 
   @OneToMany(() => SpeakingAttempt, (sa) => sa.user)
   speakingAttempts?: SpeakingAttempt[];
+
+  @OneToMany(() => Order, (order) => order.user)
+  orders?: Order[];
 }

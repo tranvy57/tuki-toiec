@@ -50,4 +50,8 @@ export class Plan extends BaseEntity {
     nullable: true,
   })
   band?: CourseBand;
+
+  @ManyToOne(() => Course, (c) => c.plans, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'course_id', referencedColumnName: 'id' })
+  course?: Course;
 }

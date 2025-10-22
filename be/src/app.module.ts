@@ -25,7 +25,6 @@ import { PhaseModule } from './phase/phase.module';
 import { PhaseLessonsModule } from './phase_lessons/phase_lessons.module';
 import { LessonModule } from './lesson/lesson.module';
 import { StudyTasksModule } from './study_tasks/study_tasks.module';
-import { LessonDepedenciesModule } from './lesson_depedencies/lesson_depedencies.module';
 import { UnitModule } from './unit/unit.module';
 import { TargetSkillsModule } from './target_skills/target_skills.module';
 import { SkillModule } from './skill/skill.module';
@@ -69,7 +68,6 @@ import { Order } from './order/entities/order.entity';
     PhaseLessonsModule,
     LessonModule,
     StudyTasksModule,
-    LessonDepedenciesModule,
     UnitModule,
     TargetSkillsModule,
     SkillModule,

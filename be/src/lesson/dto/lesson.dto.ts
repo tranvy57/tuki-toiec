@@ -1,5 +1,4 @@
 import { Expose, Type } from 'class-transformer';
-import { LessonDependency } from 'src/lesson_depedencies/entities/lesson_depedency.entity';
 import { LessonSkill } from 'src/lesson_skills/entities/lesson_skill.entity';
 import { QuestionDto } from 'src/question/dto/question.dto';
 import { StudyTask } from 'src/study_tasks/entities/study_task.entity';
@@ -27,15 +26,4 @@ export class LessonDTO {
   @Type(() => StudyTask)
   studyTasks: StudyTask[];
 
-  @Expose()
-  @Type(() => LessonSkill)
-  skills: LessonSkill[];
-
-  @Expose()
-  @Type(() => LessonDependency)
-  prerequisitesOf: LessonDependency[];
-
-  @Expose()
-  @Type(() => LessonDependency)
-  asPrerequisiteFor: LessonDependency[];
 }

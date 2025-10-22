@@ -2,6 +2,7 @@
 import { Controller, Get, Query, Req } from '@nestjs/common';
 import { VnpayService } from './vnpay.service';
 import { Public } from 'src/common/decorator/public.decorator';
+import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 
 @Controller('vnpay')
 export class VnpayController {
@@ -11,14 +12,16 @@ export class VnpayController {
   async create(
     @Query('code') code: string,
     @Query('amount') amount: string,
-    @Query('qr') qr?: string,
+    @Query('courseId') course: string,
+    @CurrentUser() user?: any,
   ) {
     const clientIp = '127.0.0.1';
     const url = await this.vnpay.createPaymentUrl(
       code,
       Number(amount),
       clientIp,
-      qr === '1',
+      course,
+      user
     );
     return { paymentUrl: url };
   }
@@ -42,7 +45,6 @@ export class VnpayController {
   @Get('ipn')
   @Public()
   async handleIpn(@Query() query: Record<string, string>) {
-    // Khôi phục dấu + đã bị decode thành khoảng tắng
     const restoredQuery = Object.fromEntries(
       Object.entries(query).map(([k, v]) => [k, v.replace(/ /g, '+')]),
     );

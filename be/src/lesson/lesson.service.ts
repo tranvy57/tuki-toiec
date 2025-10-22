@@ -5,14 +5,11 @@ import { Question } from 'src/question/entities/question.entity';
 import { Lesson } from './entities/lesson.entity';
 import { DataSource } from 'typeorm';
 import { LessonSkill } from 'src/lesson_skills/entities/lesson_skill.entity';
-import { LessonDepedenciesService } from 'src/lesson_depedencies/lesson_depedencies.service';
 
 @Injectable()
 export class LessonService {
   constructor(
     private readonly dataSrc: DataSource,
-    @Inject()
-    private readonly lessonDepedenciesService: LessonDepedenciesService,
   ) {}
 
   CHUNK_SIZE: number = 10; // Số câu hỏi mỗi lesson

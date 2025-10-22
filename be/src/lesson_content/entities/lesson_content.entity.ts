@@ -1,6 +1,9 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
 import { BaseEntity } from 'src/common/entities/base.entity';
 import { Lesson } from 'src/lesson/entities/lesson.entity';
+import { LessonContentItem } from 'src/lesson_item/entities/lesson_item.entity';
+import { LessonSkill } from 'src/lesson_skills/entities/lesson_skill.entity';
+import { Vocabulary } from 'src/vocabulary/entities/vocabulary.entity';
 
 export enum LessonContentType {
   VIDEO = 'video', // Video hướng dẫn
@@ -26,11 +29,22 @@ export class LessonContent extends BaseEntity {
   type: LessonContentType;
 
   @Column({ type: 'text' })
-  content: string; // nội dung text/markdown hoặc URL video
+  content: string;
 
   @Column({ type: 'int', default: 0 })
   order: number;
 
   @Column({ type: 'boolean', default: false })
-  isPremium: boolean; // true = chỉ user trả phí mới xem được
+  isPremium: boolean;
+
+  @OneToMany(() => LessonContentItem, (li) => li.lessonContent, { cascade: true })
+  lessonContentItems: LessonContentItem[];
+
+  @ManyToMany(() => Vocabulary)
+  @JoinTable({
+    name: 'lesson_content_vocabularies',
+    joinColumn: { name: 'lesson_content_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'vocab_id', referencedColumnName: 'id' },
+  })
+  vocabularies?: Vocabulary[];
 }
