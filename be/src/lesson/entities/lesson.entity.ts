@@ -10,13 +10,11 @@ import {
 } from 'typeorm';
 import { BaseEntity } from 'src/common/entities/base.entity';
 import { PhaseLesson } from 'src/phase_lessons/entities/phase_lesson.entity';
-import { LessonDependency } from 'src/lesson_depedencies/entities/lesson_depedency.entity';
 import { StudyTask } from 'src/study_tasks/entities/study_task.entity';
 import { Unit } from 'src/unit/entities/unit.entity';
 import { Question } from 'src/question/entities/question.entity';
 import { LessonSkill } from 'src/lesson_skills/entities/lesson_skill.entity';
 import { LessonContent } from 'src/lesson_content/entities/lesson_content.entity';
-import { LessonItem } from 'src/lesson_item/entities/lesson_item.entity';
 
 @Entity('lessons')
 export class Lesson extends BaseEntity {
@@ -42,35 +40,13 @@ export class Lesson extends BaseEntity {
   @OneToMany(() => PhaseLesson, (pl) => pl.lesson)
   phaseLessons: PhaseLesson[];
 
-  @OneToMany(() => LessonDependency, (ld) => ld.lesson)
-  prerequisitesOf: LessonDependency[];
-
-  @OneToMany(() => LessonDependency, (ld) => ld.lessonBefore)
-  asPrerequisiteFor: LessonDependency[];
-
   @OneToMany(() => StudyTask, (t) => t.lesson)
   studyTasks: StudyTask[];
-
-  @ManyToMany(() => Question, (question) => question.lessons)
-  @JoinTable({
-    name: 'lessson_questions',
-    joinColumn: {
-      name: 'lesson_id',
-      referencedColumnName: 'id',
-    },
-    inverseJoinColumn: {
-      name: 'question_id',
-      referencedColumnName: 'id',
-    },
-  })
-  questions: Question[];
-
-  @OneToMany(() => LessonSkill, (ls) => ls.lesson, { cascade: true })
-  skills: LessonSkill[];
 
   @OneToMany(() => LessonContent, (lc) => lc.lesson, { cascade: true })
   contents?: LessonContent[];
 
-  @OneToMany(() => LessonItem, (li) => li.lesson, { cascade: true })
-  lessonItems: LessonItem[];
+  @OneToMany(() => LessonSkill, (ls) => ls.lesson, { cascade: true })
+  skills: LessonSkill[];
+
 }

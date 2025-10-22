@@ -1,26 +1,19 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  Index,
-  Unique,
   Check,
-  ManyToOne,
-  JoinColumn,
-  ManyToMany,
+  Column,
+  Entity,
+  Index,
   JoinTable,
-  OneToMany,
+  ManyToMany,
+  OneToMany
 } from 'typeorm';
 
 import { BaseEntity } from 'src/common/entities/base.entity';
-import { ITEM_MODALITIES, ITEM_SOURCE, ITEM_STATUS } from '../schema/item.type';
-import type { ItemModality, ItemSourceType, ItemStatus } from '../schema/item.type';
-import { Skill } from 'src/skill/entities/skill.entity';
-import { LessonItem } from 'src/lesson_item/entities/lesson_item.entity';
 import { CourseBand } from 'src/courses/consts';
-import { Question } from 'src/question/entities/question.entity';
+import { LessonContentItem } from 'src/lesson_item/entities/lesson_item.entity';
+import { Skill } from 'src/skill/entities/skill.entity';
+import type { ItemModality, ItemStatus } from '../schema/item.type';
+import { ITEM_MODALITIES, ITEM_STATUS } from '../schema/item.type';
 
 @Entity('items')
 @Index(['modality', 'status'])
@@ -42,7 +35,7 @@ export class Item extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   explanation?: string;
 
-  @Column({name: 'skill_type', nullable: true })
+  @Column({ name: 'skill_type', nullable: true })
   skillType?: string;
 
   @Column({
@@ -67,8 +60,8 @@ export class Item extends BaseEntity {
   })
   skills: Skill[];
 
-  @OneToMany(() => LessonItem, (li) => li.item)
-  lessonItems: LessonItem[];
+  @OneToMany(() => LessonContentItem, (li) => li.item)
+  lessonContentItems: LessonContentItem[];
 
   @Column({ name: 'question_ref', type: 'uuid', nullable: true })
   questionRef?: string;

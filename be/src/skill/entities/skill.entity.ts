@@ -29,7 +29,7 @@ export class Skill extends BaseEntity {
 
   @ManyToMany(() => Part, (part) => part.skills)
   @JoinTable({
-    name: 'skill_parts', // tên bảng join
+    name: 'skill_parts',
     joinColumn: { name: 'skill_id', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'part_id', referencedColumnName: 'id' },
   })

@@ -25,7 +25,6 @@ import { PhaseModule } from './phase/phase.module';
 import { PhaseLessonsModule } from './phase_lessons/phase_lessons.module';
 import { LessonModule } from './lesson/lesson.module';
 import { StudyTasksModule } from './study_tasks/study_tasks.module';
-import { LessonDepedenciesModule } from './lesson_depedencies/lesson_depedencies.module';
 import { UnitModule } from './unit/unit.module';
 import { TargetSkillsModule } from './target_skills/target_skills.module';
 import { SkillModule } from './skill/skill.module';
@@ -42,6 +41,10 @@ import { ItemsModule } from './item/items.module';
 import { LessonItemModule } from './lesson_item/lesson_item.module';
 import { SpeakingAttemptModule } from './speaking-attempt/speaking-attempt.module';
 import { GcsModule } from './gcs/gcs.module';
+import { VnpayModule } from './vnpay/vnpay.module';
+import { OrderModule } from './order/order.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Order } from './order/entities/order.entity';
 
 @Module({
   imports: [
@@ -65,7 +68,6 @@ import { GcsModule } from './gcs/gcs.module';
     PhaseLessonsModule,
     LessonModule,
     StudyTasksModule,
-    LessonDepedenciesModule,
     UnitModule,
     TargetSkillsModule,
     SkillModule,
@@ -81,6 +83,9 @@ import { GcsModule } from './gcs/gcs.module';
     LessonItemModule,
     SpeakingAttemptModule,
     GcsModule,
+    OrderModule,
+    VnpayModule,
+    TypeOrmModule.forFeature([Order]),
   ],
   controllers: [AppController],
   providers: [

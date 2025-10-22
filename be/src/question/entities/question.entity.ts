@@ -74,7 +74,4 @@ export class Question extends BaseEntity {
 
   @OneToMany(() => QuestionTag, (questionTag) => questionTag.question)
   questionTags: QuestionTag[];
-
-  @ManyToMany(() => Lesson, (l) => l.questions)
-  lessons: Lesson[];
 }

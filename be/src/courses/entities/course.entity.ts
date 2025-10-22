@@ -3,6 +3,8 @@ import { Column, Entity, OneToMany } from 'typeorm';
 import { CourseBand } from '../consts';
 import { UserCourse } from 'src/user_courses/entities/user_course.entity';
 import { Phase } from 'src/phase/entities/phase.entity';
+import { Plan } from 'src/plan/entities/plan.entity';
+import { Order } from 'src/order/entities/order.entity';
 
 @Entity('courses')
 export class Course extends BaseEntity {
@@ -27,6 +29,9 @@ export class Course extends BaseEntity {
   @OneToMany(() => UserCourse, (uc) => uc.course)
   userCourses?: UserCourse[];
 
-  @OneToMany(() => Phase, (p) => p.course)
-  phases?: Phase[];
+  @OneToMany(() => Plan, (p) => p.course)
+  plans?: Plan[];
+
+  @OneToMany(() => Order, (o) => o.course)
+  orders?: Order[];
 }

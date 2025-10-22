@@ -1,4 +1,5 @@
 import { BaseEntity } from 'src/common/entities/base.entity';
+import { LessonContent } from 'src/lesson_content/entities/lesson_content.entity';
 import { Question } from 'src/question/entities/question.entity';
 import { UserVocabulary } from 'src/user_vocabularies/entities/user_vocabulary.entity';
 import { Column, Entity, JoinTable, ManyToMany, OneToMany } from 'typeorm';
@@ -29,6 +30,9 @@ export class Vocabulary extends BaseEntity {
   @Column({ name: 'lemma', nullable: true })
   lemma: string;
 
+  @Column({ name: 'type', nullable: true })
+  type: string;
+
   @Column({ name: 'is_phrase', default: false })
   isPhrase: boolean;
 
@@ -37,4 +41,7 @@ export class Vocabulary extends BaseEntity {
 
   @ManyToMany(() => Question, (question) => question.vocabularies)
   questions: Question[];
+
+  @ManyToMany(() => LessonContent, (lc) => lc.vocabularies)
+  lessonContents?: LessonContent[];
 }
