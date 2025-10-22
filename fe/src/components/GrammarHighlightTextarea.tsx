@@ -238,34 +238,11 @@ const GrammarHighlightTextarea: React.FC<GrammarHighlightTextareaProps> = ({
   const grammarScore = getGrammarScore();
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 flex w-full mt-4 gap-6">
       {/* Grammar Status Header */}
-      <div className="flex items-center justify-between">
-        {/* <div className="flex items-center gap-2">
-          {visibleMatches.length > 0 && (
-            <Button
-              onClick={applyAllSuggestions}
-              size="sm"
-              variant="outline"
-              className="text-xs"
-            >
-              Apply All
-            </Button>
-          )}
-
-          <Button
-            onClick={handleRefreshCheck}
-            size="sm"
-            variant="ghost"
-            className="h-8 w-8 p-0"
-          >
-            <RefreshCw className="w-3 h-3" />
-          </Button>
-        </div> */}
-      </div>
 
       {/* Textarea */}
-      <div className="relative">
+      <div className=" w-[70%]">
         <Textarea
           ref={textareaRef}
           value={value}
@@ -288,91 +265,93 @@ const GrammarHighlightTextarea: React.FC<GrammarHighlightTextareaProps> = ({
         )}
       </div>
 
-      <div className="flex items-center gap-2">
-        {loading ? (
-          <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
-        ) : visibleMatches.length === 0 && value.length > 10 ? (
-          <CheckCircle className="w-4 h-4 text-green-500" />
-        ) : visibleMatches.length > 0 ? (
-          <AlertTriangle className="w-4 h-4 text-yellow-500" />
-        ) : null}
+      <div className="flex flex-1 flex-col gap-2">
+        <div className="flex  items-center gap-2">
+          {loading ? (
+            <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+          ) : visibleMatches.length === 0 && value.length > 10 ? (
+            <CheckCircle className="w-4 h-4 text-green-500" />
+          ) : visibleMatches.length > 0 ? (
+            <AlertTriangle className="w-4 h-4 text-yellow-500" />
+          ) : null}
 
-        <span className="text-sm font-medium text-gray-700">
-          {loading
-            ? "Checking grammar..."
-            : visibleMatches.length === 0 && value.length > 10
-            ? "No issues found"
-            : visibleMatches.length > 0
-            ? `${visibleMatches.length} issue${
-                visibleMatches.length > 1 ? "s" : ""
-              } found`
-            : "Grammar Check"}
-        </span>
+          <span className="text-sm font-medium text-gray-700">
+            {loading
+              ? "Checking grammar..."
+              : visibleMatches.length === 0 && value.length > 10
+              ? "No issues found"
+              : visibleMatches.length > 0
+              ? `${visibleMatches.length} issue${
+                  visibleMatches.length > 1 ? "s" : ""
+                } found`
+              : "Grammar Check"}
+          </span>
 
-        <div className="flex items-center gap-3">
-          {grammarScore !== null && (
-            <Badge
-              variant="outline"
-              className={`${
-                grammarScore >= 90
-                  ? "bg-green-50 text-green-700 border-green-200"
-                  : grammarScore >= 70
-                  ? "bg-yellow-50 text-yellow-700 border-yellow-200"
-                  : "bg-red-50 text-red-700 border-red-200"
-              }`}
-            >
-              Score: {grammarScore}%
-            </Badge>
-          )}
-        </div>
-      </div>
-
-      {/* Error Display */}
-      {error && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-3 bg-red-50 border border-red-200 rounded-lg"
-        >
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-red-500" />
-            <span className="text-sm text-red-700">
-              Grammar check failed: {error}
-            </span>
+          <div className="flex items-center gap-3">
+            {grammarScore !== null && (
+              <Badge
+                variant="outline"
+                className={`${
+                  grammarScore >= 90
+                    ? "bg-green-50 text-green-700 border-green-200"
+                    : grammarScore >= 70
+                    ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+                    : "bg-red-50 text-red-700 border-red-200"
+                }`}
+              >
+                Score: {grammarScore}%
+              </Badge>
+            )}
           </div>
-        </motion.div>
-      )}
+        </div>
 
-      {/* Grammar Issues */}
-      <AnimatePresence mode="popLayout">
-        {visibleMatches.length > 0 && (
+        {/* Error Display */}
+        {error && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="space-y-3"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-3 bg-red-50 border border-red-200 rounded-lg"
           >
             <div className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-blue-500" />
-              <h4 className="font-medium text-gray-800">
-                Grammar & Style Issues
-              </h4>
-            </div>
-
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {visibleMatches.map((match, index) => (
-                <GrammarMatchDisplay
-                  key={`${match.offset}-${match.length}-${index}`}
-                  match={match}
-                  index={matches.indexOf(match)}
-                  onApplySuggestion={handleApplySuggestion}
-                  onIgnore={handleIgnoreMatch}
-                />
-              ))}
+              <AlertTriangle className="w-4 h-4 text-red-500" />
+              <span className="text-sm text-red-700">
+                Grammar check failed: {error}
+              </span>
             </div>
           </motion.div>
         )}
-      </AnimatePresence>
+
+        {/* Grammar Issues */}
+        <AnimatePresence mode="popLayout">
+          {visibleMatches.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="space-y-3"
+            >
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-blue-500" />
+                <h4 className="font-medium text-gray-800">
+                  Grammar & Style Issues
+                </h4>
+              </div>
+
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {visibleMatches.map((match, index) => (
+                  <GrammarMatchDisplay
+                    key={`${match.offset}-${match.length}-${index}`}
+                    match={match}
+                    index={matches.indexOf(match)}
+                    onApplySuggestion={handleApplySuggestion}
+                    onIgnore={handleIgnoreMatch}
+                  />
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };

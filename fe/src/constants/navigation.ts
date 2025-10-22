@@ -1,13 +1,4 @@
-import { 
-  Home, 
-  BookOpen, 
-  ClipboardList, 
-  Users, 
-  User,
-  Mic,
-  Bot,
-  LucideIcon
-} from "lucide-react";
+import { LucideIcon } from "lucide-react";
 
 export interface NavigationItem {
   id: string;
@@ -28,6 +19,7 @@ export const TOEIC_NAVIGATION = [
   },
   {
     name: "Ôn luyện",
+    href: "/practice",
     sub: [
       { name: "Luyện Listening", href: "/practice/listening" },
       { name: "Luyện Reading", href: "/practice/reading" },
@@ -39,7 +31,6 @@ export const TOEIC_NAVIGATION = [
   { name: "Trợ lý AI", href: "/assistant" },
   // { name: "Liên hệ", href: "/contact" },
 ];
-
 
 export const NAVIGATION_PATHS = {
   TOEIC_BASE: "/toeic",

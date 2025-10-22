@@ -56,7 +56,7 @@ export default function Header() {
               transition={{ duration: 0.3 }}
               className="flex items-center space-x-2"
             >
-              <span className="font-bold text-3xl bg-gradient-to-r from-[var(--color-7)] to-[var(--primary)] bg-clip-text text-transparent">
+              <span className="font-bold text-3xl text-[#23085A]">
                 Tuki TOEIC
               </span>
             </motion.div>

@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Progress } from "@/components/ui/progress";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Check, Clock, Edit3, Target } from "lucide-react";
+import { Check, Clock, Edit3, Icon, Target } from "lucide-react";
 import { writingExerciseTypes } from "@/data/mockDataWritting";
 
 // Mock data tương tự phần bạn có
@@ -96,19 +96,17 @@ export default function WritingTopicsPage() {
           className=""
         >
           <div className="flex mx-auto items-center justify-start gap-3 mb-4">
-            <div className="p-3  rounded-xl ">
-              <Edit3 className="w-4 h-4 " />
-            </div>
-            <h1 className="text-4xl md:text-3xl font-bold text-[#23085A]">
-              Writting
+            <exercise.icon className="w-8 h-8 text-[oklch(0.22_0.15_283)]" />
+            <h1 className="text-2xl md:text-3xl font-bold text-[#23085A]">
+              {exercise.name}
             </h1>
           </div>
 
-          <div className="flex item-start gap-6">
+          <div className="flex item-start gap-6 bg-white p-4">
             <Image
-              src={exercise.imageUrl}
-              width={500}
-              height={500}
+              src={exercise?.imageUrl}
+              width={300}
+              height={300}
               alt="hehe"
             />
 
@@ -131,123 +129,59 @@ export default function WritingTopicsPage() {
           Danh sách chủ đề:
         </h1>
 
-        <motion.div
-          variants={container}
-          initial="hidden"
-          animate="visible"
-          className=" flex  gap-6 w-full mx-auto "
-        >
-          <div className="flex gap-6 flex-col w-[75%]">
-            {exercise.subTopics.map((topic) => {
-              console.log("topic", topic.id);
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          {exercise.subTopics.map((topic, i) => {
+            console.log("name", topic);
 
-              return (
-                <motion.div
-                  key={topic.id}
-                  variants={itemVariants}
-                  onMouseEnter={() => setHoveredCard(topic.id)}
-                  onMouseLeave={() => setHoveredCard(null)}
-                >
-                  <Link
-                    href={`/practice/writing/${params.slug}/${topic.id}`}
-                    className="block"
-                  >
-                    <motion.div
-                      whileHover={{ scale: 1.02, y: -5 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <div className="flex items-stretch   transition-all duration-300 rounded-lg overflow-hidden group bg-white">
-                        <div className=" flex flex-col justify-between border-l bg-white">
-                          <Image
-                            src={
-                              topic.imageUrl ||
-                              "https://working.vn/vnt_upload/news/hinh_ky_nang/H24-min.gif"
-                            }
-                            width={600}
-                            height={600}
-                            alt={exercise.name}
-                            className="object-cover w-full h-40"
-                          />
+            return (
+              <motion.div
+                key={topic.id}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1, duration: 0.4 }}
+                className="group relative rounded-2xl shadow-sm hover:shadow-lg bg-white border border-gray-100 overflow-hidden"
+              >
+                <Link href={`/practice/writing/${params.slug}/${topic.id}`}>
+                  <div className="relative h-40 w-full overflow-hidden">
+                    <Image
+                      src={topic.imageUrl}
+                      alt={topic.name}
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-t  opacity-60`}
+                    />
+                    <div className="absolute top-3 left-3 px-2 py-1 rounded-md bg-white/80 text-sm font-semibold text-gray-800">
+                      {topic.level}
+                    </div>
+                  </div>
 
-                          {/* <div className="p-4">
-                      <Link href={`/practice/writing/${exercise.slug}/topics`}>
-                        <Button
-                          className="w-full bg-white hover:bg-gray-100 text-gray-800 font-semibold border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300"
-                          size="lg"
-                        >
-                          <span>Chọn chủ đề</span>
-                          <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-                        </Button>
-                      </Link>
-                    </div> */}
+                  <div className="p-5 flex flex-col justify-between">
+                    <div className="flex flex-col gap-2 mb-2">
+                      <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                        <div className="flex items-center gap-1.5">
+                          <Target className="w-4 h-4" />
+                          <span>5 bài tập</span>
                         </div>
-                        <div className="flex-1 p-5 flex flex-col justify-between">
-                          {/* Header */}
-                          <div>
-                            <div className="flex items-center gap-3 mb-3">
-                              {/* <div className="p-3 bg-gray-50 rounded-lg border shadow-sm group-hover:scale-110 transition-transform duration-300">
-                          <exercise.icon className="w-6 h-6 text-gray-700" />
-                        </div> */}
-                              <h3 className="text-xl font-semibold text-[#23085A]  group-hover:text-gray-800 transition-colors">
-                                {topic.title}
-                              </h3>
-                            </div>
-
-                            {/* Description */}
-                            <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                              {topic.description}
-                            </p>
-
-                            <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                              <div className="flex items-center gap-1.5">
-                                <Target className="w-4 h-4" />
-                                <span>5 bài tập</span>
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <Clock className="w-4 h-4" />
-                                <span>5-20 phút</span>
-                              </div>
-                            </div>
-                          </div>
-                          {/* Progress */}
-                          {/* <div className="mt-4">
-                      <div className="flex justify-between text-xs text-gray-600 mb-1">
-                        <span>Tiến độ</span>
-                        <span>0/{exercise.exerciseCount}</span>
-                      </div>
-                      <div className="w-full bg-gray-100 rounded-full h-2">
-                        <div className="bg-gradient-to-r from-pink-400 to-blue-500 h-2 rounded-full w-0 transition-all duration-300" />
-                      </div>
-                    </div> */}
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="w-4 h-4" />
+                          <span>5-20 phút</span>
                         </div>
-
-                        {/* RIGHT IMAGE + BUTTON */}
                       </div>
-                    </motion.div>
-                  </Link>
-                </motion.div>
-              );
-            })}
-          </div>
-
-          <div className="p-4 round-sm bg-white  w-80">
-            <h3 className="text-lg font-semibold text-[#23085A] mb-3">
-              🎯 Các dạng khác
-            </h3>
-            <ul className="space-y-4 text-gray-800">
-              {writingExerciseTypes.map((item) => {
-                return (
-                  <Link href={"abc"} key={item.slug}>
-                    <li className="flex items-start gap-2 hover:underline">
-                      <Check className="w-5 h-5 text-[#23085A] mt-0.5" />
-                      <span>{item?.name}</span>
-                    </li>
-                  </Link>
-                );
-              })}
-            </ul>
-          </div>
-        </motion.div>
+                      <h2 className="text-lg font-semibold text-gray-900">
+                        {topic.title}
+                      </h2>
+                      <p className="text-sm text-gray-600 line-clamp-3">
+                        {topic.description}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            );
+          })}
+        </div>
       </div>
       {/* Topics list */}
     </div>
