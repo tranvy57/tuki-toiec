@@ -270,7 +270,7 @@ export default function WritingExercisePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-2">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -331,7 +331,7 @@ export default function WritingExercisePage() {
             <div className="h-fit sticky top-6 bg-white border p-4 rounded-sm">
               <div>
                 <div className="text-lg font-semibold text-gray-900">
-                  {subTopic?.title}
+                  Chủ đề: {subTopic?.title}
                 </div>
               </div>
               <div className="space-y-4">
@@ -346,11 +346,9 @@ export default function WritingExercisePage() {
                 )}
 
                 {/* Prompt */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-gray-700 leading-relaxed">
-                    {subTopic?.topic}
-                  </p>
-                </div>
+                <p className="text-gray-700 leading-relaxed">
+                  Đề bài: {subTopic?.topic}
+                </p>
 
                 {/* Instructions */}
                 {/* <div className="space-y-2">

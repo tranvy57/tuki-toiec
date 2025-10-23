@@ -1,3 +1,5 @@
+import { BookOpen, ImageIcon, Mail } from "lucide-react";
+
 // Mock data tương tự phần bạn có
 export const writingExerciseTypes = [
   // {
@@ -52,7 +54,8 @@ export const writingExerciseTypes = [
     slug: "email-response",
     name: "Trả lời email",
     type: "email",
-    description: "tự nhiên xoá?",
+    icon: ImageIcon,
+    description: "Quan sát và viết mô tả ngắn dựa trên hình ảnh cho sẵn.",
     imageUrl:
       "https://media-blog.jobsgo.vn/blog/wp-content/uploads/2022/06/cach-viet-email-dung-chuan.jpg",
     instruction: [
@@ -98,6 +101,8 @@ export const writingExerciseTypes = [
   },
   {
     slug: "opinion-essay",
+    icon: Mail,
+    description: "Viết phản hồi email ngắn gọn, lịch sự và đúng ngữ cảnh.",
     name: "Viết đoạn nêu quan điểm",
     imageUrl:
       "https://dotb.vn/wp-content/uploads/2024/08/Ket-qua-hoc-tap-cua-hoc-sinh-thong-bao-ket-qua-hoc-tap-dotb.jpg",
@@ -130,6 +135,8 @@ export const writingExerciseTypes = [
   },
   {
     slug: "grammar-fix",
+    icon: BookOpen,
+    description: "Trình bày ý kiến cá nhân rõ ràng, logic và có dẫn chứng.",
     name: "Sửa câu sai",
     imageUrl:
       "https://ila.edu.vn/wp-content/uploads/2023/03/ila-ngu-phap-tieng-anh-co-ban-cho-hoc-sinh-tieu-hoc-3.jpg",

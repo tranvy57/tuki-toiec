@@ -123,12 +123,11 @@
       opacity: 0;
     }
   }
-
 }
 
-  .animate-rippling {
-    animation: rippling 600ms linear forwards;
-  }
+.animate-rippling {
+  animation: rippling 600ms linear forwards;
+}
 
 :root {
   --radius: 0.625rem;
@@ -136,7 +135,7 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.7436 0.209 25.4);
+  --primary: oklch(0.22 0.15 283);
   --primary-2: oklch(74.808% 0.14557 23.132 / 0.445);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
