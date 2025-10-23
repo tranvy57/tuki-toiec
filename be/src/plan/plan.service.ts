@@ -59,7 +59,7 @@ export class PlanService {
         isActive: true,
         startDate: new Date().toISOString(),
         band: course.band,
-        status: 'in_progress',
+        status: 'new',
       });
       const savedPlan = await this.planRepo.save(plan);
 
@@ -90,6 +90,21 @@ export class PlanService {
         courseName: course.title,
       };
     });
+  }
+
+  async updatePlan (planId: string, status: 'new' | 'in_progress' | 'completed' | 'paused') {
+    const plan = await this.planRepo.findOne({ where: { id: planId } });
+    if (!plan) throw new NotFoundException('Plan not found');
+
+    plan.status = status;
+    await this.planRepo.save(plan);
+  }
+
+  async getActivePlanByUserId(manager: DataSource['manager'], userId: string): Promise<Plan | null> {
+    const plan = await manager.getRepository(Plan).findOne({
+      where: { user: { id: userId }, isActive: true },
+    });
+    return plan;
   }
 
   // async findUserPlans(user: User, courseId?: string) {

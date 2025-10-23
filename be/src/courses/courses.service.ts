@@ -43,11 +43,22 @@ export class CoursesService {
     return this.toListDTO(courses);
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} course`;
+  async findOne(id: string) {
+    return await this.courseRepo.findOne({
+      where: { id },
+      relations: {
+        phases: {
+          phaseLessons: {
+            lesson: {
+              contents: true,
+            },
+          },
+        },
+      },
+    });
   }
 
-  update(id: number, updateCourseDto: UpdateCourseDto) {
+  update(id: string, updateCourseDto: UpdateCourseDto) {
     return `This action updates a #${id} course`;
   }
 

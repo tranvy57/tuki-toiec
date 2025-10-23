@@ -23,6 +23,15 @@ export class PlanController {
     return this.planService.create(createPlanDto, user);
   }
 
+  @Patch(':id')
+  update(
+    @Param('id') id: string,
+    @Body() status: 'new' | 'in_progress' | 'completed' | 'paused',
+    @CurrentUser() user: User,
+  ) {
+    return this.planService.updatePlan(id, status);
+  }
+
   // @Get()
   // findUserPlans(@CurrentUser() user: User, @Query('course') courseId?: string) {
   //   return this.planService.findUserPlans(user, courseId);

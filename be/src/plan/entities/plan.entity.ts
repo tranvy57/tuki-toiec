@@ -37,7 +37,7 @@ export class Plan extends BaseEntity {
     length: 16,
     default: 'in_progress',
   })
-  status: 'in_progress' | 'completed' | 'paused';
+  status: 'new' | 'in_progress' | 'completed' | 'paused';
 
   @OneToMany(() => StudyTask, (t) => t.plan)
   studyTasks: StudyTask[];

@@ -1,3 +1,4 @@
+import { PlanService } from './../plan/plan.service';
 import {
   BadRequestException,
   Inject,
@@ -47,6 +48,8 @@ export class AttemptService {
     private readonly userProgressService: UserProgressService,
     @Inject()
     private readonly studyTaskService: StudyTasksService,
+     @Inject()
+    private readonly planService: PlanService,
     private dataSrc: DataSource,
   ) {}
 
@@ -475,6 +478,15 @@ export class AttemptService {
       );
 
       await this.updateAttempt(manager, attempt, totalScore);
+
+      const plan = await this.planService.getActivePlanByUserId(
+        manager,
+        user.id,
+      );
+
+      if(plan){
+        await this.planService.updatePlan(plan.id, "in_progress");
+      }
 
       return {
         attemptId: attempt.id,

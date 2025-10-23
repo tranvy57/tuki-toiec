@@ -15,6 +15,7 @@ import { UserProgress } from 'src/user_progress/entities/user_progress.entity';
 import { UserVocabulary } from 'src/user_vocabularies/entities/user_vocabulary.entity';
 import { UserProgressModule } from 'src/user_progress/user_progress.module';
 import { StudyTasksModule } from 'src/study_tasks/study_tasks.module';
+import { PlanModule } from 'src/plan/plan.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { StudyTasksModule } from 'src/study_tasks/study_tasks.module';
     ]),
     UserProgressModule,
     StudyTasksModule,
+    PlanModule
   ],
   controllers: [AttemptController],
   providers: [AttemptService],

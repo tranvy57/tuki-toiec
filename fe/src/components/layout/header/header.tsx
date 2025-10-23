@@ -8,7 +8,7 @@ import { TOEIC_NAVIGATION } from "@/constants/navigation";
 
 const navItems = [
   { name: "Trang chủ", href: "/" },
-  { name: "Lộ trình", href: "/learning-path" },
+  { name: "Lộ trình", href: "/study-plan" },
   { name: "Thư viện", href: "/library" },
   { name: "Blog", href: "/blog" },
   { name: "Liên hệ", href: "/contact" },

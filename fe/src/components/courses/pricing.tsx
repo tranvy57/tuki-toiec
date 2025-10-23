@@ -16,9 +16,11 @@ import { RippleButton } from "../ui/ripple-button";
 import { cn } from "@/utils";
 import { useCourses } from "@/api/useCourse";
 import { Alert, AlertDescription } from "../ui/alert";
+import { useRouter } from "next/navigation";
 
 export function Pricing() {
   const { data: courses, isLoading, isError, error, refetch } = useCourses();
+  const router = useRouter();
 
   // Loading State Component
   const LoadingCard = () => (
@@ -188,6 +190,10 @@ export function Pricing() {
                           "hover:shadow-2xl hover:brightness-110 active:scale-95"
                         )}
                         rippleColor="rgba(255,255,255,0.5)"
+
+                        onClick={() => {
+                          router.push(`/payment?course=${course.id}`);
+                        }}
                       >
                         <span className="flex items-center justify-center gap-2">
                           {course.price === 0

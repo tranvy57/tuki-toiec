@@ -20,6 +20,8 @@ import {
 import { motion } from "framer-motion";
 import PaymentButton from "@/components/PaymentButton";
 import Image from "next/image";
+import { useParams, useSearchParams } from "next/navigation";
+import { useCourses } from "@/api/useCourse";
 
 interface Course {
   id: string;
@@ -66,6 +68,11 @@ const mockCourse: Course = {
 
 export default function PaymentPage() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("vnpay");
+  const params = useSearchParams();
+
+  const { data } = useCourses();
+  const courseId = params.get("course");
+  const course = data?.find((c) => c.id === courseId);
 
   const discountPercent = mockCourse.originalPrice
     ? Math.round(
@@ -114,10 +121,15 @@ export default function PaymentPage() {
                     <div className="flex-1 space-y-3">
                       <div>
                         <h3 className="font-semibold text-lg text-gray-900">
-                          {mockCourse.name}
+                          {course?.title}
                         </h3>
                         <p className="text-gray-600 text-sm mt-1">
-                          {mockCourse.description}
+                          <div
+                            className="text-gray-700 text-sm leading-relaxed prose prose-sm max-w-none"
+                            dangerouslySetInnerHTML={{
+                              __html: course?.description || "",
+                            }}
+                          />
                         </p>
                       </div>
 
@@ -203,17 +215,11 @@ export default function PaymentPage() {
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Giá gốc</span>
-                      {mockCourse.originalPrice ? (
-                        <span className="text-gray-500 line-through">
-                          {mockCourse.originalPrice.toLocaleString("vi-VN")}đ
-                        </span>
-                      ) : (
-                        <span className="text-gray-900">
-                          {mockCourse.price.toLocaleString("vi-VN")}đ
-                        </span>
-                      )}
+                      <span className="text-gray-500 ">
+                        {course?.price.toLocaleString("vi-VN")}đ
+                      </span>
                     </div>
-
+                    {/* 
                     {mockCourse.originalPrice && (
                       <div className="flex justify-between items-center">
                         <span className="text-green-600 font-medium">
@@ -227,14 +233,14 @@ export default function PaymentPage() {
                           đ
                         </span>
                       </div>
-                    )}
+                    )} */}
 
                     <Separator />
 
                     <div className="flex justify-between items-center">
                       <span className="font-semibold text-lg">Tổng cộng</span>
                       <span className="font-bold text-xl text-blue-600">
-                        {mockCourse.price.toLocaleString("vi-VN")}đ
+                        {course?.price.toLocaleString("vi-VN")}đ
                       </span>
                     </div>
                   </div>
@@ -278,9 +284,9 @@ export default function PaymentPage() {
 
                   {/* Payment Button */}
                   <PaymentButton
-                    courseId={mockCourse.id}
-                    courseName={mockCourse.name}
-                    amount={mockCourse.price}
+                    courseId={course?.id || ""}
+                    courseName={course?.title || ""}
+                    amount={course?.price || 0}
                     className="mt-4"
                   />
 
