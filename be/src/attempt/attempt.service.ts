@@ -28,6 +28,7 @@ import { attempt } from 'joi';
 import { QuestionDto } from 'src/question/dto/question.dto';
 import { AttemptDto } from './dto/attempt.dto';
 import { AttemptResultDto } from './dto/submit-attempt-response.dto';
+import { StudyTasksService } from 'src/study_tasks/study_tasks.service';
 
 @Injectable()
 export class AttemptService {
@@ -44,6 +45,8 @@ export class AttemptService {
     private attemptAnswerRepo: Repository<AttemptAnswer>,
     @Inject()
     private readonly userProgressService: UserProgressService,
+    @Inject()
+    private readonly studyTaskService: StudyTasksService,
     private dataSrc: DataSource,
   ) {}
 
@@ -70,8 +73,10 @@ export class AttemptService {
   async createAttempt(dto: CreateAttemptDto, user: User) {
     let idTest = dto.testId;
     if (dto.mode === 'review') {
-      idTest = '5fe39a7e-cc0a-432a-8b52-2ee94e10f0b3';
+      idTest = 'a1ebd8ec-3445-4334-9127-75c4ff3b12be';
     }
+
+    console.log(idTest);
 
     const test = await this.testRepo.findOne({
       where: { id: idTest },
@@ -85,6 +90,7 @@ export class AttemptService {
         },
       },
     });
+
     if (!test) throw new NotFoundException('Test was not found!');
 
     let selectedParts = test.parts;
@@ -455,11 +461,17 @@ export class AttemptService {
       const { totalScore, correctCount, totalQuestions, skillMap, allKeys } =
         this.processQuestions(attempt, answerMap);
 
+      // console.log('Skill map from processQuestions:', skillMap);
       await this.updateUserVocabulary(manager, user.id, allKeys, attempt);
       const updatedSkills = await this.userProgressService.updateUserProgress(
         manager,
         user.id,
         skillMap,
+      );
+
+      const skippedTasks = await this.studyTaskService.markSkippableStudyTasks(
+        user.id,
+        0.6,
       );
 
       await this.updateAttempt(manager, attempt, totalScore);
@@ -470,10 +482,11 @@ export class AttemptService {
         correctCount,
         totalQuestions,
         updatedSkills: updatedSkills.map((u) => ({
-          skillId: u.skill.id,
+          skillId: u.skillId,
           proficiency: u.proficiency,
         })),
         parts: attempt.parts,
+        skippedTasks,
       };
     });
   }
@@ -522,7 +535,7 @@ export class AttemptService {
 
     const skillMap: Record<string, { totalScore: number; totalDiff: number }> =
       {};
-    const allKeys = new Set<string>(); // gom cả word lẫn phrase
+    const allKeys = new Set<string>();
 
     for (const part of attempt.parts) {
       for (const group of part.groups) {
@@ -532,19 +545,24 @@ export class AttemptService {
           q['userAnswer'] = userAnswer ?? null;
 
           const isCorrect = userAnswer?.answer?.isCorrect ?? false;
+          const qScore = q['score'] ?? 1;
+          const diff = q['difficulty'] ?? 1;
+
           if (isCorrect) {
-            totalScore += q['score'] ?? 1;
+            totalScore += qScore;
             correctCount++;
           }
 
           for (const tag of q.questionTags || []) {
             const skillId = tag.skill.id;
-            const diff = Number(tag.difficulty ?? 1);
-            const score = isCorrect ? 1 : 0;
+            const skillDiff = Number(tag.difficulty ?? 1);
+            const score = isCorrect ? skillDiff : 0;
+
             if (!skillMap[skillId])
               skillMap[skillId] = { totalScore: 0, totalDiff: 0 };
+
             skillMap[skillId].totalScore += score;
-            skillMap[skillId].totalDiff += diff;
+            skillMap[skillId].totalDiff += skillDiff;
           }
 
           (q.lemmas || []).forEach((l) => allKeys.add(l));

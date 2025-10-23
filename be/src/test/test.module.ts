@@ -10,9 +10,10 @@ import { Group } from 'src/group/entities/group.entity';
 import { Test } from './entities/test.entity';
 import { QuestionTagsModule } from 'src/question_tags/question_tags.module';
 import { Skill } from 'src/skill/entities/skill.entity';
+import { QuestionTag } from 'src/question_tags/entities/question_tag.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Test, Question, Answer, Part, Group, Skill]), QuestionTagsModule],
+  imports: [TypeOrmModule.forFeature([Test, Question, Answer, Part, Group, Skill, QuestionTag]), QuestionTagsModule],
   controllers: [TestController],
   providers: [TestService],
 })

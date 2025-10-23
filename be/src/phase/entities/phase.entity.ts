@@ -8,10 +8,6 @@ export type PhaseStatus = 'locked' | 'active' | 'done';
 
 @Entity('phases')
 export class Phase extends BaseEntity {
-  @ManyToOne(() => Plan, (p) => p.phases, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'plan_id', referencedColumnName: 'id' })
-  plan: Plan;
-
   @Column({ type: 'varchar', length: 255 })
   title: string;
 

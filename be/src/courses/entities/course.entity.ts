@@ -34,4 +34,7 @@ export class Course extends BaseEntity {
 
   @OneToMany(() => Order, (o) => o.course)
   orders?: Order[];
+
+  @OneToMany(() => Phase, (p) => p.course)
+  phases: Phase[];
 }

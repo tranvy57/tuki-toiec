@@ -66,6 +66,6 @@ export class TestController {
   @Post('gen-review-test')
   @Public()
   async genReviewTest() {
-    return await this.testService.genReviewTest();
+    return await this.testService.genReviewTestv2();
   }
 }

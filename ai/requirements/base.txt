@@ -10,3 +10,4 @@ sqlacodegen-v2
 psycopg2-binary~=2.9
 uv
 cloudinary
+spacy

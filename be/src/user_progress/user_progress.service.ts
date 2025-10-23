@@ -25,19 +25,19 @@ export class UserProgressService {
   remove(id: number) {
     return `This action removes a #${id} userProgress`;
   }
-
   async updateUserProgress(
     manager: EntityManager,
     userId: string,
     skillMap: Record<string, { totalScore: number; totalDiff: number }>,
   ) {
     const repo = manager.getRepository(UserProgress);
+
     const existing = await repo.find({
       where: { user: { id: userId }, skill: { id: In(Object.keys(skillMap)) } },
-      relations: ['user', 'skill'],
+      relations: ['skill'], 
     });
-    const progressMap = new Map(existing.map((up) => [up.skill.id, up]));
 
+    const progressMap = new Map(existing.map((up) => [up.skill.id, up]));
     const alpha = 0.2;
     const updates: UserProgress[] = [];
 
@@ -61,7 +61,14 @@ export class UserProgressService {
 
       updates.push(up);
     }
+
+
+    console.log(updates)
     await repo.save(updates);
-    return updates;
+
+    return updates.map((u) => ({
+      skillId: u.skill.id,
+      proficiency: u.proficiency,
+    }));
   }
 }

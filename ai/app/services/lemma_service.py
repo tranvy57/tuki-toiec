@@ -83,8 +83,8 @@ def sync_all_vocabularies(session: Session = None) -> None:
 
 def main():
     with session_scope() as db:
-        # sync_all_vocabularies(db)
-        sync_all_questions(db)                  
+        sync_all_vocabularies(db)
+        # sync_all_questions(db)               
 
 if __name__ == "__main__":
     main()

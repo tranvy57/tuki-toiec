@@ -32,11 +32,12 @@ export class Plan extends BaseEntity {
   })
   startDate?: string;
 
-  @Column({ name: 'total_days', type: 'int', nullable: true })
-  totalDays?: number;
-
-  @OneToMany(() => Phase, (p) => p.plan)
-  phases: Phase[];
+  @Column({
+    type: 'varchar',
+    length: 16,
+    default: 'in_progress',
+  })
+  status: 'in_progress' | 'completed' | 'paused';
 
   @OneToMany(() => StudyTask, (t) => t.plan)
   studyTasks: StudyTask[];

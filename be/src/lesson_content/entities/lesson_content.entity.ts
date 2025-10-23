@@ -4,6 +4,7 @@ import { Lesson } from 'src/lesson/entities/lesson.entity';
 import { LessonContentItem } from 'src/lesson_item/entities/lesson_item.entity';
 import { LessonSkill } from 'src/lesson_skills/entities/lesson_skill.entity';
 import { Vocabulary } from 'src/vocabulary/entities/vocabulary.entity';
+import { StudyTask } from 'src/study_tasks/entities/study_task.entity';
 
 export enum LessonContentType {
   VIDEO = 'video', // Video hướng dẫn
@@ -37,8 +38,15 @@ export class LessonContent extends BaseEntity {
   @Column({ type: 'boolean', default: false })
   isPremium: boolean;
 
-  @OneToMany(() => LessonContentItem, (li) => li.lessonContent, { cascade: true })
+  @OneToMany(() => LessonContentItem, (li) => li.lessonContent, {
+    cascade: true,
+  })
   lessonContentItems: LessonContentItem[];
+
+  @OneToMany(() => StudyTask, (st) => st.lessonContent, {
+    cascade: true,
+  })
+  studyTasks: StudyTask[];
 
   @ManyToMany(() => Vocabulary)
   @JoinTable({

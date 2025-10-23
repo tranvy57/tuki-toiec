@@ -1,0 +1,11 @@
+# Core scientific + ML stack
+pandas==2.2.3
+numpy==1.26.4
+matplotlib==3.9.2
+scikit-learn==1.5.2
+
+# Optional (nếu bạn muốn mở rộng trong bước sau)
+xgboost==2.1.1            # (cho thử nghiệm mô hình booster mạnh hơn)
+seaborn==0.13.2           # (vẽ biểu đồ đẹp hơn)
+jupyterlab==4.2.5         # (nếu bạn chạy local Jupyter)
+notebook==7.2.2           # (phiên bản notebook tương thích matplotlib mới)

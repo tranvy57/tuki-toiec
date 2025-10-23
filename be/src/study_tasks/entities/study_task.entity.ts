@@ -2,13 +2,13 @@ import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from 'src/common/entities/base.entity';
 import { Lesson } from 'src/lesson/entities/lesson.entity';
 import { Plan } from 'src/plan/entities/plan.entity';
+import { LessonContent } from 'src/lesson_content/entities/lesson_content.entity';
 
 export type StudyTaskStatus =
   | 'pending'
   | 'in_progress'
   | 'completed'
   | 'skipped';
-export type StudyTaskMode = 'learn' | 'review' | 'mock_test';
 
 @Entity('study_tasks')
 export class StudyTask extends BaseEntity {
@@ -22,19 +22,15 @@ export class StudyTask extends BaseEntity {
     nullable: true,
   })
   @JoinColumn({ name: 'lesson_id', referencedColumnName: 'id' })
-  lesson?: Lesson | null;
-
-  @Column({
-    name: 'content_url',
-    type: 'varchar',
-    length: 1024,
-    nullable: true,
-  })
-  contentUrl?: string;
+  lesson: Lesson;
 
   @Column({ type: 'varchar', length: 16, default: 'pending' })
   status: StudyTaskStatus;
 
-  @Column({ type: 'varchar', length: 16, default: 'learn' })
-  mode: StudyTaskMode;
+  @ManyToOne(() => LessonContent, (lc) => lc.studyTasks, {
+    onDelete: 'SET NULL',
+    nullable: true,
+  })
+  @JoinColumn({ name: 'lesson_content_id', referencedColumnName: 'id' })
+  lessonContent: LessonContent;
 }

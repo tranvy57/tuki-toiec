@@ -23,6 +23,9 @@ export class Item extends BaseEntity {
   @Column({ name: 'modality', type: 'varchar' })
   modality: ItemModality;
 
+  @Column({ name: 'title', type: 'varchar', length: 255, nullable: true })
+  title: string;
+
   @Column({ name: 'status', type: 'varchar', default: 'draft' })
   status: ItemStatus;
 
