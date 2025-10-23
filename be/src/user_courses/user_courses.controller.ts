@@ -23,19 +23,6 @@ export class UserCoursesController {
     return this.userCoursesService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userCoursesService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateUserCourseDto: UpdateUserCourseDto,
-  ) {
-    return this.userCoursesService.update(+id, updateUserCourseDto);
-  }
-
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.userCoursesService.remove(+id);
