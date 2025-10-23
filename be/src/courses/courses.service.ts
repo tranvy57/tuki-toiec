@@ -6,7 +6,12 @@ import { CourseDto } from './dto/course.dto';
 import { plainToInstance } from 'class-transformer';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserCourse, UserCourseStatus } from 'src/user_courses/entities/user_course.entity';
+import {
+  UserCourse,
+  UserCourseStatus,
+} from 'src/user_courses/entities/user_course.entity';
+import { Plan } from 'src/plan/entities/plan.entity';
+import { StudyTask } from 'src/study_tasks/entities/study_task.entity';
 
 @Injectable()
 export class CoursesService {
@@ -14,6 +19,10 @@ export class CoursesService {
     @InjectRepository(Course) private readonly courseRepo: Repository<Course>,
     @InjectRepository(UserCourse)
     private readonly userCourseRepo: Repository<UserCourse>,
+    @InjectRepository(Plan)
+    private readonly planRepo: Repository<Plan>,
+    @InjectRepository(StudyTask)
+    private readonly studyTaskRepo: Repository<StudyTask>,
   ) {}
   private toDTO(course: Course): CourseDto {
     return plainToInstance(CourseDto, course, {
@@ -62,6 +71,7 @@ export class CoursesService {
   }
 
   async getCourseBuyeds(userId: string) {
+    // 1️⃣ Lấy UserCourse (course user đã mua)
     const userCourse = await this.userCourseRepo.findOne({
       where: {
         user: { id: userId },
@@ -85,7 +95,43 @@ export class CoursesService {
       throw new NotFoundException('Người dùng chưa đăng ký khóa học nào.');
     }
 
-    return userCourse.course;
+    const course = userCourse.course;
+
+    // 2️⃣ Tìm plan đang active của user
+    const plan = await this.planRepo.findOne({
+      where: {
+        user: { id: userId },
+        isActive: true,
+        course: { id: course.id },
+      },
+      relations: ['studyTasks', 'studyTasks.lesson'],
+    });
+
+    if (!plan) {
+      // Nếu chưa có plan thì tất cả bài đều "locked"
+      for (const phase of course.phases) {
+        for (const pl of phase.phaseLessons) {
+          pl.lesson['studyTaskStatus'] = 'locked';
+        }
+      }
+      return course;
+    }
+
+    // 3️⃣ Tạo map lessonId -> status từ studyTasks
+    const taskMap = new Map<string, string>();
+    for (const task of plan.studyTasks) {
+      taskMap.set(task.lesson.id, task.status);
+    }
+
+    // 4️⃣ Gắn trạng thái vào từng lesson
+    for (const phase of course.phases) {
+      for (const pl of phase.phaseLessons) {
+        const lesson = pl.lesson;
+        lesson['studyTaskStatus'] = taskMap.get(lesson.id) ?? 'locked';
+      }
+    }
+
+    return course;
   }
 
   update(id: string, updateCourseDto: UpdateCourseDto) {
