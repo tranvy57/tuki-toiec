@@ -39,11 +39,8 @@ export class PlanService {
           'phases.phaseLessons.lesson.contents',
         ],
       });
-      if (!course) throw new NotFoundException('Course not found');
 
-      if (!course) {
-        throw new Error('Course not found');
-      }
+      if (!course) throw new NotFoundException('Course not found');
 
       // 2️⃣ Disable plan hiện tại của user
       await this.planRepo.update(
@@ -63,8 +60,10 @@ export class PlanService {
       });
       const savedPlan = await this.planRepo.save(plan);
 
-      // 4️⃣ Sinh StudyTask cho từng lessonContent
+      // 4️⃣ Sinh StudyTask
       const studyTasks: StudyTask[] = [];
+      let isFirstTask = true;
+
       for (const phase of course.phases) {
         for (const pl of phase.phaseLessons) {
           for (const lc of pl.lesson.contents ?? []) {
@@ -72,9 +71,10 @@ export class PlanService {
               plan: savedPlan,
               lesson: pl.lesson,
               lessonContent: lc,
-              status: 'pending',
+              status: isFirstTask ? 'pending' : 'locked',
             });
             studyTasks.push(task);
+            isFirstTask = false; // Sau task đầu tiên, các task sau là locked
           }
         }
       }
@@ -92,7 +92,10 @@ export class PlanService {
     });
   }
 
-  async updatePlan (planId: string, status: 'new' | 'in_progress' | 'completed' | 'paused') {
+  async updatePlan(
+    planId: string,
+    status: 'new' | 'in_progress' | 'completed' | 'paused',
+  ) {
     const plan = await this.planRepo.findOne({ where: { id: planId } });
     if (!plan) throw new NotFoundException('Plan not found');
 
@@ -100,7 +103,10 @@ export class PlanService {
     await this.planRepo.save(plan);
   }
 
-  async getActivePlanByUserId(manager: DataSource['manager'], userId: string): Promise<Plan | null> {
+  async getActivePlanByUserId(
+    manager: DataSource['manager'],
+    userId: string,
+  ): Promise<Plan | null> {
     const plan = await manager.getRepository(Plan).findOne({
       where: { user: { id: userId }, isActive: true },
     });
