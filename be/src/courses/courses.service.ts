@@ -35,7 +35,11 @@ export class CoursesService {
           },
         },
       },
+      order: {
+        price: 'ASC', 
+      },
     });
+
     return this.toListDTO(courses);
   }
 
