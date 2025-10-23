@@ -10,5 +10,6 @@ import { StudyTask } from 'src/study_tasks/entities/study_task.entity';
   imports: [TypeOrmModule.forFeature([Plan, StudyTask, Course])],
   controllers: [PlanController],
   providers: [PlanService],
+  exports: [PlanService],
 })
 export class PlanModule {}

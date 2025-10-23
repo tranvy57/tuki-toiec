@@ -1,5 +1,6 @@
+import { PlanService } from './../plan/plan.service';
 // src/vnpay/vnpay.service.ts
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Order } from 'src/order/entities/order.entity';
 import { Repository } from 'typeorm';
@@ -15,6 +16,7 @@ import {
   UserCourse,
   UserCourseStatus,
 } from 'src/user_courses/entities/user_course.entity';
+import { Plan } from 'src/plan/entities/plan.entity';
 
 @Injectable()
 export class VnpayService {
@@ -25,6 +27,8 @@ export class VnpayService {
     @InjectRepository(Course) private readonly courseRepo: Repository<Course>,
     @InjectRepository(UserCourse)
     private readonly userCourseRepo: Repository<UserCourse>,
+    @Inject()
+    private readonly planService: PlanService,
   ) {}
   async createPaymentUrl(
     code: string,
@@ -131,7 +135,6 @@ export class VnpayService {
         console.log(order);
         await this.orderRepo.save(order);
 
-        // Tạo user_courses khi thanh toán thành công
         await this.createUserCourse(order);
 
         return { RspCode: '00', Message: 'Confirm Success' };
@@ -206,6 +209,15 @@ export class VnpayService {
       });
 
       await this.userCourseRepo.save(userCourse);
+
+      this.planService.create(
+        {
+          courseId: orderWithRelations.course.id,
+          targetScore: orderWithRelations.course.band,
+        },
+        orderWithRelations.user,
+      )
+
       console.log('✅ Đã tạo user_courses thành công:', {
         userId: orderWithRelations.user.id,
         courseId: orderWithRelations.course.id,
