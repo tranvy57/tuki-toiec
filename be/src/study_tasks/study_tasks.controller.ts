@@ -23,8 +23,11 @@ export class StudyTasksController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateStudyTaskDto: UpdateStudyTaskDto) {
-    return this.studyTasksService.update(+id, updateStudyTaskDto);
+  async updateStudyTask(
+    @Param('id') id: string,
+    @Body() dto: UpdateStudyTaskDto,
+  ) {
+    return this.studyTasksService.updateStudyTask(id, dto);
   }
 
   @Delete(':id')

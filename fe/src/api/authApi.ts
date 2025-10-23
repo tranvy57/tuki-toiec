@@ -1,5 +1,6 @@
 import { LoginRequest, AuthResponse, LoginGoogleRequest, LoginFacebookRequest, LogoutRequest, CheckTokenRequest, ResetPasswordRequest } from "@/types";
 import api from "@/libs/axios-config";
+import { useQuery } from "@tanstack/react-query";
 
 
 
@@ -84,3 +85,14 @@ export const resetPassword = async (body: ResetPasswordRequest): Promise<void> =
     throw error;
   }
 };
+
+export function usePremiumStatus() {
+  return useQuery({
+    queryKey: ["user", "premium-status"],
+    queryFn: async () => {
+      const res = await api.get("user-courses/is-premium");
+      if (!res.status) throw new Error("Failed to fetch premium status");
+      return res.data as Promise<{ isPremium: boolean }>;
+    },
+  });
+}

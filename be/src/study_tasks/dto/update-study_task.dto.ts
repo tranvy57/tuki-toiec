@@ -1,4 +1,7 @@
-import { PartialType } from '@nestjs/swagger';
-import { CreateStudyTaskDto } from './create-study_task.dto';
+import { IsEnum, IsNumber, IsOptional } from 'class-validator';
 
-export class UpdateStudyTaskDto extends PartialType(CreateStudyTaskDto) {}
+export class UpdateStudyTaskDto {
+  @IsOptional()
+  @IsEnum(['pending', 'in_progress', 'completed'])
+  status?: 'pending' | 'in_progress' | 'completed';
+}

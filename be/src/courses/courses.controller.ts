@@ -11,6 +11,8 @@ import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { Public } from 'src/common/decorator/public.decorator';
+import { CurrentUser } from 'src/common/decorator/current-user.decorator';
+import { User } from 'src/user/entities/user.entity';
 
 @Controller('courses')
 export class CoursesController {
@@ -40,5 +42,11 @@ export class CoursesController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.coursesService.remove(+id);
+  }
+
+  @Get('latest')
+  async getLatestCourse(@CurrentUser() user: User) {
+    const userId = user.id;
+    return this.coursesService.getCourseBuyeds(userId);
   }
 }

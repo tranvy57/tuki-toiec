@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { Course } from './entities/course.entity';
@@ -6,11 +6,14 @@ import { CourseDto } from './dto/course.dto';
 import { plainToInstance } from 'class-transformer';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { UserCourse, UserCourseStatus } from 'src/user_courses/entities/user_course.entity';
 
 @Injectable()
 export class CoursesService {
   constructor(
     @InjectRepository(Course) private readonly courseRepo: Repository<Course>,
+    @InjectRepository(UserCourse)
+    private readonly userCourseRepo: Repository<UserCourse>,
   ) {}
   private toDTO(course: Course): CourseDto {
     return plainToInstance(CourseDto, course, {
@@ -36,7 +39,7 @@ export class CoursesService {
         },
       },
       order: {
-        price: 'ASC', 
+        price: 'ASC',
       },
     });
 
@@ -56,6 +59,33 @@ export class CoursesService {
         },
       },
     });
+  }
+
+  async getCourseBuyeds(userId: string) {
+    const userCourse = await this.userCourseRepo.findOne({
+      where: {
+        user: { id: userId },
+        status: UserCourseStatus.ACTIVE,
+      },
+      relations: {
+        course: {
+          phases: {
+            phaseLessons: {
+              lesson: {
+                contents: true,
+              },
+            },
+          },
+        },
+      },
+      order: { purchaseDate: 'DESC' },
+    });
+
+    if (!userCourse) {
+      throw new NotFoundException('Người dùng chưa đăng ký khóa học nào.');
+    }
+
+    return userCourse.course;
   }
 
   update(id: string, updateCourseDto: UpdateCourseDto) {

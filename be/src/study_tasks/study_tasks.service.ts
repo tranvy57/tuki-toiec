@@ -1,16 +1,19 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateStudyTaskDto } from './dto/create-study_task.dto';
 import { UpdateStudyTaskDto } from './dto/update-study_task.dto';
-import { EntityManager } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { StudyTask } from './entities/study_task.entity';
 import { UserProgress } from 'src/user_progress/entities/user_progress.entity';
 import { LessonSkill } from 'src/lesson_skills/entities/lesson_skill.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class StudyTasksService {
   constructor(
     @Inject()
     private readonly manager: EntityManager,
+    @InjectRepository(StudyTask)
+    private readonly studyTaskRepo: Repository<StudyTask>,
   ) {}
 
   create(createStudyTaskDto: CreateStudyTaskDto) {
@@ -31,6 +34,20 @@ export class StudyTasksService {
 
   remove(id: number) {
     return `This action removes a #${id} studyTask`;
+  }
+
+  async updateStudyTask(id: string, dto: UpdateStudyTaskDto) {
+    const task = await this.studyTaskRepo.findOne({
+      where: { id },
+      relations: { lesson: true, plan: true },
+    });
+
+    if (!task) throw new NotFoundException('Study task not found');
+
+    if (dto.status) task.status = dto.status;
+
+    const updated = await this.studyTaskRepo.save(task);
+    return updated;
   }
 
   async markSkippableStudyTasks(userId: string, threshold = 0.6) {
