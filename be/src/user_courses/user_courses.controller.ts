@@ -4,14 +4,18 @@ import { CreateUserCourseDto } from './dto/create-user_course.dto';
 import { UpdateUserCourseDto } from './dto/update-user_course.dto';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { User } from 'src/user/entities/user.entity';
+import { CourseBand } from 'src/courses/consts';
 
 @Controller('user-courses')
 export class UserCoursesController {
   constructor(private readonly userCoursesService: UserCoursesService) {}
 
   @Post()
-  create(@Body() createUserCourseDto: CreateUserCourseDto) {
-    return this.userCoursesService.create(createUserCourseDto);
+  create(@CurrentUser() user: User, @Body() body: CreateUserCourseDto) {
+    return this.userCoursesService.create(
+      user,
+      body.band,
+    );
   }
 
   @Get()
@@ -25,7 +29,10 @@ export class UserCoursesController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserCourseDto: UpdateUserCourseDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateUserCourseDto: UpdateUserCourseDto,
+  ) {
     return this.userCoursesService.update(+id, updateUserCourseDto);
   }
 
@@ -35,7 +42,9 @@ export class UserCoursesController {
   }
 
   @Get('is-premium')
-  async isPremiumUser(@CurrentUser() user: User): Promise<{ isPremium: boolean }> {
+  async isPremiumUser(
+    @CurrentUser() user: User,
+  ): Promise<{ isPremium: boolean }> {
     const isPremium = await this.userCoursesService.isPremiumUser(user.id);
     return { isPremium };
   }

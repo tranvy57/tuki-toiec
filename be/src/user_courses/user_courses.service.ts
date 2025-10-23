@@ -1,18 +1,71 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserCourseDto } from './dto/create-user_course.dto';
 import { UpdateUserCourseDto } from './dto/update-user_course.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserCourse, UserCourseStatus } from './entities/user_course.entity';
-import { MoreThan, Repository } from 'typeorm';
+import { DataSource, MoreThan, Repository } from 'typeorm';
+import { Course } from 'src/courses/entities/course.entity';
+import { CourseBand } from 'src/courses/consts';
+import { User } from 'src/user/entities/user.entity';
+import { PlanService } from 'src/plan/plan.service';
 
 @Injectable()
 export class UserCoursesService {
   constructor(
     @InjectRepository(UserCourse)
     private readonly userCourseRepo: Repository<UserCourse>,
+
+    @Inject()
+    private readonly dataSource: DataSource,
+
+    @Inject()
+    private readonly planService: PlanService
   ) {}
-  create(createUserCourseDto: CreateUserCourseDto) {
-    return 'This action adds a new userCourse';
+  async create(user: User, band: CourseBand): Promise<UserCourse> {
+    return await this.dataSource.transaction(async (manager) => {
+      // 1️⃣ Tìm course phù hợp band
+      const course = await manager.getRepository(Course).findOne({
+        where: { band },
+      });
+      if (!course) {
+        throw new NotFoundException(`Không tìm thấy khóa học cho band ${band}`);
+      }
+
+      // 2️⃣ Kiểm tra nếu user đã có trial course (tránh tạo trùng)
+      const existing = await manager.getRepository(UserCourse).findOne({
+        where: {
+          user: { id: user.id },
+          course: { id: course.id },
+          status: UserCourseStatus.TRIAL,
+        },
+      });
+
+      if (existing) {
+        return existing; // đã có trial thì không tạo lại
+      }
+
+      // 3️⃣ Tạo user_course trial
+      const trialCourse = manager.getRepository(UserCourse).create({
+        user: { id: user.id } as any,
+        course,
+        status: UserCourseStatus.TRIAL,
+        purchaseDate: new Date(),
+      });
+
+      const savedTrial = await manager
+        .getRepository(UserCourse)
+        .save(trialCourse);
+
+      // 4️⃣ Tạo Plan tương ứng (nếu muốn user có thể học thử)
+      this.planService.create({
+        courseId: course.id,
+        targetScore: band
+      }, user)
+
+     
+
+      return savedTrial;
+    });
   }
 
   findAll() {
@@ -41,11 +94,6 @@ export class UserCoursesService {
           status: UserCourseStatus.ACTIVE,
           expireDate: MoreThan(now),
         },
-        {
-          user: { id: userId },
-          status: UserCourseStatus.TRIAL,
-          expireDate: MoreThan(now),
-        }
       ],
     });
 

@@ -71,12 +71,17 @@ export class CoursesService {
   }
 
   async getCourseBuyeds(userId: string) {
-    // 1️⃣ Lấy UserCourse (course user đã mua)
     const userCourse = await this.userCourseRepo.findOne({
-      where: {
-        user: { id: userId },
-        status: UserCourseStatus.ACTIVE,
-      },
+      where: [
+        {
+          user: { id: userId },
+          status: UserCourseStatus.ACTIVE,
+        },
+        {
+          user: { id: userId },
+          status: UserCourseStatus.TRIAL,
+        },
+      ],
       relations: {
         course: {
           phases: {
