@@ -87,7 +87,12 @@ export class CoursesService {
           phases: {
             phaseLessons: {
               lesson: {
-                contents: true,
+                contents: {
+                  lessonContentItems: {
+                    item: true, // ← Lấy chi tiết item
+                  },
+                  vocabularies: true,
+                },
               },
             },
           },
@@ -112,8 +117,8 @@ export class CoursesService {
       relations: ['studyTasks', 'studyTasks.lesson'],
     });
 
+    // 3️⃣ Nếu chưa có plan, gán tất cả locked
     if (!plan) {
-      // Nếu chưa có plan thì tất cả bài đều "locked"
       for (const phase of course.phases) {
         for (const pl of phase.phaseLessons) {
           pl.lesson['studyTaskStatus'] = 'locked';
@@ -122,13 +127,13 @@ export class CoursesService {
       return course;
     }
 
-    // 3️⃣ Tạo map lessonId -> status từ studyTasks
+    // 4️⃣ Map lessonId -> status
     const taskMap = new Map<string, string>();
     for (const task of plan.studyTasks) {
       taskMap.set(task.lesson.id, task.status);
     }
 
-    // 4️⃣ Gắn trạng thái vào từng lesson
+    // 5️⃣ Gắn trạng thái
     for (const phase of course.phases) {
       for (const pl of phase.phaseLessons) {
         const lesson = pl.lesson;

@@ -48,7 +48,7 @@ export class AttemptService {
     private readonly userProgressService: UserProgressService,
     @Inject()
     private readonly studyTaskService: StudyTasksService,
-     @Inject()
+    @Inject()
     private readonly planService: PlanService,
     private dataSrc: DataSource,
   ) {}
@@ -484,8 +484,8 @@ export class AttemptService {
         user.id,
       );
 
-      if(plan){
-        await this.planService.updatePlan(plan.id, "in_progress");
+      if (plan) {
+        await this.planService.updatePlan(plan.id, 'in_progress');
       }
 
       return {
@@ -501,41 +501,6 @@ export class AttemptService {
         skippedTasks,
       };
     });
-  }
-
-  private async loadAttempt(
-    manager: EntityManager,
-    attemptId: string,
-    user: User,
-  ) {
-    const repo = manager.getRepository(Attempt);
-    const attempt = await repo.findOne({
-      where: { id: attemptId },
-      relations: {
-        user: true,
-        test: true,
-        parts: {
-          groups: {
-            questions: {
-              answers: true,
-              questionTags: { skill: true },
-            },
-          },
-        },
-      },
-    });
-    if (!attempt) throw new NotFoundException('Attempt not found!');
-    if (attempt.user.id !== user.id) throw new UnauthorizedException();
-    return attempt;
-  }
-
-  async loadAttemptAnswers(manager: EntityManager, attemptId: string) {
-    const repo = manager.getRepository(AttemptAnswer);
-    const attemptAnswers = await repo.find({
-      where: { attempt: { id: attemptId } },
-      relations: { answer: true, question: true },
-    });
-    return new Map(attemptAnswers.map((aa) => [aa.question.id, aa]));
   }
   private processQuestions(
     attempt: Attempt,
@@ -679,6 +644,40 @@ export class AttemptService {
     attempt.finishAt = new Date();
     attempt.totalScore = totalScore;
     await repo.save(attempt);
+  }
+  private async loadAttempt(
+    manager: EntityManager,
+    attemptId: string,
+    user: User,
+  ) {
+    const repo = manager.getRepository(Attempt);
+    const attempt = await repo.findOne({
+      where: { id: attemptId },
+      relations: {
+        user: true,
+        test: true,
+        parts: {
+          groups: {
+            questions: {
+              answers: true,
+              questionTags: { skill: true },
+            },
+          },
+        },
+      },
+    });
+    if (!attempt) throw new NotFoundException('Attempt not found!');
+    if (attempt.user.id !== user.id) throw new UnauthorizedException();
+    return attempt;
+  }
+
+  async loadAttemptAnswers(manager: EntityManager, attemptId: string) {
+    const repo = manager.getRepository(AttemptAnswer);
+    const attemptAnswers = await repo.find({
+      where: { attempt: { id: attemptId } },
+      relations: { answer: true, question: true },
+    });
+    return new Map(attemptAnswers.map((aa) => [aa.question.id, aa]));
   }
 
   async historyAttempt(user: User) {

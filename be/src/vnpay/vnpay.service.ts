@@ -166,66 +166,102 @@ export class VnpayService {
         return;
       }
 
-      const existingUserCourse = await this.userCourseRepo.findOne({
+      const { user, course } = orderWithRelations;
+
+      // Lấy tất cả user_course của user với course này
+      const existingCourses = await this.userCourseRepo.find({
         where: {
-          user: { id: orderWithRelations.user.id },
-          course: { id: orderWithRelations.course.id },
+          user: { id: user.id },
+          course: { id: course.id },
         },
       });
 
-      if (existingUserCourse) {
-        console.log('User đã có course này rồi:', existingUserCourse);
-        // Có thể update status nếu cần
-        existingUserCourse.status = UserCourseStatus.ACTIVE;
-        existingUserCourse.purchaseDate = new Date();
-        // Tính expire date (ví dụ: course duration + 30 ngày)
-        existingUserCourse.expireDate = new Date(
-          Date.now() +
-            (orderWithRelations.course.durationDays || 60) *
-              24 *
-              60 *
-              60 *
-              1000,
-        );
-        await this.userCourseRepo.save(existingUserCourse);
+      const trialCourse = existingCourses.find((uc) => uc.status === 'trial');
+      const expiredCourse = existingCourses.find(
+        (uc) => uc.status === UserCourseStatus.EXPIRED,
+      );
+      const activeCourse = existingCourses.find(
+        (uc) => uc.status === UserCourseStatus.ACTIVE && uc.status === 'active',
+      );
+
+      // 🟢 Trường hợp 1: Đã có active → bỏ qua
+      if (activeCourse) {
+        console.log('⚠️ User đã có khóa học active, bỏ qua:', activeCourse.id);
         return;
       }
 
-      // Tạo mới user_courses
+      // 🟠 Trường hợp 2: Có expired → kích hoạt lại
+      if (expiredCourse) {
+        console.log('♻️ User có course expired, cập nhật lại thành active');
+        expiredCourse.status = UserCourseStatus.ACTIVE;
+        expiredCourse.purchaseDate = new Date();
+        expiredCourse.expireDate = new Date(
+          Date.now() + (course.durationDays || 60) * 24 * 60 * 60 * 1000,
+        );
+        await this.userCourseRepo.save(expiredCourse);
+
+        await this.planService.create(
+          {
+            courseId: course.id,
+            targetScore: course.band,
+          },
+          user,
+        );
+        return;
+      }
+
+      // 🔵 Trường hợp 3: Có trial nhưng chưa có active → tạo mới
+      if (trialCourse && !activeCourse) {
+        console.log('✨ User có trial, tạo thêm khóa học active mới');
+        const newActiveCourse = this.userCourseRepo.create({
+          user,
+          course,
+          status: UserCourseStatus.ACTIVE,
+          purchaseDate: new Date(),
+          expireDate: new Date(
+            Date.now() + (course.durationDays || 60) * 24 * 60 * 60 * 1000,
+          ),
+        });
+        await this.userCourseRepo.save(newActiveCourse);
+
+        await this.planService.create(
+          {
+            courseId: course.id,
+            targetScore: course.band,
+          },
+          user,
+        );
+        return;
+      }
+
       const userCourse = this.userCourseRepo.create({
-        user: orderWithRelations.user,
-        course: orderWithRelations.course,
+        user,
+        course,
         status: UserCourseStatus.ACTIVE,
         purchaseDate: new Date(),
-        // Tính expire date dựa trên course duration
         expireDate: new Date(
-          Date.now() +
-            (orderWithRelations.course.durationDays || 60) *
-              24 *
-              60 *
-              60 *
-              1000,
+          Date.now() + (course.durationDays || 60) * 24 * 60 * 60 * 1000,
         ),
       });
 
       await this.userCourseRepo.save(userCourse);
 
-      this.planService.create(
+      await this.planService.create(
         {
-          courseId: orderWithRelations.course.id,
-          targetScore: orderWithRelations.course.band,
+          courseId: course.id,
+          targetScore: course.band,
         },
-        orderWithRelations.user,
-      )
+        user,
+      );
 
-      console.log('✅ Đã tạo user_courses thành công:', {
-        userId: orderWithRelations.user.id,
-        courseId: orderWithRelations.course.id,
+      console.log('✅ Đã tạo user_course thành công:', {
+        userId: user.id,
+        courseId: course.id,
         orderId: order.id,
       });
     } catch (error) {
-      console.error('❌ Lỗi khi tạo user_courses:', error);
-      // Không throw error để không ảnh hưởng đến flow thanh toán chính
+      console.error('❌ Lỗi khi tạo user_course:', error);
+      // Không throw để không ảnh hưởng flow thanh toán
     }
   }
 }
