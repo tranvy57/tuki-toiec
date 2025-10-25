@@ -6,8 +6,9 @@ import Image from "next/image";
 import { Progress } from "@/components/ui/progress";
 import { useState } from "react";
 import Link from "next/link";
-import { Check, Edit3 } from "lucide-react";
+import { Check, Edit3, Mic } from "lucide-react";
 import { speakingExerciseTypes } from "@/data/mockMenuSpeaking";
+import { CustomCard } from "@/components/CustomCard";
 
 // Mock data tương tự phần bạn có
 // const speakingExerciseTypes = [
@@ -211,7 +212,7 @@ export default function SpeakingTopicsPage() {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
   const exercise = speakingExerciseTypes.find((ex) => ex.slug === params.slug);
-  console.log(exercise)
+  console.log(exercise);
 
   if (!exercise)
     return (
@@ -267,17 +268,17 @@ export default function SpeakingTopicsPage() {
         >
           <div className="flex mx-auto items-center justify-start gap-3 mb-4">
             <div className="p-3  rounded-xl ">
-              <Edit3 className="w-4 h-4 " />
+              <Mic className="w-4 h-4 " />
             </div>
-            <h1 className="text-4xl md:text-3xl font-bold text-[#23085A]">
+            <h1 className="text-4xl md:text-2xl font-bold text-[#23085A]">
               Speaking
             </h1>
           </div>
 
-          <div className="flex item-start gap-6">
+          <div className="flex item-start gap-6 bg-white p-4 rounded-md">
             <Image
               src={exercise.imageUrl}
-              width={500}
+              width={300}
               height={500}
               alt="hehe"
             />
@@ -307,112 +308,18 @@ export default function SpeakingTopicsPage() {
           animate="visible"
           className=" flex  gap-6 w-full mx-auto "
         >
-          <div className="flex gap-6 flex-col w-[75%]">
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {exercise.subTopics.map((topic) => (
-              <motion.div
+              <CustomCard
                 key={topic.id}
-                variants={itemVariants}
-                onMouseEnter={() => setHoveredCard(topic.id)}
-                onMouseLeave={() => setHoveredCard(null)}
-              >
-                <Link
-                  href={`/practice/speaking/${exercise.slug}/${topic.slug}`}
-                  className="block"
-                >
-                  <motion.div
-                    whileHover={{ scale: 1.02, y: -5 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <div className="flex items-stretch   transition-all duration-300 rounded-lg overflow-hidden group bg-white">
-                      <div className=" flex flex-col justify-between border-l bg-white">
-                        <Image
-                          src={
-                            topic.imageUrl ||
-                            "https://working.vn/vnt_upload/news/hinh_ky_nang/H24-min.gif"
-                          }
-                          width={600}
-                          height={600}
-                          alt={exercise.name}
-                          className="object-cover w-full h-40"
-                        />
-
-                        {/* <div className="p-4">
-                      <Link href={`/practice/writing/${exercise.slug}/topics`}>
-                        <Button
-                          className="w-full bg-white hover:bg-gray-100 text-gray-800 font-semibold border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300"
-                          size="lg"
-                        >
-                          <span>Chọn chủ đề</span>
-                          <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-                        </Button>
-                      </Link>
-                    </div> */}
-                      </div>
-                      <div className="flex-1 p-5 flex flex-col justify-between">
-                        {/* Header */}
-                        <div>
-                          <div className="flex items-center gap-3 mb-3">
-                            {/* <div className="p-3 bg-gray-50 rounded-lg border shadow-sm group-hover:scale-110 transition-transform duration-300">
-                          <exercise.icon className="w-6 h-6 text-gray-700" />
-                        </div> */}
-                            <h3 className="text-xl font-semibold text-[#23085A]  group-hover:text-gray-800 transition-colors">
-                              {topic.title}
-                            </h3>
-                          </div>
-
-                          {/* Description */}
-                          <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                            {topic.description}
-                          </p>
-
-                          {/* Info */}
-                          {/* <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                        <div className="flex items-center gap-1.5">
-                          <Target className="w-4 h-4" />
-                          <span>{exercise.exerciseCount} bài tập</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <Clock className="w-4 h-4" />
-                          <span>{exercise.estimatedTime}</span>
-                        </div>
-                      </div> */}
-                        </div>
-                        {/* Progress */}
-                        {/* <div className="mt-4">
-                      <div className="flex justify-between text-xs text-gray-600 mb-1">
-                        <span>Tiến độ</span>
-                        <span>0/{exercise.exerciseCount}</span>
-                      </div>
-                      <div className="w-full bg-gray-100 rounded-full h-2">
-                        <div className="bg-gradient-to-r from-pink-400 to-blue-500 h-2 rounded-full w-0 transition-all duration-300" />
-                      </div>
-                    </div> */}
-                      </div>
-
-                      {/* RIGHT IMAGE + BUTTON */}
-                    </div>
-                  </motion.div>
-                </Link>
-              </motion.div>
+                slug={topic.id}
+                name={topic.title}
+                description={topic.description}
+                imageUrl={topic.imageUrl}
+                icon={topic.icon}
+                href={`/practice/speaking/${exercise.slug}/${topic.id}`}
+              />
             ))}
-          </div>
-
-          <div className="p-4 round-sm bg-white  w-80">
-            <h3 className="text-lg font-semibold text-[#23085A] mb-3">
-              🎯 Các dạng khác
-            </h3>
-            <ul className="space-y-4 text-gray-800">
-              {speakingExerciseTypes.map((item) => {
-                return (
-                  <Link href={"abc"} key={item.slug}>
-                    <li className="flex items-start gap-2 hover:underline">
-                      <Check className="w-5 h-5 text-[#23085A] mt-0.5" />
-                      <span>{item?.name}</span>
-                    </li>
-                  </Link>
-                );
-              })}
-            </ul>
           </div>
         </motion.div>
       </div>

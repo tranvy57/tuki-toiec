@@ -6,7 +6,7 @@ export const speakingExerciseTypes = [
     name: "Đọc to đoạn văn",
     slug: "read-aloud",
     imageUrl:
-      "https://www.britishcouncil.vn/sites/default/files/styles/bc-landscape-800x450/public/1200x675-hoc-tieng-anh-cung-chuyen-gia-toan-cau.jpg?itok=ope7GUwq",
+      "https://edubenchmark.com/blog/wp-content/uploads/2020/12/How-to-Score-High-in-PTE-Speaking-Read-Aloud.jpg",
     description:
       "Luyện phát âm, ngữ điệu và ngắt nghỉ bằng cách đọc to các đoạn văn ngắn theo mẫu chuẩn TOEIC Speaking.",
     difficulty: "Easy",
@@ -66,7 +66,7 @@ export const speakingExerciseTypes = [
     name: "Lặp lại câu",
     slug: "repeat-sentence",
     imageUrl:
-      "https://www.britishcouncil.vn/sites/default/files/styles/bc-landscape-800x450/public/1200x675-hoc-tieng-anh-cung-chuyen-gia-toan-cau.jpg?itok=ope7GUwq",
+      "https://kajabi-storefronts-production.kajabi-cdn.com/kajabi-storefronts-production/blogs/8689/images/xHeyL1NkS6mq53wl2tsW_Copy_of_GET_PAID.png",
     description:
       "Nghe một câu tiếng Anh và lặp lại chính xác để luyện khả năng nghe-nói liền mạch.",
     difficulty: "Medium",
@@ -125,8 +125,7 @@ export const speakingExerciseTypes = [
     id: "3",
     name: "Mô tả hình ảnh",
     slug: "describe-picture",
-    imageUrl:
-      "https://www.britishcouncil.vn/sites/default/files/styles/bc-landscape-800x450/public/1200x675-hoc-tieng-anh-cung-chuyen-gia-toan-cau.jpg?itok=ope7GUwq",
+    imageUrl: "https://r2.erweima.ai/i/4lkKO6p9SdOVkN7CQvFrCA.png",
     description:
       "Quan sát hình và mô tả chi tiết hành động, bối cảnh, và nhân vật bằng lời nói tự nhiên.",
     icon: Image,

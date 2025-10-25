@@ -28,10 +28,9 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import { speakingExerciseTypes } from "@/data/mockMenuSpeaking";
+import { CustomCard } from "@/components/CustomCard";
 
 // Mock data cho các loại bài tập nói
-
-
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -114,135 +113,20 @@ export default function SpeakingPracticePage() {
           Danh sách chủ đề:
         </h1>
 
-        <div className="flex gap-6 ">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {/* Exercise Cards Grid */}
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="flex flex-col gap-6 w-[90%]"
-          >
-            {speakingExerciseTypes.map((exercise) => (
-              <motion.div
-                key={exercise.id}
-                variants={itemVariants}
-                onMouseEnter={() => setHoveredCard(exercise.id)}
-                onMouseLeave={() => setHoveredCard(null)}
-              >
-                <Link
-                  href={`/practice/speaking/${exercise.slug}`}
-                  className="block"
-                >
-                  <motion.div
-                    whileHover={{ scale: 1.02, y: -5 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <div className="flex items-stretch   transition-all duration-300 rounded-lg overflow-hidden group bg-white">
-                      <div className="w-80 flex flex-col justify-between border-l bg-white">
-                        {exercise.imageUrl && (
-                          <Image
-                            src={exercise.imageUrl}
-                            width={600}
-                            height={600}
-                            alt={exercise.name}
-                            className="object-cover w-full h-40"
-                          />
-                        )}
 
-                        {/* <div className="p-4">
-                      <Link href={`/practice/writing/${exercise.slug}/topics`}>
-                        <Button
-                          className="w-full bg-white hover:bg-gray-100 text-gray-800 font-semibold border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300"
-                          size="lg"
-                        >
-                          <span>Chọn chủ đề</span>
-                          <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-                        </Button>
-                      </Link>
-                    </div> */}
-                      </div>
-                      <div className="flex-1 p-5 flex flex-col justify-between">
-                        {/* Header */}
-                        <div>
-                          <div className="flex items-center gap-3 mb-3">
-                            {/* <div className="p-3 bg-gray-50 rounded-lg border shadow-sm group-hover:scale-110 transition-transform duration-300">
-                          <exercise.icon className="w-6 h-6 text-gray-700" />
-                        </div> */}
-                            <h3 className="text-xl font-semibold text-[#23085A]  group-hover:text-gray-800 transition-colors">
-                              {exercise.name}
-                            </h3>
-                          </div>
-
-                          {/* Description */}
-                          <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                            {exercise.description}
-                          </p>
-
-                          {/* Info */}
-                          <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                            <div className="flex items-center gap-1.5">
-                              <Target className="w-4 h-4" />
-                              <span>{exercise.exerciseCount} bài tập</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <Clock className="w-4 h-4" />
-                              <span>{exercise.estimatedTime}</span>
-                            </div>
-                          </div>
-                        </div>
-                        {/* Progress */}
-                        {/* <div className="mt-4">
-                      <div className="flex justify-between text-xs text-gray-600 mb-1">
-                        <span>Tiến độ</span>
-                        <span>0/{exercise.exerciseCount}</span>
-                      </div>
-                      <div className="w-full bg-gray-100 rounded-full h-2">
-                        <div className="bg-gradient-to-r from-pink-400 to-blue-500 h-2 rounded-full w-0 transition-all duration-300" />
-                      </div>
-                    </div> */}
-                      </div>
-
-                      {/* RIGHT IMAGE + BUTTON */}
-                    </div>
-                  </motion.div>
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          <div className="p-4 round-sm bg-white  w-100">
-            <h3 className="text-lg font-semibold text-[#23085A] mb-3">
-              🎯 Mục tiêu đạt được
-            </h3>
-            <ul className="space-y-2 text-gray-800">
-              <li className="flex items-start gap-2">
-                <Check className="w-5 h-5 text-[#23085A] mt-0.5" />
-                <span>
-                  Nâng cao khả năng diễn đạt ý tưởng mạch lạc và logic.
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="w-5 h-5 text-[#23085A] mt-0.5" />
-                <span>Sử dụng từ vựng và cấu trúc câu chuẩn TOEIC.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="w-5 h-5 text-[#23085A] mt-0.5" />
-                <span>Viết tự nhiên, đúng ngữ pháp và dễ hiểu.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="w-5 h-5 text-[#23085A] mt-0.5" />
-                <span>
-                  Nhận phản hồi chi tiết từ AI giúp cải thiện từng bài viết.
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="w-5 h-5 text-[#23085A] mt-0.5" />
-                <span>
-                  Tự đánh giá tiến bộ và điều chỉnh chiến lược học phù hợp.
-                </span>
-              </li>
-            </ul>
-          </div>
+          {speakingExerciseTypes.map((exercise, i) => (
+            <CustomCard
+              key={exercise.slug}
+              slug={exercise.slug}
+              name={exercise.name}
+              description={exercise.description}
+              imageUrl={exercise.imageUrl}
+              icon={exercise.icon}
+              href={`/practice/speaking/${exercise.slug}`}
+            />
+          ))}
         </div>
 
         {/* AI Features Section */}

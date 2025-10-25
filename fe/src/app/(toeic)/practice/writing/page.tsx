@@ -29,6 +29,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 import { writingExerciseTypes } from "@/data/mockDataWritting";
+import { CustomCard } from "@/components/CustomCard";
 
 //   {
 //     id: "1",
@@ -293,7 +294,7 @@ export default function WritingPracticePage() {
             <div className="p-3  rounded-xl ">
               <Edit3 className="w-4 h-4 " />
             </div>
-            <h1 className="text-4xl md:text-3xl font-bold text-[#23085A]">
+            <h1 className="text-2xl md:text-3xl font-bold text-[#23085A]">
               Writting
             </h1>
           </div>
@@ -311,50 +312,21 @@ export default function WritingPracticePage() {
         </h1>
 
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 w-full">
-          {/* Exercise Cards Grid */}
+          {writingExerciseTypes.map((exercise, i) => {
+            console.log("exercise", exercise);
 
-          {writingExerciseTypes.map((exercise) => (
-            <motion.div
-              // key={skill.id}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              // transition={{ delay: i * 0.1, duration: 0.4 }}
-              className="group relative rounded-2xl shadow-sm hover:shadow-lg bg-white border border-gray-100 overflow-hidden"
-            >
-              <Link href={`/practice/writing/${exercise.slug}`}>
-                <div className="relative h-40 w-full overflow-hidden">
-                  <Image
-                    src={exercise.imageUrl}
-                    alt={exercise.name}
-                    fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-t  opacity-60`}
-                  />
-                  <div className="absolute top-3 left-3 px-2 py-1 rounded-md bg-white/80 text-sm font-semibold text-gray-800">
-                    {/* {skill.level}
-                     */}
-                    hard
-                  </div>
-                </div>
-
-                <div className="p-5 flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      {/* <Icon className={`w-5 h-5 text-[oklch(0.22_0.15_283)]`} />
-                    <h2 className="text-lg font-semibold text-gray-900">
-                      {skill.name}
-                    </h2> */}
-                    </div>
-                    <p className="text-sm text-gray-600 line-clamp-3">
-                      {exercise.description}
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
+            return (
+              <CustomCard
+                key={exercise.slug}
+                slug={exercise.slug}
+                name={exercise.name}
+                description={exercise.description}
+                imageUrl={exercise.imageUrl}
+                icon={exercise.icon}
+                href={`/practice/writing/${exercise.slug}`}
+              />
+            );
+          })}
         </div>
 
         {/* AI Features Section */}

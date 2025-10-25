@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -101,24 +100,24 @@ const mockExerciseData = {
       feedback:
         "You missed 'has' and 'of'. Try slowing down a little to catch all words.",
     },
-  // },
-  // "describe-picture": {
-  //   id: "3",
-  //   name: "Describe a Picture",
-  //   vietnameseName: "Mô tả hình ảnh",
-  //   title: "Mô tả hình ảnh trong 30 giây",
-  //   prompt: "Nhìn vào hình ảnh và mô tả chi tiết những gì bạn nhìn thấy.",
-  //   difficulty: "Medium",
-  //   difficultyColor: "bg-yellow-100 text-yellow-800",
-  //   duration: 30,
-  //   timeLimit: "30 giây",
-  //   image_url: "/images/airport_waiting.jpg",
-  //   instructions: [
-  //     "Quan sát kỹ tất cả chi tiết trong hình",
-  //     "Mô tả người, vật, hành động rõ ràng",
-  //     "Sử dụng từ vựng phong phú và chính xác",
-  //     "Tổ chức ý tưởng logic và mạch lạc",
-  //   ],
+    // },
+    // "describe-picture": {
+    //   id: "3",
+    //   name: "Describe a Picture",
+    //   vietnameseName: "Mô tả hình ảnh",
+    //   title: "Mô tả hình ảnh trong 30 giây",
+    //   prompt: "Nhìn vào hình ảnh và mô tả chi tiết những gì bạn nhìn thấy.",
+    //   difficulty: "Medium",
+    //   difficultyColor: "bg-yellow-100 text-yellow-800",
+    //   duration: 30,
+    //   timeLimit: "30 giây",
+    //   image_url: "/images/airport_waiting.jpg",
+    //   instructions: [
+    //     "Quan sát kỹ tất cả chi tiết trong hình",
+    //     "Mô tả người, vật, hành động rõ ràng",
+    //     "Sử dụng từ vựng phong phú và chính xác",
+    //     "Tổ chức ý tưởng logic và mạch lạc",
+    //   ],
     // sample_feedback: {
     //   grammar_score: 89,
     //   vocabulary_score: 76,
@@ -159,7 +158,8 @@ export default function SpeakingExercisePage() {
 
   const slug = params.slug as string;
   const exerciseData = mockExerciseData[slug as keyof typeof mockExerciseData];
-  const { mutate, data, isPending, isError } = useEvaluateSpeakingAttempt();
+  const { mutate, data, isPending, isError, reset } =
+    useEvaluateSpeakingAttempt();
 
   useEffect(() => {
     if (data && !apiResult) {
@@ -318,6 +318,7 @@ export default function SpeakingExercisePage() {
   };
 
   const handleReset = () => {
+    setShowFeedback(false);
     setIsRecording(false);
     setRecordingTime(0);
     setUserTranscript("");
@@ -327,6 +328,7 @@ export default function SpeakingExercisePage() {
     setShowTranscript(false);
     setShowAudioTranscript(false);
     setApiResult(null);
+    reset();
     setAudioBlob(null);
     setAudioUrl(null);
     if (recordingIntervalRef.current)
@@ -343,48 +345,71 @@ export default function SpeakingExercisePage() {
   if (!exerciseData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white flex items-center justify-center">
-        <Card className="p-6 text-center">
+        <div className="p-6 text-center">
           <p className="text-gray-600">Không tìm thấy bài tập này.</p>
           <Button onClick={() => router.back()} className="mt-4">
             Quay lại
           </Button>
-        </Card>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-4">
         {/* Header */}
+
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-8"
+          className="flex items-center justify-between mb-6"
         >
           <div className="flex items-center gap-4">
             <Button
               variant="outline"
               size="sm"
               onClick={() => router.back()}
-              className="flex items-center gap-2 hover:bg-gray-50"
+              className="flex items-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
               Quay lại
             </Button>
+            <div className="flex gap-6">
+              <h1 className="text-2xl font-bold text-[#23085A]">
+                {exerciseData.name}
+              </h1>
+              <div className="flex items-center gap-4 mt-1">
+                {/* <Badge
+                  className={
+                    subTopic?.level === "Easy"
+                      ? "bg-green-100 text-green-800"
+                      : subTopic?.level === "Medium"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-red-100 text-red-800"
+                  }
+                >
+                  {subTopic?.level}
+                </Badge> */}
+                <div className="flex items-center gap-1 text-sm text-gray-500">
+                  <Clock className="w-4 h-4" />
+                  <span>{formatTime(timeElapsed)}</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Progress */}
-          {/* <div className="text-right hidden md:block">
+          <div className="text-right">
             <div className="text-sm text-gray-600 mb-1">
               Tiến độ: {Math.round(progress)}%
             </div>
             <Progress value={progress} className="w-32" />
-          </div> */}
+          </div>
         </motion.div>
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="flex flex-col lg:flex-row gap-4">
           {/* Left Side - Instructions & Content */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -392,15 +417,15 @@ export default function SpeakingExercisePage() {
             transition={{ delay: 0.1 }}
             className="space-y-4 lg:col-span-2"
           >
-            {/* Prompt Card */}
-            <Card className="border-2 border-blue-100">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            {/* Prompt div */}
+            <div className="bg-white rounded-sm p-4">
+              <div>
+                <div className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                   <FileText className="w-5 h-5 text-blue-500" />
                   {exerciseData.title}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+                </div>
+              </div>
+              <div className="space-y-4">
                 {/* Image for picture description */}
                 {slug === "describe-picture" && (
                   <div className="relative aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden border-2 border-dashed border-gray-300">
@@ -494,8 +519,8 @@ export default function SpeakingExercisePage() {
 
                 {/* Text content for read aloud */}
                 {slug === "read-aloud" && (
-                  <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-xl p-6">
-                    <p className="text-lg leading-relaxed text-gray-800 font-medium">
+                  <div className=" rounded-sm p-2">
+                    <p className="text-lg leading-relaxed text-gray-800 ">
                       {exerciseData.prompt}
                     </p>
                   </div>
@@ -507,8 +532,8 @@ export default function SpeakingExercisePage() {
                     {exerciseData.prompt}
                   </p>
                 </div> */}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Recorded audio player (visible after recording) */}
 
@@ -518,17 +543,17 @@ export default function SpeakingExercisePage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.1 }}
-              className="space-y-6"
+              className="space-y-4"
             >
-              <Card className="border-2 border-pink-100 sticky top-6">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <div className="  bg-white rounded-sm p-4">
+                <div className="pb-2">
+                  <div className="text-lg font-semibold flex items-center gap-2">
                     <Mic className="w-5 h-5 text-pink-500" />
                     Ghi âm & Nộp bài
-                  </CardTitle>
-                </CardHeader>
+                  </div>
+                </div>
 
-                <CardContent className="space-y-5">
+                <div className="space-y-5">
                   {/* Record / Stop button */}
                   <div className="flex flex-col items-center gap-3">
                     <div className="relative">
@@ -595,10 +620,10 @@ export default function SpeakingExercisePage() {
                   </div>
 
                   {/* Action row: Nộp bài + Ghi lại (chỉ 2 nút) */}
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="flex items-center justify-center gap-4">
                     <Button
                       onClick={submitRecording}
-                      className="bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600"
+                      className=" hover:to-violet-600"
                       disabled={!audioBlob || isPending}
                     >
                       {isPending ? (
@@ -607,7 +632,7 @@ export default function SpeakingExercisePage() {
                           gửi
                         </>
                       ) : (
-                        "AI đánh giá"
+                        "Nộp bài"
                       )}
                     </Button>
 
@@ -636,8 +661,8 @@ export default function SpeakingExercisePage() {
                   )}
 
                   {/* Link mở modal kết quả nếu có (nhỏ gọn) */}
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
               {/* Error (nhỏ gọn) */}
               <AnimatePresence>
@@ -647,14 +672,14 @@ export default function SpeakingExercisePage() {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
-                    <Card className="border-red-200 bg-red-50">
-                      <CardContent className="py-3">
+                    <div className="border-red-200 bg-red-50">
+                      <div className="py-3">
                         <div className="text-sm text-red-700 flex items-center gap-2">
                           <AlertTriangle className="w-4 h-4" />
                           Gửi bài không thành công. Vui lòng thử lại.
                         </div>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -671,14 +696,14 @@ export default function SpeakingExercisePage() {
                 exit={{ opacity: 0, height: 0 }}
                 data-result-section
               >
-                <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-                  <CardHeader>
-                    <CardTitle className="text-lg font-semibold flex items-center gap-2 text-blue-900">
-                      <Sparkles className="w-5 h-5" />
-                      Kết quả đánh giá AI
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
+                <div className="bg-white rounded-sm p-4">
+                  <div>
+                    <div className="text-lg font-semibold flex items-center gap-2 text-blue-900 mb-2">
+                      <Sparkles className="w-5 h-5 " />
+                      Kết quả đánh giá từ AI
+                    </div>
+                  </div>
+                  <div className="space-y-4">
                     {/* Scores Grid */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       {Object.entries(apiResult).map(([key, value]) => {
@@ -779,8 +804,8 @@ export default function SpeakingExercisePage() {
                         </AnimatePresence>
                       </div>
                     )}
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

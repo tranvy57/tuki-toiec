@@ -11,7 +11,6 @@ export function App() {
   const [selectedExerciseType, setSelectedExerciseType] =
     useState<ExerciseType | null>(null);
 
-
   const handleBackToOverview = () => {
     setCurrentView("overview");
     setSelectedExerciseType(null);

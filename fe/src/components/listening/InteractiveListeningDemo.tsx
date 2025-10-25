@@ -10,6 +10,7 @@ import {
   Eye,
   Headphones,
   MessageSquare,
+  Mic,
   Play,
   Volume2,
 } from "lucide-react";
@@ -144,6 +145,8 @@ const exerciseTypes = [
   {
     id: "mcq",
     name: "Multiple Choice",
+    image:
+      "https://test-english.com/staging11/wp-content/uploads/A2%E2%80%93Test-2_Use-of-English.jpg",
     description: "Listen and choose the best answer",
     icon: Headphones,
     color: "blue" as const,
@@ -297,63 +300,78 @@ export default function InteractiveListeningDemo({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <Button
-            variant="ghost"
-            onClick={onBack}
-            className="text-slate-600 hover:text-slate-900"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Overview
-          </Button>
+        <motion.div
+          className="absolute top-20 left-10 w-20 h-20 bg-pink-400/10 rounded-full blur-xl"
+          animate={{
+            y: [0, -20, 0],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            duration: 4,
+            repeat: Number.POSITIVE_INFINITY,
+            ease: "easeInOut",
+          }}
+        />
+        <motion.div
+          className="absolute top-40 right-20 w-32 h-32 bg-blue-400/10 rounded-full blur-xl"
+          animate={{
+            y: [0, 20, 0],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{
+            duration: 5,
+            repeat: Number.POSITIVE_INFINITY,
+            ease: "easeInOut",
+          }}
+        />
 
-          <Badge variant="outline" className="bg-white/70 backdrop-blur-sm">
-            Interactive Demo
-          </Badge>
-        </div>
-
-        {/* Title */}
-        <div className="text-center mb-12">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
+        <div className="container mx-auto px-4 py-4 relative z-10">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-4xl font-bold text-slate-900 mb-4"
+            transition={{ duration: 0.6 }}
+            className=""
           >
-            TOEIC Listening Practice
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-lg text-slate-600 max-w-2xl mx-auto"
-          >
-            Experience modern, interactive listening exercises with instant
-            feedback and adaptive UI
-          </motion.p>
-        </div>
+            <div className="flex items-center justify-start gap-3 mb-4">
+              <div className="p-3  rounded-xl ">
+                <Mic className="w-4 h-4 " />
+              </div>
+              <h1 className="text-2xl md:text-2xl font-bold text-[#23085A]">
+                Listening
+              </h1>
+            </div>
+            {/* Mô tả chính */}
+            <p className="pb-4 text-lg">
+              Phát triển khả năng diễn đạt ý tưởng rõ ràng, mạch lạc và tự nhiên
+              theo chuẩn TOEIC. Với Tuki, bạn được luyện tập qua các bài viết mô
+              phỏng đề thi thật, hệ thống sẽ tự động cá nhân hóa nội dung phù
+              hợp với trình độ và mục tiêu điểm số của bạn.
+            </p>
+          </motion.div>
 
-        {/* Exercise Types Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {exerciseTypes.map((exercise, index) => {
-            const IconComponent = exercise.icon;
+          {/* Exercise Types Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {exerciseTypes.map((exercise, index) => {
+              const IconComponent = exercise.icon;
 
-            return (
-              <motion.div
-                key={exercise.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Card
-                  className="group cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-slate-200 bg-white/80 backdrop-blur-sm"
-                  onClick={() => handleSelectExercise(exercise.id)}
+              return (
+                <motion.div
+                  key={exercise.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
                 >
-                  <CardHeader className="pb-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div
-                        className={`
+                  <Card
+                    className="group cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-slate-200 bg-white/80 backdrop-blur-sm"
+                    onClick={() => handleSelectExercise(exercise.id)}
+                  >
+                    <CardHeader className="pb-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div
+                          className={`
                         w-12 h-12 rounded-xl flex items-center justify-center
                         ${
                           exercise.color === "blue"
@@ -374,93 +392,97 @@ export default function InteractiveListeningDemo({
                         }
                         group-hover:scale-110 transition-transform duration-300
                       `}
-                      >
-                        <IconComponent className="h-6 w-6" />
+                        >
+                          <IconComponent className="h-6 w-6" />
+                        </div>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Play className="h-4 w-4" />
+                        </Button>
                       </div>
 
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <Play className="h-4 w-4" />
-                      </Button>
-                    </div>
+                      <CardTitle className="text-xl font-semibold text-slate-800 group-hover:text-slate-900">
+                        {exercise.name}
+                      </CardTitle>
+                    </CardHeader>
 
-                    <CardTitle className="text-xl font-semibold text-slate-800 group-hover:text-slate-900">
-                      {exercise.name}
-                    </CardTitle>
-                  </CardHeader>
+                    <CardContent>
+                      <p className="text-slate-600 mb-4 leading-relaxed">
+                        {exercise.description}
+                      </p>
 
-                  <CardContent>
-                    <p className="text-slate-600 mb-4 leading-relaxed">
-                      {exercise.description}
-                    </p>
+                      <div className="flex items-center justify-between">
+                        <Badge variant="outline" className="text-xs">
+                          {exercise.questions.length} question
+                          {exercise.questions.length > 1 ? "s" : ""}
+                        </Badge>
 
-                    <div className="flex items-center justify-between">
-                      <Badge variant="outline" className="text-xs">
-                        {exercise.questions.length} question
-                        {exercise.questions.length > 1 ? "s" : ""}
-                      </Badge>
-
-                      <div className="flex items-center text-xs text-slate-500">
-                        <Volume2 className="h-3 w-3 mr-1" />
-                        Audio included
+                        <div className="flex items-center text-xs text-slate-500">
+                          <Volume2 className="h-3 w-3 mr-1" />
+                          Audio included
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {/* Features */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="mt-16 text-center"
-        >
-          <h2 className="text-2xl font-semibold text-slate-800 mb-6">
-            Features
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <Volume2 className="h-6 w-6" />
-              </div>
-              <h3 className="font-semibold text-slate-800 mb-2">
-                Interactive Audio
-              </h3>
-              <p className="text-slate-600 text-sm">
-                Advanced audio controls with replay limits and speed adjustment
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-12 h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <Eye className="h-6 w-6" />
-              </div>
-              <h3 className="font-semibold text-slate-800 mb-2">
-                Instant Feedback
-              </h3>
-              <p className="text-slate-600 text-sm">
-                Real-time corrections with detailed explanations
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <MessageSquare className="h-6 w-6" />
-              </div>
-              <h3 className="font-semibold text-slate-800 mb-2">Adaptive UI</h3>
-              <p className="text-slate-600 text-sm">
-                Each exercise type has optimized interactions and animations
-              </p>
-            </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </div>
-        </motion.div>
+
+          {/* Features */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mt-16 text-center"
+          >
+            <h2 className="text-2xl font-semibold text-slate-800 mb-6">
+              Features
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <Volume2 className="h-6 w-6" />
+                </div>
+                <h3 className="font-semibold text-slate-800 mb-2">
+                  Interactive Audio
+                </h3>
+                <p className="text-slate-600 text-sm">
+                  Advanced audio controls with replay limits and speed
+                  adjustment
+                </p>
+              </div>
+
+              <div className="text-center">
+                <div className="w-12 h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <Eye className="h-6 w-6" />
+                </div>
+                <h3 className="font-semibold text-slate-800 mb-2">
+                  Instant Feedback
+                </h3>
+                <p className="text-slate-600 text-sm">
+                  Real-time corrections with detailed explanations
+                </p>
+              </div>
+
+              <div className="text-center">
+                <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <MessageSquare className="h-6 w-6" />
+                </div>
+                <h3 className="font-semibold text-slate-800 mb-2">
+                  Adaptive UI
+                </h3>
+                <p className="text-slate-600 text-sm">
+                  Each exercise type has optimized interactions and animations
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       </div>
     </div>
   );

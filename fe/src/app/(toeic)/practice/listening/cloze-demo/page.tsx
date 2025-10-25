@@ -23,7 +23,6 @@ export default function ClozeTestPage() {
     console.log("Is correct:", isCorrect);
   };
 
-
   if (showSingle) {
     return (
       <div className="min-h-screen bg-slate-50">
