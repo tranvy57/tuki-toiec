@@ -17,9 +17,7 @@ export function App() {
   };
 
   return (
-    <>
-      <InteractiveListeningDemo onBack={handleBackToOverview} />
-    </>
+    <InteractiveListeningDemo />
   );
 }
 

@@ -1,52 +1,53 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { Slider } from "@/components/ui/slider";
 import {
   Mic,
   MicOff,
   Send,
-  MessageCircle,
-  Briefcase,
-  MapPin,
-  ShoppingBag,
-  Users,
-  Lightbulb,
-  Gift,
-  Home,
   Bot,
   User as UserIcon,
   Settings,
   Volume2,
   VolumeX,
-  ChevronDown,
-  ChevronUp,
-  Eye,
-  EyeOff,
   RotateCcw,
-  SkipForward,
-  CheckCircle,
-  Clock,
-  Star,
-  Camera,
-  MessageSquare,
-  Brain,
-  FileText,
-  Play,
-  Pause,
-  Square,
-  Award,
-  Target,
-  ArrowLeft,
   Loader2,
+  Upload,
+  AlertCircle,
+  MapPin,
+  ShoppingBag,
+  MessageSquare,
+  Briefcase,
+  MessageCircle,
+  Users,
+  Award,
+  FileText,
+  Star,
+  ArrowLeft,
+  EyeOff,
+  Eye,
+  Square,
+  CheckCircle
 } from "lucide-react";
 import { toast } from "sonner";
+import dynamic from "next/dynamic";
 import Image from "next/image";
+import { Progress } from "@/components/ui/progress";
+
+// Dynamically import Spline component for SSR compatibility
+const Spline = dynamic(() => import('@splinetool/react-spline'), {
+  ssr: false,
+  loading: () => <div className="flex items-center justify-center h-full">
+    <Loader2 className="w-8 h-8 animate-spin text-[#7E57C2]" />
+  </div>
+});
 
 interface Message {
   id: string;
@@ -61,10 +62,10 @@ interface Message {
 interface TOEICSpeakingTask {
   id: string;
   type:
-    | "describe-picture"
-    | "respond-question"
-    | "opinion-paragraph"
-    | "roleplay";
+  | "describe-picture"
+  | "respond-question"
+  | "opinion-paragraph"
+  | "roleplay";
   title: string;
   instruction: string;
   prompt: string;
@@ -754,13 +755,12 @@ export default function AISpeakingBot() {
                 </Badge>
                 <h2 className="font-bold text-gray-800">{currentTask.title}</h2>
                 <Badge
-                  className={`text-xs ${
-                    currentTask.difficulty === "Easy"
+                  className={`text-xs ${currentTask.difficulty === "Easy"
                       ? "bg-green-500"
                       : currentTask.difficulty === "Medium"
-                      ? "bg-yellow-500"
-                      : "bg-red-500"
-                  }`}
+                        ? "bg-yellow-500"
+                        : "bg-red-500"
+                    }`}
                 >
                   {currentTask.difficulty}
                 </Badge>
@@ -862,17 +862,16 @@ export default function AISpeakingBot() {
                   <div className="flex items-center gap-4">
                     {/* Animated Bot Avatar */}
                     <motion.div
-                      className={`relative w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg ${
-                        botState.mode === "speaking"
+                      className={`relative w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg ${botState.mode === "speaking"
                           ? "bg-gradient-to-r from-blue-500 to-purple-600"
                           : botState.mode === "listening"
-                          ? "bg-gradient-to-r from-green-500 to-emerald-600"
-                          : botState.mode === "processing"
-                          ? "bg-gradient-to-r from-yellow-500 to-orange-600"
-                          : botState.mode === "evaluating"
-                          ? "bg-gradient-to-r from-purple-500 to-pink-600"
-                          : "bg-gradient-to-r from-gray-400 to-gray-600"
-                      }`}
+                            ? "bg-gradient-to-r from-green-500 to-emerald-600"
+                            : botState.mode === "processing"
+                              ? "bg-gradient-to-r from-yellow-500 to-orange-600"
+                              : botState.mode === "evaluating"
+                                ? "bg-gradient-to-r from-purple-500 to-pink-600"
+                                : "bg-gradient-to-r from-gray-400 to-gray-600"
+                        }`}
                       animate={{
                         scale: botState.mode === "speaking" ? [1, 1.05, 1] : 1,
                         rotate:
@@ -882,7 +881,7 @@ export default function AISpeakingBot() {
                         duration: botState.mode === "speaking" ? 0.8 : 2,
                         repeat:
                           botState.mode === "speaking" ||
-                          botState.mode === "processing"
+                            botState.mode === "processing"
                             ? Infinity
                             : 0,
                         ease: "easeInOut",
@@ -909,28 +908,27 @@ export default function AISpeakingBot() {
                       </h3>
                       <div className="flex items-center gap-2">
                         <div
-                          className={`w-2 h-2 rounded-full ${
-                            botState.mode === "speaking"
+                          className={`w-2 h-2 rounded-full ${botState.mode === "speaking"
                               ? "bg-blue-500 animate-pulse"
                               : botState.mode === "listening"
-                              ? "bg-green-500 animate-pulse"
-                              : botState.mode === "processing"
-                              ? "bg-yellow-500 animate-pulse"
-                              : botState.mode === "evaluating"
-                              ? "bg-purple-500 animate-pulse"
-                              : "bg-gray-400"
-                          }`}
+                                ? "bg-green-500 animate-pulse"
+                                : botState.mode === "processing"
+                                  ? "bg-yellow-500 animate-pulse"
+                                  : botState.mode === "evaluating"
+                                    ? "bg-purple-500 animate-pulse"
+                                    : "bg-gray-400"
+                            }`}
                         />
                         <span className="text-sm text-gray-600 capitalize">
                           {botState.mode === "speaking"
                             ? "Speaking..."
                             : botState.mode === "listening"
-                            ? "Listening..."
-                            : botState.mode === "processing"
-                            ? "Processing..."
-                            : botState.mode === "evaluating"
-                            ? "Evaluating..."
-                            : "Ready"}
+                              ? "Listening..."
+                              : botState.mode === "processing"
+                                ? "Processing..."
+                                : botState.mode === "evaluating"
+                                  ? "Evaluating..."
+                                  : "Ready"}
                         </span>
                       </div>
                     </div>
@@ -940,7 +938,7 @@ export default function AISpeakingBot() {
                   <div className="flex items-center gap-2">
                     <Button
                       onClick={
-                        botState.mode === "speaking" ? stopSpeaking : () => {}
+                        botState.mode === "speaking" ? stopSpeaking : () => { }
                       }
                       variant="outline"
                       size="sm"
@@ -996,18 +994,16 @@ export default function AISpeakingBot() {
                       key={message.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className={`flex ${
-                        message.type === "user"
+                      className={`flex ${message.type === "user"
                           ? "justify-end"
                           : "justify-start"
-                      }`}
+                        }`}
                     >
                       <div
-                        className={`max-w-[80%] ${
-                          message.type === "user"
+                        className={`max-w-[80%] ${message.type === "user"
                             ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl rounded-br-md"
                             : "bg-gray-100 text-gray-800 rounded-2xl rounded-bl-md"
-                        } p-4 shadow-md`}
+                          } p-4 shadow-md`}
                       >
                         <p className="text-sm">{message.content}</p>
                         <div className="flex items-center gap-2 mt-2 text-xs opacity-70">
@@ -1067,22 +1063,21 @@ export default function AISpeakingBot() {
                     onClick={
                       botState.isRecording ? stopRecording : startRecording
                     }
-                    className={`relative w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all ${
-                      botState.isRecording
+                    className={`relative w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all ${botState.isRecording
                         ? "bg-gradient-to-r from-red-500 to-pink-600"
                         : "bg-gradient-to-r from-green-500 to-emerald-600 hover:scale-105"
-                    }`}
+                      }`}
                     whileTap={{ scale: 0.95 }}
                     animate={
                       botState.isRecording
                         ? {
-                            scale: [1, 1.1, 1],
-                            boxShadow: [
-                              "0px 0px 0px 0px rgba(239, 68, 68, 0.4)",
-                              "0px 0px 0px 10px rgba(239, 68, 68, 0)",
-                              "0px 0px 0px 0px rgba(239, 68, 68, 0)",
-                            ],
-                          }
+                          scale: [1, 1.1, 1],
+                          boxShadow: [
+                            "0px 0px 0px 0px rgba(239, 68, 68, 0.4)",
+                            "0px 0px 0px 10px rgba(239, 68, 68, 0)",
+                            "0px 0px 0px 0px rgba(239, 68, 68, 0)",
+                          ],
+                        }
                         : {}
                     }
                     transition={{
@@ -1168,7 +1163,7 @@ export default function AISpeakingBot() {
                       onClick={() =>
                         speakMessage(
                           messages[messages.length - 1]?.content ||
-                            "Hello! Let's practice speaking."
+                          "Hello! Let's practice speaking."
                         )
                       }
                       variant="outline"

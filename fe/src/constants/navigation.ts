@@ -20,12 +20,6 @@ export const TOEIC_NAVIGATION = [
   {
     name: "Ôn luyện",
     href: "/practice",
-    sub: [
-      { name: "Luyện Listening", href: "/practice/listening" },
-      { name: "Luyện Reading", href: "/practice/reading" },
-      { name: "Luyện Writing", href: "/practice/writing" },
-      { name: "Luyện Speaking", href: "/practice/speaking" },
-    ],
   },
   { name: "Đề thi", href: "/tests" },
   { name: "Trợ lý AI", href: "/assistant" },

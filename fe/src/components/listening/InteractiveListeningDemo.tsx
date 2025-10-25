@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import {
-  ArrowLeft,
   Edit,
   Eye,
   Headphones,
@@ -14,11 +13,7 @@ import {
   Play,
   Volume2,
 } from "lucide-react";
-import { useState } from "react";
-import MultipleChoiceListening from "./exercises/MultipleChoiceListening";
-// import ClozeListening from "./exercises/ClozeListening";
-import ClozeDemoPage from "./exercises/ClozeDemoPage";
-import DictationExerciseList from "./exercises/DictationExerciseList";
+import { useRouter } from "next/navigation";
 
 // Mock data for different question types
 const mockMCQQuestions = [
@@ -150,7 +145,6 @@ const exerciseTypes = [
     description: "Listen and choose the best answer",
     icon: Headphones,
     color: "blue" as const,
-    component: MultipleChoiceListening,
     questions: mockMCQQuestions,
     type: "mcq" as const,
   },
@@ -190,7 +184,6 @@ const exerciseTypes = [
     description: "Listen and type what you hear",
     icon: MessageSquare,
     color: "red" as const,
-    component: DictationExerciseList,
     questions: mockDictationQuestions,
     type: "dictation" as const,
   },
@@ -200,103 +193,36 @@ const exerciseTypes = [
     description: "Advanced fill-in-the-blank",
     icon: Edit,
     color: "purple" as const,
-    component: ClozeDemoPage,
     questions: [],
     type: "cloze-enhanced" as const,
   },
 ];
 
-interface InteractiveListeningDemoProps {
-  onBack: () => void;
-}
 
-export default function InteractiveListeningDemo({
-  onBack,
-}: InteractiveListeningDemoProps) {
-  const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-
-  const selectedExerciseData = exerciseTypes.find(
-    (ex) => ex.id === selectedExercise
-  );
+export default function InteractiveListeningDemo() {
+  const router = useRouter();
 
   const handleSelectExercise = (exerciseId: string) => {
-    setSelectedExercise(exerciseId);
-    setCurrentQuestionIndex(0);
-  };
-
-  const handleBackToSelection = () => {
-    setSelectedExercise(null);
-    setCurrentQuestionIndex(0);
-  };
-
-  const handleNextQuestion = () => {
-    if (
-      selectedExerciseData &&
-      currentQuestionIndex < selectedExerciseData.questions.length - 1
-    ) {
-      setCurrentQuestionIndex((prev) => prev + 1);
-    } else {
-      // Exercise completed, go back to selection
-      handleBackToSelection();
-    }
-  };
-
-  const handleAnswer = (questionId: string, answer: any) => {
-    console.log("Answer submitted:", { questionId, answer });
-    // Here you would normally save the answer
-  };
-
-  if (selectedExercise && selectedExerciseData) {
-    const ExerciseComponent = selectedExerciseData.component;
-
-    // Type-safe rendering based on exercise type
-    switch (selectedExerciseData.type) {
+    // Navigate directly based on exercise type
+    switch (exerciseId) {
       case "mcq":
-        return (
-          <ExerciseComponent
-            questions={selectedExerciseData.questions as any}
-            currentQuestionIndex={currentQuestionIndex}
-            onAnswer={handleAnswer}
-            onNext={handleNextQuestion}
-            onBack={handleBackToSelection}
-            totalQuestions={selectedExerciseData.questions.length}
-            streakCount={3}
-          />
-        );
-      // case "cloze":
-      //   return (
-      //     <ExerciseComponent
-      //       questions={selectedExerciseData.questions as any}
-      //       currentQuestionIndex={currentQuestionIndex}
-      //       onAnswer={handleAnswer}
-      //       onNext={handleNextQuestion}
-      //       onBack={handleBackToSelection}
-      //       totalQuestions={selectedExerciseData.questions.length}
-      //       streakCount={3}
-      //     />
-      // );
-      // po
-      // case "discrimination":
-      //   return (
-      //     <ExerciseComponent
-      //       questions={selectedExerciseData.questions as any}
-      //       currentQuestionIndex={currentQuestionIndex}
-      //       onAnswer={handleAnswer}
-      //       onNext={handleNextQuestion}
-      //       onBack={handleBackToSelection}
-      //       totalQuestions={selectedExerciseData.questions.length}
-      //       streakCount={3}
-      //     />
-      //   );
+        router.push('/practice/listening/mcq');
+        break;
       case "dictation":
-        return <DictationExerciseList onBack={handleBackToSelection} />;
+        router.push('/practice/listening/dictation');
+        break;
       case "cloze-enhanced":
-        return <ClozeDemoPage onBack={handleBackToSelection} />;
+        router.push('/practice/listening/cloze');
+        break;
       default:
-        return null;
+        // For other exercises, keep the old behavior
+        setSelectedExercise(exerciseId);
+        setCurrentQuestionIndex(0);
+        break;
     }
-  }
+  };
+
+  // Navigation is now handled in handleSelectExercise function
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
@@ -373,23 +299,20 @@ export default function InteractiveListeningDemo({
                         <div
                           className={`
                         w-12 h-12 rounded-xl flex items-center justify-center
-                        ${
-                          exercise.color === "blue"
-                            ? "bg-blue-100 text-blue-600"
-                            : ""
-                        }
+                        ${exercise.color === "blue"
+                              ? "bg-blue-100 text-blue-600"
+                              : ""
+                            }
                         
-                        ${
-                          exercise.color === "purple"
-                            ? "bg-purple-100 text-purple-600"
-                            : ""
-                        }
+                        ${exercise.color === "purple"
+                              ? "bg-purple-100 text-purple-600"
+                              : ""
+                            }
                         
-                        ${
-                          exercise.color === "red"
-                            ? "bg-red-100 text-red-600"
-                            : ""
-                        }
+                        ${exercise.color === "red"
+                              ? "bg-red-100 text-red-600"
+                              : ""
+                            }
                         group-hover:scale-110 transition-transform duration-300
                       `}
                         >
