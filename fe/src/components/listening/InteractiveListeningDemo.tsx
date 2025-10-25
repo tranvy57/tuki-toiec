@@ -14,6 +14,7 @@ import {
   Volume2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { CustomCard } from "../CustomCard";
 
 // Mock data for different question types
 const mockMCQQuestions = [
@@ -136,17 +137,18 @@ const mockDictationQuestions = [
   },
 ];
 
-const exerciseTypes = [
+export const dataListening = [
   {
     id: "mcq",
-    name: "Multiple Choice",
+    name: "Trắc nghiệm",
     image:
       "https://test-english.com/staging11/wp-content/uploads/A2%E2%80%93Test-2_Use-of-English.jpg",
-    description: "Listen and choose the best answer",
+    description: "Nghe và chọn đáp án đúng",
     icon: Headphones,
     color: "blue" as const,
     questions: mockMCQQuestions,
     type: "mcq" as const,
+    href: "/practice/listening/mcq",
   },
   //   {
   //     id: "cloze",
@@ -180,24 +182,25 @@ const exerciseTypes = [
   // },
   {
     id: "dictation",
-    name: "Dictation",
-    description: "Listen and type what you hear",
+    name: "Điền chính tả",
+    description: "Nghe và gõ chính xác những gì bạn nghe được",
     icon: MessageSquare,
     color: "red" as const,
     questions: mockDictationQuestions,
     type: "dictation" as const,
+    href: "/practice/listening/dictation",
   },
   {
     id: "cloze-enhanced",
-    name: "Enhanced Cloze Exercise",
-    description: "Advanced fill-in-the-blank",
+    name: "Điền từ nâng cao",
+    description: "Nghe và điền từ còn thiếu vào chỗ trống ",
     icon: Edit,
     color: "purple" as const,
     questions: [],
     type: "cloze-enhanced" as const,
+    href: "/practice/listening/cloze",
   },
 ];
-
 
 export default function InteractiveListeningDemo() {
   const router = useRouter();
@@ -206,18 +209,15 @@ export default function InteractiveListeningDemo() {
     // Navigate directly based on exercise type
     switch (exerciseId) {
       case "mcq":
-        router.push('/practice/listening/mcq');
+        router.push("/practice/listening/mcq");
         break;
       case "dictation":
-        router.push('/practice/listening/dictation');
+        router.push("/practice/listening/dictation");
         break;
       case "cloze-enhanced":
-        router.push('/practice/listening/cloze');
+        router.push("/practice/listening/cloze");
         break;
       default:
-        // For other exercises, keep the old behavior
-        setSelectedExercise(exerciseId);
-        setCurrentQuestionIndex(0);
         break;
     }
   };
@@ -280,7 +280,7 @@ export default function InteractiveListeningDemo() {
 
           {/* Exercise Types Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {exerciseTypes.map((exercise, index) => {
+            {dataListening.map((exercise, index) => {
               const IconComponent = exercise.icon;
 
               return (
@@ -290,7 +290,7 @@ export default function InteractiveListeningDemo() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <Card
+                  {/* <Card
                     className="group cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-slate-200 bg-white/80 backdrop-blur-sm"
                     onClick={() => handleSelectExercise(exercise.id)}
                   >
@@ -299,20 +299,23 @@ export default function InteractiveListeningDemo() {
                         <div
                           className={`
                         w-12 h-12 rounded-xl flex items-center justify-center
-                        ${exercise.color === "blue"
-                              ? "bg-blue-100 text-blue-600"
-                              : ""
-                            }
+                        ${
+                          exercise.color === "blue"
+                            ? "bg-blue-100 text-blue-600"
+                            : ""
+                        }
                         
-                        ${exercise.color === "purple"
-                              ? "bg-purple-100 text-purple-600"
-                              : ""
-                            }
+                        ${
+                          exercise.color === "purple"
+                            ? "bg-purple-100 text-purple-600"
+                            : ""
+                        }
                         
-                        ${exercise.color === "red"
-                              ? "bg-red-100 text-red-600"
-                              : ""
-                            }
+                        ${
+                          exercise.color === "red"
+                            ? "bg-red-100 text-red-600"
+                            : ""
+                        }
                         group-hover:scale-110 transition-transform duration-300
                       `}
                         >
@@ -350,7 +353,14 @@ export default function InteractiveListeningDemo() {
                         </div>
                       </div>
                     </CardContent>
-                  </Card>
+                  </Card> */}
+                  <CustomCard
+                    slug={exercise.id}
+                    name={exercise.name}
+                    description={exercise.description}
+                    icon={exercise.icon}
+                    href={exercise.href}
+                  />
                 </motion.div>
               );
             })}
