@@ -45,9 +45,9 @@ export class ItemsService {
         modality: item.modality,
         difficulty: item.difficulty,
         bandHint: item.bandHint,
-        prompt: item.promptJsonb,
-        solution: item.solutionJsonb,
-        rubric: item.rubricJsonb,
+        promptJsonb: item.promptJsonb,
+        solutionJsonb: item.solutionJsonb,
+        rubricJsonb: item.rubricJsonb,
       })),
     };
   }

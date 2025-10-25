@@ -11,14 +11,13 @@ import {
   Headphones,
   MessageSquare,
   Play,
-  Volume2
+  Volume2,
 } from "lucide-react";
 import { useState } from "react";
 import MultipleChoiceListening from "./exercises/MultipleChoiceListening";
 // import ClozeListening from "./exercises/ClozeListening";
 import ClozeDemoPage from "./exercises/ClozeDemoPage";
-import DictationListening from "./exercises/DictationListening";
-import WordDiscrimination from "./exercises/WordDiscriminationNew";
+import DictationExerciseList from "./exercises/DictationExerciseList";
 
 // Mock data for different question types
 const mockMCQQuestions = [
@@ -152,16 +151,16 @@ const exerciseTypes = [
     questions: mockMCQQuestions,
     type: "mcq" as const,
   },
-//   {
-//     id: "cloze",
-//     name: "Fill in the Blanks",
-//     description: "Listen and complete the missing words",
-//     icon: Edit,
-//     color: "green" as const,
-//     component: ClozeListening,
-//     questions: mockClozeQuestions,
-//     type: "cloze" as const,
-//   },
+  //   {
+  //     id: "cloze",
+  //     name: "Fill in the Blanks",
+  //     description: "Listen and complete the missing words",
+  //     icon: Edit,
+  //     color: "green" as const,
+  //     component: ClozeListening,
+  //     questions: mockClozeQuestions,
+  //     type: "cloze" as const,
+  //   },
   // {
   //   id: "ordering",
   //   name: "Sentence Ordering",
@@ -188,7 +187,7 @@ const exerciseTypes = [
     description: "Listen and type what you hear",
     icon: MessageSquare,
     color: "red" as const,
-    component: DictationListening,
+    component: DictationExerciseList,
     questions: mockDictationQuestions,
     type: "dictation" as const,
   },
@@ -273,7 +272,7 @@ export default function InteractiveListeningDemo({
       //       totalQuestions={selectedExerciseData.questions.length}
       //       streakCount={3}
       //     />
-        // );
+      // );
       // po
       // case "discrimination":
       //   return (
@@ -288,17 +287,7 @@ export default function InteractiveListeningDemo({
       //     />
       //   );
       case "dictation":
-        return (
-          <ExerciseComponent
-            questions={selectedExerciseData.questions as any}
-            currentQuestionIndex={currentQuestionIndex}
-            onAnswer={handleAnswer}
-            onNext={handleNextQuestion}
-            onBack={handleBackToSelection}
-            totalQuestions={selectedExerciseData.questions.length}
-            streakCount={3}
-          />
-        );
+        return <DictationExerciseList onBack={handleBackToSelection} />;
       case "cloze-enhanced":
         return <ClozeDemoPage onBack={handleBackToSelection} />;
       default:

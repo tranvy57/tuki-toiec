@@ -1,34 +1,49 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { motion } from "framer-motion"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Target, Sparkles } from "lucide-react"
+import { useState } from "react";
+import { motion } from "framer-motion";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Target, Sparkles } from "lucide-react";
+import { StudyPlan } from "@/api/usePlan";
 
 interface BandPickerDialogProps {
-  open: boolean
-  onBandSelected: (band: string) => void
+  open: boolean;
+  onBandSelected: (band: string) => void;
+  latestCourse?: StudyPlan;
 }
 
 const bandOptions = [
   { value: "450", label: "450-500", description: "Elementary" },
   { value: "550", label: "550-750", description: "Intermediate" },
   { value: "750+", label: "750+", description: "Advanced" },
-]
+];
 
-export function BandPickerDialog({ open, onBandSelected }: BandPickerDialogProps) {
-  const [selectedBand, setSelectedBand] = useState<string>("")
-  const [customBand, setCustomBand] = useState<string>("")
-  const [showCustom, setShowCustom] = useState(false)
+export function BandPickerDialog({
+  open,
+  onBandSelected,
+  latestCourse,
+}: BandPickerDialogProps) {
+  const [selectedBand, setSelectedBand] = useState<string>("");
+  const [customBand, setCustomBand] = useState<string>("");
+  const [showCustom, setShowCustom] = useState(false);
+
+  // Use latest course band as suggestion if available
+  const suggestedBand = latestCourse?.band?.toString() || "750";
 
   const handleContinue = () => {
-    const band = showCustom ? customBand : selectedBand
+    const band = showCustom ? customBand : selectedBand;
     if (band) {
-      onBandSelected(band)
+      onBandSelected(band);
     }
-  }
+  };
 
   return (
     <Dialog open={open}>
@@ -51,7 +66,9 @@ export function BandPickerDialog({ open, onBandSelected }: BandPickerDialogProps
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.25, delay: 0.06 }}
             >
-              <DialogTitle className="text-3xl font-bold text-center">Choose your target TOEIC band</DialogTitle>
+              <DialogTitle className="text-3xl font-bold text-center">
+                Choose your target TOEIC band
+              </DialogTitle>
             </motion.div>
 
             <motion.div
@@ -60,7 +77,8 @@ export function BandPickerDialog({ open, onBandSelected }: BandPickerDialogProps
               transition={{ duration: 0.25, delay: 0.12 }}
             >
               <DialogDescription className="text-center text-base text-muted-foreground">
-                We use this to personalize your plan and tailor the difficulty to your goals.
+                We use this to personalize your plan and tailor the difficulty
+                to your goals.
               </DialogDescription>
             </motion.div>
           </DialogHeader>
@@ -78,8 +96,8 @@ export function BandPickerDialog({ open, onBandSelected }: BandPickerDialogProps
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25, delay: 0.24 + index * 0.06 }}
                 onClick={() => {
-                  setSelectedBand(option.value)
-                  setShowCustom(false)
+                  setSelectedBand(option.value);
+                  setShowCustom(false);
                 }}
                 className={`
                   group relative overflow-hidden rounded-2xl border-2 p-6 text-left transition-all
@@ -91,8 +109,12 @@ export function BandPickerDialog({ open, onBandSelected }: BandPickerDialogProps
                 `}
               >
                 <div className="relative z-10">
-                  <div className="text-2xl font-bold text-foreground">{option.label}</div>
-                  <div className="mt-1 text-sm text-muted-foreground">{option.description}</div>
+                  <div className="text-2xl font-bold text-foreground">
+                    {option.label}
+                  </div>
+                  <div className="mt-1 text-sm text-muted-foreground">
+                    {option.description}
+                  </div>
                 </div>
                 {selectedBand === option.value && (
                   <motion.div
@@ -111,7 +133,6 @@ export function BandPickerDialog({ open, onBandSelected }: BandPickerDialogProps
             transition={{ duration: 0.25, delay: 0.48 }}
             className="space-y-3"
           >
-
             <Button
               onClick={handleContinue}
               disabled={!selectedBand && !customBand}
@@ -124,5 +145,5 @@ export function BandPickerDialog({ open, onBandSelected }: BandPickerDialogProps
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

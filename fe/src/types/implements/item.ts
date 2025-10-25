@@ -1,3 +1,4 @@
+import { title } from "process";
 import { z } from "zod";
 
 export const Jsonb = z.record(z.string(), z.any());
@@ -7,9 +8,9 @@ export const ItemSchema = z.object({
   modality: z.string(),
   difficulty: z.string(),
   bandHint: z.number().int(),
-  prompt: Jsonb,
-  solution: Jsonb.optional(),
-  rubric: Jsonb.optional(),
+  promptJsonb: Jsonb,
+  solutionJsonb: Jsonb.optional(),
+  rubricJsonb: Jsonb.optional(),
 });
 
 export const ItemsResponseSchema = z.object({

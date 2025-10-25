@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,33 +17,27 @@ import {
   TrendingUp,
   ArrowLeft,
   ArrowRight,
+  RefreshCcw,
+  Play,
+  FastForward,
+  Mic,
+  Edit3,
+  AlertTriangle,
+  Clock,
 } from "lucide-react";
+import Spline from "@splinetool/react-spline";
 import { AudioPlayer } from "@/components/toeic/test/Audio";
-
-interface DictationItem {
-  id: string;
-  modality: "dictation";
-  difficulty: "easy" | "medium" | "hard";
-  bandHint: number;
-  prompt: {
-    audio_url: string;
-  };
-  solution: {
-    transcript: string;
-  };
-  rubric: {
-    criteria: string[];
-  };
-}
+import { Item } from "@/types/implements/item";
 
 interface DictationPracticePageProps {
-  item: DictationItem;
+  item: Item;
   itemIndex?: number;
   totalItems?: number;
   currentIndex?: number;
   setCurrentIndex?: (index: number) => void;
   onNext?: () => void;
   onPrevious?: () => void;
+  onBack?: () => void;
 }
 
 interface WordComparison {
@@ -58,24 +51,176 @@ export default function DictationPracticePage({
   itemIndex = 1,
   totalItems = 25,
   currentIndex = 0,
-  setCurrentIndex = () => {},
+  setCurrentIndex = () => { },
   onNext,
   onPrevious,
+  onBack,
 }: DictationPracticePageProps) {
+
+  console.log(item?.solutionJsonb?.sentences);
+
+  // Early return if no item data
+  if (!item) {
+    return (
+      <div className="bg-white h-[calc(100vh-72px)] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Mic className="w-8 h-8 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Không có bài tập</h3>
+          <p className="text-gray-600 mb-4">Dữ liệu bài tập chưa được tải.</p>
+          {onBack && (
+            <Button onClick={onBack}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Quay lại
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
   const [userInput, setUserInput] = useState("");
   const [showTranscript, setShowTranscript] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [wordComparison, setWordComparison] = useState<WordComparison[]>([]);
   const [score, setScore] = useState<number>(0);
+  const [currentSegment, setCurrentSegment] = useState<number>(0);
+  const [completedSegments, setCompletedSegments] = useState<Set<number>>(
+    new Set()
+  );
+  const [revealedWords, setRevealedWords] = useState<Set<string>>(new Set());
+  const [segmentScores, setSegmentScores] = useState<{ [key: number]: number }>(
+    {}
+  );
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [segmentEnded, setSegmentEnded] = useState(false);
+  const [replayTrigger, setReplayTrigger] = useState(0);
 
-  // Reset state when item changes
+
   useEffect(() => {
     setUserInput("");
     setShowTranscript(false);
     setIsChecked(false);
     setWordComparison([]);
     setScore(0);
+    setCurrentSegment(0);
+    setCompletedSegments(new Set());
+    setRevealedWords(new Set());
+    setSegmentScores({});
+    setIsPlaying(false);
+    setPlaybackSpeed(1);
+    setSegmentEnded(false);
+    setReplayTrigger(0);
   }, [item.id]);
+
+  // Get current sentence/segment data
+  const getCurrentSegmentData = () => {
+    const sentences = item?.solutionJsonb?.sentences || [];
+    const currentSentence = sentences[currentSegment] || "";
+    const words = currentSentence.trim() ? currentSentence.split(" ").filter(word => word.length > 0) : [];
+    return { currentSentence, words, totalSegments: sentences.length };
+  };
+
+  const { currentSentence, words, totalSegments } = getCurrentSegmentData();
+
+  // Handle segment selection from transcript
+  const handleSegmentSelect = (segmentIndex: number) => {
+    // Save current progress if there's input
+    if (userInput.trim() && currentSegment !== segmentIndex) {
+      handleSaveProgress();
+    }
+
+    setCurrentSegment(segmentIndex);
+    setUserInput(""); // Clear input for new segment
+    setIsChecked(false);
+    setWordComparison([]);
+    setScore(0);
+    setSegmentEnded(false); // Reset segment ended state
+
+    // Audio will automatically sync to new segment's start/end time via props
+    setIsPlaying(false); // Reset playing state when switching segments
+  };
+
+  // Handle saving progress for current segment
+  const handleSaveProgress = () => {
+    if (!userInput.trim()) return;
+
+    const comparison = compareWords(userInput, currentSentence);
+    const calculatedScore = calculateScore(comparison);
+
+    setWordComparison(comparison);
+    setScore(calculatedScore);
+    setIsChecked(true);
+
+    // Save to completed segments
+    setCompletedSegments((prev) => new Set(prev).add(currentSegment));
+    setSegmentScores((prev) => ({
+      ...prev,
+      [currentSegment]: calculatedScore,
+    }));
+  };
+
+  // Handle next segment
+  const handleNextSegment = () => {
+    handleSaveProgress();
+
+    if (currentSegment < totalSegments - 1) {
+      setCurrentSegment(currentSegment + 1);
+      setUserInput("");
+      setIsChecked(false);
+      setWordComparison([]);
+      setScore(0);
+      setIsPlaying(false); // Reset playing state for new segment
+    } else {
+      // All segments completed
+      onNext && onNext();
+    }
+  };
+
+  // Handle word reveal
+  const handleRevealWord = (wordIndex: number) => {
+    const wordKey = `${currentSegment}-${wordIndex}`;
+    setRevealedWords((prev) => new Set(prev).add(wordKey));
+
+    // Auto-fill the word in input
+    const wordsInSentence = currentSentence.split(" ");
+    const revealedWord = wordsInSentence[wordIndex];
+    if (revealedWord) {
+      const currentWords = userInput.split(" ");
+      currentWords[wordIndex] = revealedWord;
+      setUserInput(currentWords.join(" ").trim());
+    }
+  };
+
+  // Handle reveal all words
+  const handleRevealAllWords = () => {
+    words.forEach((_, index) => {
+      const wordKey = `${currentSegment}-${index}`;
+      setRevealedWords((prev) => new Set(prev).add(wordKey));
+    });
+    setUserInput(currentSentence);
+    handleSaveProgress();
+  };
+
+  // Calculate overall progress
+  const overallProgress = Math.round(
+    (completedSegments.size / totalSegments) * 100
+  );
+
+  // Handle when segment audio ends
+  const handleSegmentEnded = () => {
+    setIsPlaying(false);
+    setSegmentEnded(true);
+
+    // Auto advance after a short delay to allow user to hear the end
+    if (currentSegment < totalSegments - 1) {
+      setTimeout(() => {
+        setSegmentEnded(false);
+        // Don't auto advance, let user decide
+      }, 1000);
+    }
+  };
 
   const normalizeText = (text: string): string => {
     return text
@@ -150,14 +295,7 @@ export default function DictationPracticePage({
   };
 
   const handleCheckAnswer = () => {
-    if (!userInput.trim()) return;
-
-    const comparison = compareWords(userInput, item.solution.transcript);
-    const calculatedScore = calculateScore(comparison);
-
-    setWordComparison(comparison);
-    setScore(calculatedScore);
-    setIsChecked(true);
+    handleSaveProgress();
   };
 
   const handleToggleTranscript = () => {
@@ -180,266 +318,521 @@ export default function DictationPracticePage({
   const scoreMessage = getScoreMessage(score);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between"
-        >
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl shadow-lg">
-              <Volume2 className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800">
-                TOEIC Dictation Practice
-              </h1>
-              <p className="text-gray-600">
-                Listen carefully and type what you hear
-              </p>
-            </div>
+    <div className=" bg-white max-h-[calc(100vh-72px)]">
+      <div className="grid grid-cols-12 h-[calc(100vh-72px)]">
+        {/* Left Panel - Audio Player + Info */}
+        <div className="col-span-4 bg-white p-6 flex flex-col border-r border-[#E6E6E6]">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm text-gray-600 font-medium">Video</h2>
+            <Clock className="w-4 h-4 text-gray-400" />
           </div>
 
-          <div className="flex items-center gap-3">
-            <Badge variant="outline" className="text-sm">
-              {itemIndex}/{totalItems}
-            </Badge>
-            <Badge
-              variant="outline"
-              className={`text-sm border ${getDifficultyColor(
-                item.difficulty
-              )}`}
-            >
-              {item.difficulty.charAt(0).toUpperCase() +
-                item.difficulty.slice(1)}
-            </Badge>
-            <Badge
-              variant="outline"
-              className="text-sm bg-purple-100 text-purple-800 border-purple-200"
-            >
-              Band {item.bandHint}
-            </Badge>
+          {/* Back Button */}
+          {onBack && (
+            <div className="mb-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onBack}
+                className="text-[#23085A] hover:bg-[#F4F0FF] hover:text-[#34116D]"
+              >
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                Quay lại
+              </Button>
+            </div>
+          )}
+
+          {/* Audio Player */}
+          <div className="bg-[#FAFAFA] rounded-xl p-4 mb-6">
+            <AudioPlayer
+              audioUrl={item.promptJsonb?.audio_url || ""}
+              startTime={item.promptJsonb?.segments?.[currentSegment]?.start}
+              endTime={item.promptJsonb?.segments?.[currentSegment]?.end}
+              onEndedSegment={handleSegmentEnded}
+              replayTrigger={replayTrigger}
+            />
           </div>
-        </motion.div>
 
-        {/* Main Content */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-            <CardHeader className="text-center pb-4">
-              <CardTitle className="text-lg text-gray-800">
-                Listen to the audio and type the exact words you hear
-              </CardTitle>
-            </CardHeader>
-
-            <CardContent className="space-y-6">
-              {/* Audio Player */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2 }}
-                className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4"
+          {/* Controls */}
+          <div className="space-y-4 mb-6">
+            <div className="space-y-2">
+              <Button
+                className="bg-[#EDE7F6] text-[#23085A] hover:bg-[#D1C4E9] rounded-xl font-medium w-full"
+                onClick={() => {
+                  // Reset input and replay current segment immediately
+                  setUserInput("");
+                  setSegmentEnded(false);
+                  setReplayTrigger((prev) => prev + 1); // Trigger AudioPlayer to replay
+                }}
               >
-                <AudioPlayer audioUrl={item.prompt.audio_url} />
-              </motion.div>
+                <RefreshCcw className="w-4 h-4 mr-2" />
+                Phát lại đoạn
+              </Button>
+            </div>
 
-              {/* Input Area */}
+            {/* Continue to next segment button - show when segment ended */}
+            {segmentEnded && currentSegment < totalSegments - 1 && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="space-y-3"
+                className="space-y-2"
               >
-                <label
-                  htmlFor="dictation-input"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Your transcription:
-                </label>
-                <Textarea
-                  id="dictation-input"
-                  placeholder="Type what you hear..."
-                  value={userInput}
-                  onChange={(e) => setUserInput(e.target.value)}
-                  className="min-h-[120px] text-base resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  disabled={isChecked}
-                />
-              </motion.div>
-
-              {/* Action Buttons */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="flex flex-wrap gap-3 justify-center"
-              >
-                <Button
-                  onClick={handleCheckAnswer}
-                  disabled={!userInput.trim() || isChecked}
-                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-6"
-                >
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Check Answer
-                </Button>
-
-                <Button
-                  onClick={handleToggleTranscript}
-                  variant="outline"
-                  className="px-6 border-gray-300 hover:bg-gray-50"
-                >
-                  {showTranscript ? (
-                    <>
-                      <EyeOff className="w-4 h-4 mr-2" />
-                      Hide Transcript
-                    </>
-                  ) : (
-                    <>
-                      <Eye className="w-4 h-4 mr-2" />
-                      Show Transcript
-                    </>
-                  )}
-                </Button>
-              </motion.div>
-
-              {/* Results Section */}
-              <AnimatePresence>
-                {isChecked && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.4 }}
-                    className="space-y-4"
-                  >
-                    {/* Score */}
-                    <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-4 text-center">
-                      <div className="flex items-center justify-center gap-2 mb-2">
-                        {scoreMessage.icon}
-                        <span
-                          className={`text-lg font-semibold ${scoreMessage.color}`}
-                        >
-                          Score: {score}%
-                        </span>
-                      </div>
-                      <p className={`text-sm ${scoreMessage.color}`}>
-                        {scoreMessage.message}
-                      </p>
-                    </div>
-
-                    {/* Word-by-Word Comparison */}
-                    <div className="bg-white rounded-lg p-4 border border-gray-200">
-                      <h3 className="text-sm font-semibold text-gray-700 mb-3">
-                        Word Comparison:
-                      </h3>
-                      <div className="flex flex-wrap gap-1 text-sm leading-relaxed">
-                        {wordComparison.map((item, index) => (
-                          <span
-                            key={index}
-                            className={`px-2 py-1 rounded transition-colors ${
-                              item.isCorrect
-                                ? "bg-green-100 text-green-800 border border-green-200"
-                                : "bg-red-100 text-red-800 border border-red-200"
-                            }`}
-                            title={
-                              item.userWord
-                                ? `Your input: "${item.userWord}"`
-                                : undefined
-                            }
-                          >
-                            {item.word || "(missing)"}
-                          </span>
-                        ))}
-                      </div>
-
-                      {/* Rubric Criteria */}
-                      <div className="mt-4 pt-3 border-t border-gray-200">
-                        <p className="text-xs text-gray-600 mb-2">
-                          Evaluated on:
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {item.rubric.criteria.map((criterion, index) => (
-                            <Badge
-                              key={index}
-                              variant="secondary"
-                              className="text-xs"
-                            >
-                              {criterion}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Transcript Section */}
-              <AnimatePresence>
-                {showTranscript && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <Card className="border-blue-200 bg-blue-50">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-semibold text-blue-800 flex items-center gap-2">
-                          <BookOpen className="w-4 h-4" />
-                          Correct Transcript
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-blue-900 leading-relaxed">
-                          {item.solution.transcript}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Navigation */}
-              <div className="flex items-center justify-between">
-                <Button
-                  onClick={onPrevious}
-                  disabled={currentIndex === 0}
-                  variant="outline"
-                  className="flex items-center gap-2"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  Previous
-                </Button>
-
-                <div className="flex items-center gap-2">
-                  {Array.from({ length: totalItems }, (_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setCurrentIndex(i)}
-                      className={`w-3 h-3 rounded-full transition-all duration-200 ${
-                        i === currentIndex
-                          ? "bg-blue-500 scale-125"
-                          : i < currentIndex
-                          ? "bg-green-500"
-                          : "bg-gray-300"
-                      }`}
-                    />
-                  ))}
+                <div className="text-center text-sm text-[#7E57C2] font-medium">
+                  Đoạn {currentSegment + 1} đã kết thúc
                 </div>
-
-                <Button onClick={onNext} className="flex items-center gap-2">
-                  {currentIndex === totalItems - 1 ? "Finish" : "Next"}
-                  <ArrowRight className="w-4 h-4" />
+                <Button
+                  className="w-full bg-[#7E57C2] hover:bg-[#6A4CAE] text-white rounded-xl font-medium"
+                  onClick={() => handleSegmentSelect(currentSegment + 1)}
+                >
+                  <ArrowRight className="w-4 h-4 mr-2" />
+                  Nghe tiếp đoạn {currentSegment + 2}
                 </Button>
+              </motion.div>
+            )}
+
+            {/* Navigation to next segment (always available) */}
+            {!segmentEnded && currentSegment < totalSegments - 1 && (
+              <Button
+                variant="outline"
+                className="w-full border-[#7E57C2] text-[#7E57C2] hover:bg-[#F4F0FF] rounded-xl font-medium"
+                onClick={() => handleSegmentSelect(currentSegment + 1)}
+              >
+                <ArrowRight className="w-4 h-4 mr-2" />
+                Chuyển đoạn {currentSegment + 2}
+              </Button>
+            )}
+
+            {/* Segment Info */}
+            {item.promptJsonb?.segments?.[currentSegment] && (
+              <div className="text-center text-xs text-gray-500">
+                <p>
+                  Đoạn {currentSegment + 1}:{" "}
+                  {item.promptJsonb.segments[currentSegment].start?.toFixed(1)}s -{" "}
+                  {item.promptJsonb.segments[currentSegment].end?.toFixed(1)}s
+                </p>
               </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+            )}
+          </div>
+
+          {/* Tuki Mascot */}
+          <div className="rounded-full bg-gradient-to-tr from-pink-100 to-purple-100 p-[2px] shadow-sm w-full h-full overflow-hidden ">
+            <Spline scene="https://prod.spline.design/D6rvoprmxCW4MNMi/scene.splinecode" className="" />
+          </div>
+
+          {/* Exercise Info */}
+          <div className="mt-auto">
+            <h3 className="text-[#23085A] font-semibold text-lg mb-2 text-center">
+              {item.promptJsonb?.title || "First-Class Upgrade Perks"}
+            </h3>
+            <p className="text-gray-600 text-sm text-center leading-relaxed">
+              {item.promptJsonb?.instructions ||
+                "Luyện tập kỹ năng nghe và chép chính tả"}
+            </p>
+          </div>
+        </div>
+
+        {/* Middle Panel - Dictation Area */}
+        <div className="col-span-4 bg-white p-6 flex flex-col border-r border-[#E6E6E6]">
+          {/* Header */}
+          <div className="mb-6">
+            <h2 className="font-semibold text-[#23085A] text-lg mb-3">
+              Chép chính tả
+            </h2>
+
+            {/* Toolbar */}
+            <div className="flex items-center gap-2 mb-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setUserInput("");
+                  setIsPlaying(false);
+                }}
+                className="w-8 h-8 p-0 rounded-full hover:bg-[#F4F0FF] border border-[#E6E6E6]"
+                title="Làm mới input"
+              >
+                <RefreshCcw className="w-4 h-4 text-[#6B7280]" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsPlaying(!isPlaying)}
+                className="w-8 h-8 p-0 rounded-full hover:bg-[#F4F0FF] border border-[#E6E6E6]"
+                title="Phát/Dừng đoạn hiện tại"
+              >
+                <Play className="w-4 h-4 text-[#6B7280]" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  // Skip to next segment if available
+                  if (currentSegment < totalSegments - 1) {
+                    handleSegmentSelect(currentSegment + 1);
+                  }
+                }}
+                disabled={currentSegment >= totalSegments - 1}
+                className="w-8 h-8 p-0 rounded-full hover:bg-[#F4F0FF] border border-[#E6E6E6] disabled:opacity-50"
+                title="Chuyển đoạn tiếp theo"
+              >
+                <FastForward className="w-4 h-4 text-[#6B7280]" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  setPlaybackSpeed(
+                    playbackSpeed === 1
+                      ? 0.75
+                      : playbackSpeed === 0.75
+                        ? 0.5
+                        : 1
+                  )
+                }
+                className="px-3 py-1 rounded-full hover:bg-[#F4F0FF] border border-[#E6E6E6] text-xs"
+                title="Thay đổi tốc độ phát"
+              >
+                {playbackSpeed}x
+              </Button>
+            </div>
+          </div>
+
+          {/* Input Area */}
+          <div className="mb-6">
+            <div className="relative">
+              <Textarea
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                placeholder="Gõ câu trả lời của bạn ở đây..."
+                className="min-h-[120px] resize-none border-[#E0E0E0] rounded-lg p-4 pr-12 focus:border-[#23085A] focus:ring-1 focus:ring-[#23085A]"
+                disabled={isChecked}
+              />
+              <Mic className="absolute top-4 right-4 w-5 h-5 text-[#9E9E9E]" />
+            </div>
+          </div>
+
+          {/* Word Grid - Current Segment Words */}
+          <div className="flex-1 mb-6">
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-2">
+                Câu {currentSegment + 1}/{totalSegments}:
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {words.map((word, index) => {
+                  const wordKey = `${currentSegment}-${index}`;
+                  const isRevealed = revealedWords.has(wordKey);
+                  return (
+                    <div key={index} className="flex flex-col items-center">
+                      <button
+                        onClick={() => handleRevealWord(index)}
+                        disabled={isRevealed}
+                        className={`min-w-[60px] px-3 py-2 rounded-lg border text-sm transition-colors ${isRevealed
+                          ? "bg-[#FDECEA] text-[#D32F2F] border-[#F9C0C0] cursor-not-allowed"
+                          : "bg-white hover:bg-[#F4F0FF] text-[#9E9E9E] border-[#E0E0E0]"
+                          }`}
+                      >
+                        {isRevealed
+                          ? word
+                          : "★".repeat(Math.min(word.length, 5))}
+                      </button>
+                      <button
+                        onClick={() => handleRevealWord(index)}
+                        disabled={isRevealed}
+                        className={`mt-1 w-6 h-6 rounded-full flex items-center justify-center text-xs transition-colors ${isRevealed
+                          ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                          : "hover:bg-[#F4F0FF] text-[#9E9E9E]"
+                          }`}
+                        title="Hiện từ này"
+                      >
+                        <Eye className="w-3 h-3" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="space-y-3">
+            <Button
+              onClick={handleRevealAllWords}
+              disabled={isChecked}
+              className="w-full bg-[#FDECEA] text-[#D32F2F] border border-[#F9C0C0] hover:bg-[#FFEBEE] rounded-lg"
+              variant="outline"
+            >
+              Hiện tất cả từ
+            </Button>
+
+            {!isChecked ? (
+              <Button
+                onClick={handleCheckAnswer}
+                disabled={!userInput.trim()}
+                className="w-full bg-[#7E57C2] hover:bg-[#6A4CAE] text-white rounded-lg font-medium"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Kiểm tra
+              </Button>
+            ) : (
+              <Button
+                onClick={handleNextSegment}
+                className="w-full bg-[#23085A] hover:bg-[#34116D] text-white rounded-lg font-medium"
+              >
+                {currentSegment < totalSegments - 1
+                  ? "Tiếp theo"
+                  : "Hoàn thành"}
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            )}
+          </div>
+
+          {/* Note */}
+          <p className="text-xs text-gray-500 mt-4 text-center">
+            Các từ được tiết lộ sẽ bị tính là lỗi và ảnh hưởng đến điểm số của
+            bạn.
+          </p>
+        </div>
+
+        {/* Right Panel - Transcript */}
+        <div className="col-span-4 bg-[#FAFAFA] p-6 flex flex-col">
+          {/* Header */}
+          <div className="mb-6">
+            <h3 className="font-semibold text-[#23085A] text-lg mb-3">
+              Bản chép
+            </h3>
+
+            {/* Progress Bar */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-gray-600">Tiến độ bài luyện</span>
+                <span className="text-sm font-medium text-[#23085A]">
+                  {overallProgress}%
+                </span>
+              </div>
+              <div className="w-full bg-[#E6E6E6] rounded-full h-2">
+                <div
+                  className="bg-gradient-to-r from-[#7E57C2] to-[#23085A] h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${overallProgress}%` }}
+                ></div>
+              </div>
+              <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
+                <span>
+                  {completedSegments.size}/{totalSegments} câu hoàn thành
+                </span>
+                <span>
+                  Điểm TB:{" "}
+                  {Object.keys(segmentScores).length > 0
+                    ? Math.round(
+                      Object.values(segmentScores).reduce(
+                        (a, b) => a + b,
+                        0
+                      ) / Object.values(segmentScores).length
+                    )
+                    : 0}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Sentence List */}
+          <div className="flex-1 space-y-2 mb-6 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
+            {item?.solutionJsonb?.sentences && Array.isArray(item.solutionJsonb.sentences)
+              ? item.solutionJsonb.sentences.map((sentence, index) => {
+                if (!sentence) return null;
+
+                const isCompleted = completedSegments.has(index);
+                const isCurrent = currentSegment === index;
+                const segmentScore = segmentScores[index];
+
+                return (
+                  <motion.div
+                    key={index}
+                    className={`rounded-lg border p-3 transition-all duration-200 hover:shadow-sm cursor-pointer ${isCurrent
+                      ? "bg-[#F0EBFF] border-[#7E57C2] ring-1 ring-[#7E57C2]"
+                      : isCompleted
+                        ? "bg-[#E8F5E8] border-[#4CAF50]"
+                        : "bg-white border-[#E6E6E6] hover:border-[#D1C4E9]"
+                      }`}
+                    onClick={() => handleSegmentSelect(index)}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`text-sm font-medium ${isCurrent ? "text-[#7E57C2]" : "text-[#23085A]"
+                            }`}
+                        >
+                          #{index + 1}
+                        </span>
+                        {isCompleted && (
+                          <Badge
+                            variant="outline"
+                            className="text-xs bg-[#E8F5E8] text-[#2E7D32] border-[#4CAF50]"
+                          >
+                            {segmentScore}%
+                          </Badge>
+                        )}
+                        {isCurrent && (
+                          <Badge
+                            variant="outline"
+                            className="text-xs bg-[#F0EBFF] text-[#7E57C2] border-[#7E57C2]"
+                          >
+                            Hiện tại
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSegmentSelect(index);
+                          }}
+                          className="w-6 h-6 p-0 hover:bg-[#F4F0FF]"
+                          title="Chỉnh sửa câu này"
+                        >
+                          <Edit3 className="w-4 h-4 text-[#6B7280]" />
+                        </Button>
+                        {!isCompleted && index !== currentSegment && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-6 h-6 p-0 hover:bg-[#F4F0FF]"
+                            title="Chưa hoàn thành"
+                          >
+                            <AlertTriangle className="w-4 h-4 text-[#FF9800]" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-sm text-[#1A1A1A] leading-relaxed">
+                      {showTranscript || isCompleted
+                        ? sentence
+                        : sentence.replace(/\w/g, "★")}
+                    </p>
+                  </motion.div>
+                );
+              })
+              : (
+                <div className="flex items-center justify-center p-8 text-gray-500">
+                  <div className="text-center">
+                    <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-[#FF9800]" />
+                    <p className="text-sm">Không có câu để luyện tập</p>
+                    <p className="text-xs text-gray-400 mt-1">Vui lòng kiểm tra dữ liệu bài tập</p>
+                  </div>
+                </div>
+              )}
+          </div>
+
+          {/* Current Answer Display */}
+          {isChecked && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-xl p-4 border-2 border-[#7E57C2] shadow-sm mb-4"
+            >
+              <h4 className="font-medium text-[#23085A] mb-2">
+                Đáp án câu {currentSegment + 1}:
+              </h4>
+              <p className="text-sm text-[#1A1A1A] mb-3 leading-relaxed">
+                {currentSentence}
+              </p>
+
+              {/* Word by word comparison */}
+              {wordComparison.length > 0 && (
+                <div className="mb-3">
+                  <p className="text-xs text-gray-600 mb-2">So sánh từng từ:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {wordComparison.map((item, idx) => (
+                      <span
+                        key={idx}
+                        className={`px-2 py-1 rounded text-xs ${item.isCorrect
+                          ? "bg-[#E6F4EA] text-[#2E7D32] border border-[#81C784]"
+                          : "bg-[#FDECEA] text-[#D32F2F] border border-[#F9C0C0]"
+                          }`}
+                        title={
+                          item.userWord
+                            ? `Bạn nhập: "${item.userWord}"`
+                            : undefined
+                        }
+                      >
+                        {item.word}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between">
+                <span className={`text-sm font-medium ${scoreMessage.color}`}>
+                  Điểm: {score}%
+                </span>
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant="outline"
+                    className={`${score >= 80
+                      ? "bg-[#E6F4EA] text-[#2E7D32] border-[#81C784]"
+                      : score >= 60
+                        ? "bg-[#FFF3E0] text-[#F57C00] border-[#FFB74D]"
+                        : "bg-[#FDECEA] text-[#D32F2F] border-[#F9C0C0]"
+                      }`}
+                  >
+                    {score >= 80
+                      ? "Tốt"
+                      : score >= 60
+                        ? "Khá"
+                        : "Cần cải thiện"}
+                  </Badge>
+                  {scoreMessage.icon}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Transcript Toggle & Navigation */}
+          <div className="space-y-3">
+            <Button
+              onClick={() => setShowTranscript(!showTranscript)}
+              variant="outline"
+              className="w-full border-[#23085A] text-[#23085A] hover:bg-[#F4F0FF] rounded-lg"
+            >
+              <Eye className="w-4 h-4 mr-2" />
+              {showTranscript ? "Ẩn tất cả bản ghi" : "Hiện tất cả bản ghi"}
+            </Button>
+
+            {/* Navigation Buttons */}
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                onClick={() =>
+                  currentSegment > 0 && handleSegmentSelect(currentSegment - 1)
+                }
+                disabled={currentSegment === 0}
+                variant="outline"
+                size="sm"
+                className="text-[#23085A] border-[#E6E6E6] hover:bg-[#F4F0FF]"
+              >
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                Câu trước
+              </Button>
+              <Button
+                onClick={() =>
+                  currentSegment < totalSegments - 1 &&
+                  handleSegmentSelect(currentSegment + 1)
+                }
+                disabled={currentSegment === totalSegments - 1}
+                variant="outline"
+                size="sm"
+                className="text-[#23085A] border-[#E6E6E6] hover:bg-[#F4F0FF]"
+              >
+                Câu sau
+                <ArrowRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

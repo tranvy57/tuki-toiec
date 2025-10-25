@@ -92,7 +92,7 @@ export function usePremiumStatus() {
     queryFn: async () => {
       const res = await api.get("user-courses/is-premium");
       if (!res.status) throw new Error("Failed to fetch premium status");
-      return res.data as Promise<{ isPremium: boolean }>;
+      return res.data.data as Promise<{ isPremium: boolean }>;
     },
   });
 }

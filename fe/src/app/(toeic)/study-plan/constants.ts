@@ -1,4 +1,5 @@
-import { Unit, Lesson } from "../../../../types/type-lesson-mock";
+import { Unit, Lesson } from "../../../types/type-lesson-mock";
+import { mockLessonContentsWithLearning } from "@/data/mockLearningContent";
 
 export const MOCK_UNITS: Unit[] = [
   { id: 1, title: "Chương 1: Bắt đầu", progress: 100 },
@@ -131,3 +132,6 @@ export const getTypeLesson = (id: string) => {
     .flat()
     .find((lesson) => lesson.id === Number(id));
 };
+
+// Mock lesson contents for testing learning interface
+export const MOCK_LESSON_CONTENTS = mockLessonContentsWithLearning;

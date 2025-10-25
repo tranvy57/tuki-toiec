@@ -1,15 +1,32 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Crown, Check, X, Sparkles, BookOpen, Video, BarChart3, Target } from "lucide-react"
+import { motion } from "framer-motion";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Crown,
+  Check,
+  X,
+  Sparkles,
+  BookOpen,
+  Video,
+  BarChart3,
+  Target,
+} from "lucide-react";
+import { StudyPlan } from "@/api/usePlan";
 
 interface UpgradeProSheetProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  studyPlan?: StudyPlan;
 }
 
 const proBenefits = [
@@ -26,14 +43,15 @@ const proBenefits = [
   {
     icon: Target,
     title: "Checkpoint Quizzes",
-    description: "Test your knowledge with comprehensive checkpoint assessments",
+    description:
+      "Test your knowledge with comprehensive checkpoint assessments",
   },
   {
     icon: BarChart3,
     title: "Detailed Reports",
     description: "Track your progress with advanced analytics and insights",
   },
-]
+];
 
 const comparisonFeatures = [
   { feature: "Practice Questions", free: true, pro: true },
@@ -44,9 +62,13 @@ const comparisonFeatures = [
   { feature: "Checkpoint Quizzes", free: false, pro: true },
   { feature: "Detailed Analytics", free: false, pro: true },
   { feature: "Personalized Study Plan", free: false, pro: true },
-]
+];
 
-export function UpgradeProSheet({ open, onOpenChange }: UpgradeProSheetProps) {
+export function UpgradeProSheet({
+  open,
+  onOpenChange,
+  studyPlan,
+}: UpgradeProSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
@@ -71,7 +93,9 @@ export function UpgradeProSheet({ open, onOpenChange }: UpgradeProSheetProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.25, delay: 0.06 }}
             >
-              <SheetTitle className="text-3xl font-bold text-center">Upgrade to Pro</SheetTitle>
+              <SheetTitle className="text-3xl font-bold text-center">
+                Upgrade to Pro
+              </SheetTitle>
             </motion.div>
 
             <motion.div
@@ -80,7 +104,8 @@ export function UpgradeProSheet({ open, onOpenChange }: UpgradeProSheetProps) {
               transition={{ duration: 0.25, delay: 0.12 }}
             >
               <SheetDescription className="text-center text-base text-muted-foreground">
-                Unlock the complete TOEIC learning experience with theory, expert tips, and detailed progress tracking.
+                Unlock the complete TOEIC learning experience with theory,
+                expert tips, and detailed progress tracking.
               </SheetDescription>
             </motion.div>
           </SheetHeader>
@@ -93,7 +118,7 @@ export function UpgradeProSheet({ open, onOpenChange }: UpgradeProSheetProps) {
             className="space-y-3 mb-8"
           >
             {proBenefits.map((benefit, index) => {
-              const IconComponent = benefit.icon
+              const IconComponent = benefit.icon;
               return (
                 <motion.div
                   key={benefit.title}
@@ -108,12 +133,14 @@ export function UpgradeProSheet({ open, onOpenChange }: UpgradeProSheetProps) {
                       </div>
                       <div className="flex-1">
                         <h3 className="font-semibold mb-1">{benefit.title}</h3>
-                        <p className="text-sm text-muted-foreground">{benefit.description}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {benefit.description}
+                        </p>
                       </div>
                     </div>
                   </Card>
                 </motion.div>
-              )
+              );
             })}
           </motion.div>
 
@@ -124,7 +151,9 @@ export function UpgradeProSheet({ open, onOpenChange }: UpgradeProSheetProps) {
             transition={{ duration: 0.25, delay: 0.48 }}
             className="mb-8"
           >
-            <h3 className="text-lg font-semibold mb-4 text-center">Free vs Pro</h3>
+            <h3 className="text-lg font-semibold mb-4 text-center">
+              Free vs Pro
+            </h3>
             <Card className="glass border-white/10 overflow-hidden">
               <div className="grid grid-cols-[1fr,auto,auto] gap-4 p-4 border-b border-white/10 bg-white/5">
                 <div className="font-semibold">Feature</div>
@@ -181,7 +210,9 @@ export function UpgradeProSheet({ open, onOpenChange }: UpgradeProSheetProps) {
                   <span className="text-4xl font-bold">$29</span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
-                <p className="text-sm text-muted-foreground">Cancel anytime. No commitment.</p>
+                <p className="text-sm text-muted-foreground">
+                  Cancel anytime. No commitment.
+                </p>
               </div>
             </Card>
           </motion.div>
@@ -218,5 +249,5 @@ export function UpgradeProSheet({ open, onOpenChange }: UpgradeProSheetProps) {
         </div>
       </SheetContent>
     </Sheet>
-  )
+  );
 }

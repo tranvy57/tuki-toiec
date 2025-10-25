@@ -1,16 +1,20 @@
 "use client";
 
+import { PlanPhase } from "@/api/usePlan";
+import { useSidebar } from "@/hooks/use-side-bar";
+import { cn } from "@/utils";
 import { m } from "framer-motion";
 import {
   BookOpen,
-  MessageSquare,
-  Headphones,
-  Mic,
   Grid3x3,
+  Headphones,
+  MessageSquare,
+  Mic,
+  Lock,
+  Play,
+  CheckCircle2,
 } from "lucide-react";
-import { cn } from "@/utils";
-import { Unit } from "../../../types/type-lesson-mock";
-import { useSidebar } from "@/hooks/use-side-bar";
+import { Badge } from "@/components/ui/badge";
 
 const LESSON_ICONS = {
   vocab: BookOpen,
@@ -18,6 +22,18 @@ const LESSON_ICONS = {
   match: Grid3x3,
   listen: Headphones,
   dict: Mic,
+};
+
+const PHASE_STATUS_ICONS = {
+  locked: Lock,
+  current: Play,
+  completed: CheckCircle2,
+};
+
+const PHASE_STATUS_COLORS = {
+  locked: "text-gray-400 bg-gray-50",
+  current: "text-indigo-600 bg-indigo-50",
+  completed: "text-green-600 bg-green-50",
 };
 
 // Animation variants
@@ -36,9 +52,9 @@ const staggerContainer = {
 };
 
 interface SidebarUnitsProps {
-  units: Unit[];
-  activeUnitId: number;
-  onSelectUnit: (id: number) => void;
+  units: PlanPhase[];
+  activeUnitId: string;
+  onSelectUnit: (id: string) => void;
 }
 
 export function SidebarUnits({
@@ -47,6 +63,30 @@ export function SidebarUnits({
   onSelectUnit,
 }: SidebarUnitsProps) {
   const { collapsed } = useSidebar();
+  
+  const getStatusBadge = (status: string) => {
+    
+    const variants = {
+      completed: "default",
+      current: "secondary",
+      locked: "outline",
+    } as const;
+
+    const labels = {
+      completed: "Hoàn thành",
+      current: "Đang học",
+      locked: "Khóa",
+    };
+
+    return (
+      <Badge
+        variant={variants[status as keyof typeof variants] || "outline"}
+        className="text-xs"
+      >
+        {labels[status as keyof typeof labels] || "Khóa"}
+      </Badge>
+    );
+  };
 
   return (
     <m.div
@@ -57,27 +97,38 @@ export function SidebarUnits({
     >
       {units.map((unit) => {
         const isActive = unit.id === activeUnitId;
-        const Icon = LESSON_ICONS.vocab;
+        const StatusIcon =
+          PHASE_STATUS_ICONS[unit.status as keyof typeof PHASE_STATUS_ICONS] ||
+          Lock;
+        const statusColor =
+          PHASE_STATUS_COLORS[
+            unit.status as keyof typeof PHASE_STATUS_COLORS
+          ] || "text-gray-400 bg-gray-50";
+        const isLocked = unit.status === "locked";
 
         return (
           <m.button
             key={unit.id}
             variants={fadeInUp}
-            onClick={() => onSelectUnit(unit.id)}
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.98 }}
+            onClick={() => !isLocked && onSelectUnit(unit.id)}
+            whileHover={!isLocked ? { scale: 1.01 } : {}}
+            whileTap={!isLocked ? { scale: 0.98 } : {}}
             transition={{ duration: 0.15 }}
             style={{ willChange: "transform, opacity" }}
+            disabled={isLocked}
             className={cn(
               "w-full text-left rounded-xl transition-colors duration-150 relative group",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500",
-              // isActive
-              //   ? "bg-slate-100 ring-1 ring-slate-200 p-0"
-              //   : "hover:bg-slate-50 hover:ring-1 hover:ring-slate-200 py-2",
+              isActive && "bg-indigo-50 ring-1 ring-indigo-200",
+              !isActive &&
+                !isLocked &&
+                "hover:bg-slate-50 hover:ring-1 hover:ring-slate-200",
+              isLocked && "opacity-60 cursor-not-allowed",
               collapsed ? "my-3" : "p-3"
             )}
             aria-selected={isActive}
             aria-current={isActive ? "page" : undefined}
+            aria-disabled={isLocked}
             title={collapsed ? unit.title : undefined}
           >
             {collapsed ? (
@@ -85,45 +136,34 @@ export function SidebarUnits({
                 <div
                   className={cn(
                     "p-2 rounded-lg transition-colors duration-150",
-                    isActive
-                      ? "bg-indigo-100 text-indigo-600"
-                      : "bg-slate-100 text-slate-600"
+                    statusColor
                   )}
                 >
-                  <Icon className="w-4 h-4" />
+                  <StatusIcon className="w-4 h-4" />
                 </div>
               </div>
             ) : (
-              <div className="flex items-start gap-3">
-                <div
-                  className={cn(
-                    "p-2 rounded-lg transition-colors duration-150",
-                    isActive
-                      ? "bg-indigo-100 text-indigo-600"
-                      : "bg-slate-100 text-slate-600"
-                  )}
-                >
-                  <Icon className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-slate-900 text-sm mb-1 truncate">
-                    {unit.title}
-                  </h3>
-                  <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                    <m.div
-                      initial={{ scaleX: 0 }}
-                      animate={{ scaleX: unit.progress / 100 }}
-                      transition={{ duration: 0.4, ease: "easeOut" }}
-                      style={{
-                        transformOrigin: "left",
-                        willChange: "transform",
-                      }}
-                      className="h-full bg-indigo-600 rounded-full"
-                    />
+              <div className="flex items-start justify-between">
+                <div className="flex items-start gap-3 flex-1 min-w-0">
+                  <div
+                    className={cn(
+                      "p-2 rounded-lg transition-colors duration-150",
+                      statusColor
+                    )}
+                  >
+                    <StatusIcon className="w-4 h-4" />
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">
-                    {unit.progress}% complete
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-slate-900 text-sm mb-1 truncate">
+                      {unit.title}
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      {unit.phaseLessons?.length || 0} bài học
+                    </p>
+                  </div>
+                </div>
+                <div className="flex-shrink-0 mt-1">
+                  {getStatusBadge(unit.status)}
                 </div>
               </div>
             )}
