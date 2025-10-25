@@ -2,13 +2,6 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
-import { Search, Users, Clock, FileText, Sparkles } from "lucide-react";
+import { Search, Users, Clock, FileText, Sparkles, Edit3 } from "lucide-react";
 import Link from "next/link";
 import { useTest } from "@/api/useTest";
 
@@ -60,7 +53,7 @@ export default function TestListPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden">
+    <div className="min-h-screen  relative overflow-hidden">
       {/* Floating decorative elements */}
       <motion.div
         className="absolute top-20 left-10 w-20 h-20 bg-blue-400/20 rounded-full blur-xl"
@@ -99,21 +92,22 @@ export default function TestListPage() {
         }}
       />
 
-      <div className="container mx-auto px-4 py-12 relative z-10">
+      <div className="container mx-auto px-4 py-4 relative z-10">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12"
         >
-          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-[var(--color-7)]  to-[var(--primary)] bg-clip-text text-transparent">
-            Đề Thi Thử TOEIC
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Nâng cao kỹ năng tiếng Anh với bộ đề thi thử TOEIC toàn diện của
-            chúng tôi
-          </p>
+          <div className="flex items-center justify-start gap-3 mb-4">
+            <div className="p-3  rounded-md ">
+              <Edit3 className="w-4 h-4 " />
+            </div>
+            <h1 className="text-2xl md:text-2xl font-bold text-[#23085A]">
+              Writting
+            </h1>
+          </div>
+          {/* Mô tả chính */}
         </motion.div>
 
         {/* Search and Filters */}
@@ -121,7 +115,7 @@ export default function TestListPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="mb-8 flex flex-col md:flex-row gap-4 max-w-4xl mx-auto"
+          className="mb-8 flex flex-col md:flex-row gap-2 max-w-4xl "
         >
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
@@ -184,7 +178,7 @@ export default function TestListPage() {
 
         {!isLoading && !isError && (
           <>
-            {/* Test Cards Grid */}
+            {/* Test div Grid */}
             <motion.div
               variants={containerVariants}
               initial="hidden"
@@ -197,8 +191,8 @@ export default function TestListPage() {
                     whileHover={{ scale: 1.03, y: -5 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <Card className="h-full bg-white/80 backdrop-blur-sm border-gray-200 shadow-lg hover:shadow-2xl transition-shadow duration-300 rounded-xl overflow-hidden">
-                      <CardHeader className="pb-4">
+                    <div className="p-4 bg-white border rounded-md">
+                      <div className="">
                         <div className="flex items-start justify-between mb-2">
                           <Badge
                             variant="secondary"
@@ -207,11 +201,11 @@ export default function TestListPage() {
                             Đề thi thử
                           </Badge>
                         </div>
-                        <CardTitle className="text-xl font-bold text-gray-900">
+                        <div className="text-md font-bold text-gray-900 line-clamp-2 min-h-[2.5rem]">
                           {test.title}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3 pb-4">
+                        </div>
+                      </div>
+                      <div className="space-y-3 pb-4">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <FileText className="w-4 h-4 text-blue-500" />
                           <span>200 câu hỏi</span>
@@ -227,18 +221,18 @@ export default function TestListPage() {
                         <div className="flex items-center gap-2 pt-2">
                           <Users className="w-4 h-4 text-green-500" />
                           <span className="text-sm font-medium text-gray-700">
-                            999+ học viên
+                            999+
                           </span>
                         </div>
-                      </CardContent>
-                      <CardFooter>
+                      </div>
+                      <div>
                         <Link href={`/tests/${test.id}`} className="w-full">
-                          <Button className="w-full bg-gradient-to-r from-[var(--color-7)] to-[var(--primary)] hover:from-fuchsia-200-700 hover:via-orange-400 hover:to-yellow-400 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-300">
+                          <Button className="w-full  text-white font-semibold shadow-md hover:shadow-lg transition-all duration-300">
                             Bắt đầu luyện tập
                           </Button>
                         </Link>
-                      </CardFooter>
-                    </Card>
+                      </div>
+                    </div>
                   </motion.div>
                 </motion.div>
               ))}

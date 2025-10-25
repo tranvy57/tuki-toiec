@@ -27,7 +27,7 @@ export const TOEIC_NAVIGATION = [
       { name: "Luyện Speaking", href: "/practice/speaking" },
     ],
   },
-  { name: "Thi thử", href: "/tests" },
+  { name: "Đề thi", href: "/tests" },
   { name: "Trợ lý AI", href: "/assistant" },
   // { name: "Liên hệ", href: "/contact" },
 ];
