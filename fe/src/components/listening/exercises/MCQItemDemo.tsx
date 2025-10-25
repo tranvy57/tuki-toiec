@@ -30,7 +30,6 @@ export default function MCQItemDemo() {
   const props = {
     modality: "mcq",
     skill_type: "listening",
-    
   };
 
   const { data, isLoading, isError, error, refetch } = useItems(props);
@@ -484,7 +483,7 @@ export default function MCQItemDemo() {
                     >
                       <span className="text-sm text-gray-700">
                         Question {index + 1}:{" "}
-                        {item.prompt.text.substring(0, 50)}...
+                        {item.promptJsonb.text.substring(0, 50)}...
                       </span>
                       <div className="flex items-center gap-2">
                         <Badge

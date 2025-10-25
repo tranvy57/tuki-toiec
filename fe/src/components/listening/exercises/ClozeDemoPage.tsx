@@ -60,7 +60,7 @@ export default function ClozeDemoPage({ onBack }: ClozeDemoPageProps) {
 
   // Audio handlers
   const togglePlay = async () => {
-    if (!audioRef.current || !currentQuestion?.prompt?.audioUrl) return;
+    if (!audioRef.current || !currentQuestion?.promptJsonb?.audioUrl) return;
 
     try {
       if (isPlaying) {
@@ -566,10 +566,10 @@ export default function ClozeDemoPage({ onBack }: ClozeDemoPageProps) {
                 <CardContent className="p-4">
                   <ClozeListeningQuestion
                     key={`question-${currentQuestionIndex}`} // Force remount on question change
-                    text={currentQuestion?.prompt.text || ""}
-                    answers={currentQuestion?.solution?.answers || []}
-                    audioUrl={currentQuestion?.prompt?.audio_url || ""}
-                    transcript={currentQuestion?.solution?.transcript || ""}
+                    text={currentQuestion?.promptJsonb.text || ""}
+                    answers={currentQuestion?.solutionJsonb?.answers || []}
+                    audioUrl={currentQuestion?.promptJsonb?.audio_url || ""}
+                    transcript={currentQuestion?.solutionJsonb?.transcript || ""}
                     onComplete={handleQuestionComplete}
                   />
                 </CardContent>

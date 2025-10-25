@@ -152,9 +152,15 @@ export default function ClozeListeningQuestion({
     if (isChecked) return;
 
     setBlanks((prev) =>
-      prev.map((blank) =>
-        blank.id === blankId ? { ...blank, userAnswer: value } : blank
-      )
+      prev.map((blank) => {
+        if (blank.id === blankId) {
+          // Limit input length based on correct answer length
+          const maxLength = blank.correctAnswer.length;
+          const limitedValue = value.slice(0, maxLength);
+          return { ...blank, userAnswer: limitedValue };
+        }
+        return blank;
+      })
     );
   };
 
@@ -218,9 +224,9 @@ export default function ClozeListeningQuestion({
       const blank = blanks[blankIndex];
 
       if (blank) {
-        // nếu DB có số lượng từ ẩn, quy định độ rộng ô
-        const numWords = blank.correctAnswer.trim().split(/\s+/).length;
-        const width = Math.max(80, numWords * 60); // mỗi từ ước lượng ~60px
+        // Tính độ rộng ô input dựa trên số ký tự của từ đúng
+        const charCount = blank.correctAnswer.length;
+        const width = Math.max(60, charCount * 12 + 24); // mỗi ký tự ước lượng ~12px + padding
 
         parts.push(
           <span
@@ -231,21 +237,22 @@ export default function ClozeListeningQuestion({
               value={blank.userAnswer}
               onChange={(e) => handleBlankChange(blank.id, e.target.value)}
               disabled={isChecked}
+              maxLength={blank.correctAnswer.length}
               style={{ width }}
               className={`
               text-center font-medium text-lg
               border-0 border-b-3 rounded-none
               bg-transparent hover:bg-slate-50/80 focus:bg-white px-3 py-2
               transition-all duration-300 shadow-none
-              ${
-                isChecked
+              ${isChecked
                   ? blank.isCorrect
                     ? "border-emerald-400 bg-emerald-50/50 text-emerald-800 shadow-sm"
                     : "border-rose-400 bg-rose-50/50 text-rose-800 shadow-sm"
                   : "border-slate-300 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              }
+                }
             `}
-              placeholder={"_ ".repeat(numWords).trim()}
+              placeholder={"*".repeat(blank.correctAnswer.length)}
+              title={`Cần điền ${blank.correctAnswer.length} ký tự`}
             />
 
             <AnimatePresence>
@@ -286,7 +293,7 @@ export default function ClozeListeningQuestion({
   const progressPercentage = duration ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-white to-slate-50/50 font-['Inter',system-ui,sans-serif]">
+    <div className="min-h-screen bg-  gradient-to-br from-blue-50/30 via-white to-slate-50/50 font-['Inter',system-ui,sans-serif]">
       <div className="max-w-7xl mx-auto px-4 py-4">
         {/* Header */}
         <div className="text-center mb-4">
@@ -327,7 +334,7 @@ export default function ClozeListeningQuestion({
             transition={{ delay: 0.3 }}
           >
             {/* <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm h-full"> */}
-              {/* <CardHeader className="pb-3">
+            {/* <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Volume2 className="h-4 w-4 text-blue-600" />
                   Audio Player
@@ -336,13 +343,13 @@ export default function ClozeListeningQuestion({
                   </Badge>
                 </CardTitle>
               </CardHeader> */}
-              {/* <CardContent className=""></CardContent>
+            {/* <CardContent className=""></CardContent>
             </Card> */}
             {audioUrl === "" ? (
               <TTSPlayer
                 text={transcript}
-                // autoSpeak
-                // onTranscript={(text) => console.log("User said:", text)}
+              // autoSpeak
+              // onTranscript={(text) => console.log("User said:", text)}
               />
             ) : (
               <AudioPlayer audioUrl={audioUrl} />
@@ -430,23 +437,21 @@ export default function ClozeListeningQuestion({
                 transition={{ delay: 0.2 }}
               >
                 <Card
-                  className={`shadow-lg border-2 ${
-                    accuracy >= 80
-                      ? "border-green-200 bg-green-50/50"
-                      : accuracy >= 50
+                  className={`shadow-lg border-2 ${accuracy >= 80
+                    ? "border-green-200 bg-green-50/50"
+                    : accuracy >= 50
                       ? "border-amber-200 bg-amber-50/50"
                       : "border-red-200 bg-red-50/50"
-                  }`}
+                    }`}
                 >
                   <CardContent className="p-4 text-center">
                     <div
-                      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium mb-3 ${
-                        accuracy >= 80
-                          ? "bg-green-100 text-green-800"
-                          : accuracy >= 50
+                      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium mb-3 ${accuracy >= 80
+                        ? "bg-green-100 text-green-800"
+                        : accuracy >= 50
                           ? "bg-amber-100 text-amber-800"
                           : "bg-red-100 text-red-800"
-                      }`}
+                        }`}
                     >
                       {accuracy >= 80 ? (
                         <CheckCircle className="h-3 w-3" />
@@ -456,8 +461,8 @@ export default function ClozeListeningQuestion({
                       {accuracy >= 80
                         ? "Excellent!"
                         : accuracy >= 50
-                        ? "Good Job!"
-                        : "Keep Practicing!"}
+                          ? "Good Job!"
+                          : "Keep Practicing!"}
                     </div>
 
                     <div className="flex justify-center gap-4 text-sm">

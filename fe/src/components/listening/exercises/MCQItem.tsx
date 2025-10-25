@@ -34,14 +34,14 @@ interface MCQItemProps {
     id: string;
     difficulty?: string;
     bandHint?: number;
-    prompt: {
+    promptJsonb: {
       text: string;
       choices: { content: string; answer_key: string }[];
       audio_url?: string | null;
       explanation?: string;
       transcript?: string;
     };
-    solution: { correct_keys: string[] };
+    solutionJsonb: { correct_keys: string[] };
   };
   onAnswer?: (answerKey: string, isCorrect: boolean) => void;
   showResult?: boolean;
@@ -67,6 +67,8 @@ export default function MCQItem({
   const [showTranscript, setShowTranscript] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
 
+  console.log(item)
+
   // Audio controls
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -74,17 +76,17 @@ export default function MCQItem({
   const audioRef = useRef<HTMLAudioElement>(null);
   const optionsRef = useRef<HTMLDivElement>(null);
 
-  const { prompt, solution } = item;
-  const hasAudio = Boolean(prompt.audio_url);
-  const hasTranscript = Boolean(prompt.explanation);
-  const hasExplanation = Boolean(prompt.explanation);
+  const { promptJsonb, solutionJsonb } = item;
+  const hasAudio = Boolean(promptJsonb.audio_url);
+  const hasTranscript = Boolean(promptJsonb.explanation);
+  const hasExplanation = Boolean(promptJsonb.explanation);
 
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
       if (isAnswered || disabled) return;
 
-      const choices = prompt.choices;
+      const choices = promptJsonb.choices;
       const currentIndex = choices.findIndex(
         (choice) => choice.answer_key === selectedOption
       );
@@ -132,7 +134,7 @@ export default function MCQItem({
       element.addEventListener("keydown", handleKeyDown as any);
       return () => element.removeEventListener("keydown", handleKeyDown as any);
     }
-  }, [selectedOption, isAnswered, disabled, prompt.choices]);
+  }, [selectedOption, isAnswered, disabled, promptJsonb.choices]);
 
   const toggleAudio = () => {
     const audio = audioRef.current;
@@ -161,11 +163,11 @@ export default function MCQItem({
   const handleSubmitAnswer = () => {
     if (!selectedOption || isAnswered || disabled) return;
 
-    const isCorrect = solution.correct_keys.includes(selectedOption);
+    const isCorrect = solutionJsonb.correct_keys.includes(selectedOption);
     const newFeedback: FeedbackState = {
       type: isCorrect ? "correct" : "incorrect",
       selectedKey: selectedOption,
-      correctKeys: solution.correct_keys,
+      correctKeys: solutionJsonb.correct_keys,
       message: isCorrect
         ? "Chính xác! 🎉"
         : "Chưa đúng. Đáp án đúng được tô sáng bên dưới.",
@@ -210,13 +212,13 @@ export default function MCQItem({
       return selectedOption === answerKey ? "selected" : "default";
     }
 
-    if (solution.correct_keys.includes(answerKey)) {
+    if (solutionJsonb.correct_keys.includes(answerKey)) {
       return "correct";
     }
 
     if (
       selectedOption === answerKey &&
-      !solution.correct_keys.includes(answerKey)
+      !solutionJsonb.correct_keys.includes(answerKey)
     ) {
       return "incorrect";
     }
@@ -279,7 +281,7 @@ export default function MCQItem({
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between gap-4 mb-4">
           <CardTitle className="text-lg font-semibold text-gray-800 leading-relaxed">
-            {prompt.text}
+            {promptJsonb.text}
           </CardTitle>
 
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -305,7 +307,7 @@ export default function MCQItem({
         {/* Audio Controls */}
         {hasAudio && (
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 w-full border border-blue-100">
-            <AudioPlayer audioUrl={prompt.audio_url || ""} />
+            <AudioPlayer audioUrl={promptJsonb.audio_url || ""} />
 
             <div className="flex items-center justify-between gap-4">
               {duration > 0 && (
@@ -344,7 +346,7 @@ export default function MCQItem({
             onValueChange={handleOptionSelect}
             disabled={isAnswered || disabled}
           >
-            {prompt.choices.map((choice, index) => {
+            {promptJsonb.choices.map((choice, index) => {
               const status = getOptionStatus(choice.answer_key);
 
               return (
@@ -467,7 +469,7 @@ export default function MCQItem({
                   <div
                     className="text-sm text-blue-700 leading-relaxed prose prose-sm max-w-none"
                     dangerouslySetInnerHTML={{
-                      __html: sanitizeHTML(prompt.explanation || ""),
+                      __html: sanitizeHTML(promptJsonb.explanation || ""),
                     }}
                   />
                 </CardContent>
@@ -510,7 +512,7 @@ export default function MCQItem({
 
         {/* Hidden Audio Element */}
         {/* {hasAudio && (
-          <AudioPlayer audioUrl={prompt.audio_url || "" } />
+          <AudioPlayer audioUrl={promptJsonb.audio_url || "" } />
         )} */}
       </CardContent>
     </Card>
