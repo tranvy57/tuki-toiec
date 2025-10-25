@@ -54,6 +54,7 @@ const itemVariants = {
     visible: { opacity: 1, y: 0 }
 };
 
+// Extended Vocabulary interface to match API response
 export interface VocabularyLearningInterfaceProps {
     vocabularies: Vocabulary[];
     isPremiumUser?: boolean;
@@ -118,13 +119,13 @@ export default function VocabularyLearningInterface({
 
     // Convert Vocabulary to WeakVocabulary format for compatibility
     const weakVocabularies: WeakVocabulary[] = vocabularies.map(vocab => ({
-        id: Math.random().toString(36),
+        id: vocab.id,
         word: vocab.word,
         meaning: vocab.meaning,
-        pronunciation: vocab.pronunciation,
-        partOfSpeech: vocab.partOfSpeech,
-        exampleEn: vocab.exampleEn,
-        exampleVn: vocab.exampleVn,
+        pronunciation: vocab.pronunciation || "/pronunciation/",
+        partOfSpeech: vocab.partOfSpeech || "noun",
+        exampleEn: vocab.exampleEn || "",
+        exampleVn: vocab.exampleVn || "",
         audioUrl: vocab.audioUrl || "",
         wrongCount: 0,
         correctCount: 0,
@@ -134,6 +135,30 @@ export default function VocabularyLearningInterface({
         mistakeCount: 2,
         lastReviewDate: "2025-10-25T09:00:00Z",
     }));
+
+    // Smart quiz type selection based on available data
+    const getOptimalQuizType = (vocab: Vocabulary): QuizType => {
+        const availableTypes: QuizType[] = [];
+
+        // Always include multiple choice if we have meaning
+        if (vocab.meaning && vocab.meaning.trim()) {
+            availableTypes.push("multiple-choice");
+        }
+
+        // Include fill-blank if word is reasonable length
+        if (vocab.word && vocab.word.length >= 2 && vocab.word.length <= 20) {
+            availableTypes.push("fill-blank");
+        }
+
+        // Include audio quiz if we have audio URL or pronunciation
+        if (vocab.audioUrl || (vocab.pronunciation && vocab.pronunciation !== "/pronunciation/")) {
+            availableTypes.push("audio");
+        }
+
+        // Return random available type or default to multiple-choice
+        if (availableTypes.length === 0) return "multiple-choice";
+        return availableTypes[Math.floor(Math.random() * availableTypes.length)];
+    };
 
     const currentWord = session ? weakVocabularies[session.currentIndex] : null;
     const progress = session ? ((session.currentIndex + 1) / session.totalItems) * 100 : 0;
@@ -161,11 +186,10 @@ export default function VocabularyLearningInterface({
 
         setIsLoading(true);
         setTimeout(() => {
-            const randomType: QuizType = ["multiple-choice", "fill-blank", "audio"][
-                Math.floor(Math.random() * 3)
-            ] as QuizType;
+            // Use smart quiz type selection for the first vocabulary
+            const optimalType = getOptimalQuizType(vocabularies[0]);
 
-            setCurrentQuizType(randomType);
+            setCurrentQuizType(optimalType);
             setSession({
                 sessionType: "quiz",
                 currentIndex: 0,
@@ -177,7 +201,7 @@ export default function VocabularyLearningInterface({
             });
             setCurrentView("learning");
 
-            if (randomType === "multiple-choice") {
+            if (optimalType === "multiple-choice") {
                 const options = generateQuizOptions(vocabularies[0].meaning, weakVocabularies);
                 setQuizOptions(options);
             }
@@ -241,16 +265,15 @@ export default function VocabularyLearningInterface({
 
         if (session.currentIndex < session.totalItems - 1) {
             const nextIndex = session.currentIndex + 1;
+            const nextVocab = vocabularies[nextIndex];
             const nextWord = weakVocabularies[nextIndex];
 
-            // Generate new quiz
-            const randomType: QuizType = ["multiple-choice", "fill-blank", "audio"][
-                Math.floor(Math.random() * 3)
-            ] as QuizType;
+            // Use smart quiz type selection for next vocabulary
+            const optimalType = getOptimalQuizType(nextVocab);
 
-            setCurrentQuizType(randomType);
+            setCurrentQuizType(optimalType);
 
-            if (randomType === "multiple-choice") {
+            if (optimalType === "multiple-choice") {
                 const options = generateQuizOptions(nextWord.meaning, weakVocabularies);
                 setQuizOptions(options);
             }
@@ -267,7 +290,7 @@ export default function VocabularyLearningInterface({
         } else {
             completeSession();
         }
-    }, [session, currentWord, weakVocabularies]);
+    }, [session, currentWord, vocabularies, weakVocabularies]);
 
     const completeSession = useCallback(() => {
         if (!session) return;
@@ -339,7 +362,7 @@ export default function VocabularyLearningInterface({
                 </motion.div>
 
                 {/* Stats Overview */}
-                <motion.div variants={itemVariants} className="grid md:grid-cols-3 gap-6 mb-8">
+                <motion.div variants={itemVariants} className="grid md:grid-cols-4 gap-6 mb-8">
                     <Card>
                         <CardContent className="p-6 text-center">
                             <BookOpen className="w-12 h-12 text-blue-500 mx-auto mb-3" />
@@ -351,16 +374,67 @@ export default function VocabularyLearningInterface({
                     <Card>
                         <CardContent className="p-6 text-center">
                             <Brain className="w-12 h-12 text-purple-500 mx-auto mb-3" />
-                            <h3 className="text-2xl font-bold text-slate-900">2</h3>
-                            <p className="text-slate-600">Phương pháp học</p>
+                            <h3 className="text-2xl font-bold text-slate-900">
+                                {vocabularies.filter(v => v.audioUrl || v.pronunciation !== "/pronunciation/").length}
+                            </h3>
+                            <p className="text-slate-600">Có âm thanh</p>
                         </CardContent>
                     </Card>
 
                     <Card>
                         <CardContent className="p-6 text-center">
                             <Star className="w-12 h-12 text-yellow-500 mx-auto mb-3" />
+                            <h3 className="text-2xl font-bold text-slate-900">
+                                {new Set(vocabularies.map(v => v.partOfSpeech)).size}
+                            </h3>
+                            <p className="text-slate-600">Loại từ</p>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardContent className="p-6 text-center">
+                            <Volume2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
                             <h3 className="text-2xl font-bold text-slate-900">AI</h3>
-                            <p className="text-slate-600">Hỗ trợ thông minh</p>
+                            <p className="text-slate-600">Thông minh</p>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+
+                {/* Vocabulary Preview */}
+                <motion.div variants={itemVariants} className="mb-8">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-lg text-slate-900 flex items-center gap-2">
+                                <BookOpen className="w-5 h-5 text-blue-600" />
+                                Xem trước từ vựng
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                {vocabularies.slice(0, 8).map((vocab, index) => (
+                                    <div key={vocab.id} className="bg-slate-50 p-3 rounded-lg">
+                                        <div className="font-medium text-slate-900 text-sm truncate">
+                                            {vocab.word}
+                                        </div>
+                                        <div className="text-blue-600 text-xs truncate">
+                                            {vocab.meaning}
+                                        </div>
+                                        <div className="text-slate-500 text-xs">
+                                            {vocab.partOfSpeech}
+                                        </div>
+                                    </div>
+                                ))}
+                                {vocabularies.length > 8 && (
+                                    <div className="bg-blue-50 p-3 rounded-lg flex items-center justify-center">
+                                        <div className="text-center">
+                                            <div className="font-medium text-blue-900 text-sm">
+                                                +{vocabularies.length - 8}
+                                            </div>
+                                            <div className="text-blue-600 text-xs">từ khác</div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </CardContent>
                     </Card>
                 </motion.div>
@@ -383,12 +457,12 @@ export default function VocabularyLearningInterface({
                         </CardHeader>
                         <CardContent>
                             <p className="text-slate-600 mb-4">
-                                Phương pháp học truyền thống với thẻ từ hai mặt. Xem từ vựng,
-                                suy nghĩ về nghĩa, sau đó kiểm tra đáp án.
+                                Học từ vựng với thẻ từ tương tác. Xem từ, nghĩa, phiên âm
+                                và ví dụ. Phương pháp hiệu quả để ghi nhớ từ mới.
                             </p>
                             <div className="flex items-center text-sm text-slate-500 mb-4">
                                 <CheckCircle2 className="w-4 h-4 mr-2 text-green-500" />
-                                Phù hợp cho người mới bắt đầu
+                                Phù hợp cho việc ghi nhớ từ vựng
                             </div>
                             <Button
                                 onClick={startFlashcardSession}
@@ -415,18 +489,18 @@ export default function VocabularyLearningInterface({
                         </CardHeader>
                         <CardContent>
                             <p className="text-slate-600 mb-4">
-                                Bài tập đa dạng với trắc nghiệm, điền từ và nghe âm thanh.
-                                Hệ thống tự động chọn dạng bài phù hợp.
+                                Kiểm tra kiến thức với trắc nghiệm, điền từ và nghe âm thanh.
+                                AI tự động chọn dạng bài phù hợp dựa trên dữ liệu từ vựng.
                             </p>
                             <div className="flex items-center text-sm text-slate-500 mb-4">
                                 <CheckCircle2 className="w-4 h-4 mr-2 text-green-500" />
-                                Củng cố kiến thức hiệu quả
+                                Kiểm tra và củng cố kiến thức
                             </div>
                             <Button
                                 onClick={startQuizSession}
                                 className="w-full bg-purple-600 hover:bg-purple-700"
                             >
-                                Bắt đầu Quiz
+                                Bắt đầu Quiz Thông Minh
                             </Button>
                         </CardContent>
                     </Card>

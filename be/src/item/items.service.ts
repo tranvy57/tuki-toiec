@@ -17,7 +17,7 @@ export class ItemsService {
   }
 
   async findAll(query: GetItemsDto) {
-    const { modality, difficulty, limit, offset } = query;
+    const { modality, difficulty, limit, offset, skill_type } = query;
 
     console.log(query)
 
@@ -32,6 +32,8 @@ export class ItemsService {
     if (modality) qb.andWhere('item.modality = :modality', { modality });
     if (difficulty)
       qb.andWhere('item.difficulty = :difficulty', { difficulty });
+    if (skill_type)
+      qb.andWhere('item.skill_type = :skill_type', { skill_type });
 
     const [data, total] = await qb.getManyAndCount();
 

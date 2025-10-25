@@ -22,7 +22,6 @@ import { useSidebar } from "@/hooks/use-side-bar";
 import {
   MOCK_LESSONS,
   MOCK_UNITS,
-  MOCK_LESSON_CONTENTS,
 } from "@/app/(toeic)/study-plan/constants";
 import { MobileDrawer, MobileMenuButton } from "./mobile-navigation";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -268,6 +267,7 @@ function ContentDetailPanel({
   isPremiumUser?: boolean;
 }) {
   const [showLearningInterface, setShowLearningInterface] = useState(false);
+  console.log(content)
 
   const ContentIcon =
     LESSON_CONTENT_ICONS[content.type as keyof typeof LESSON_CONTENT_ICONS] ||
@@ -382,11 +382,16 @@ function ContentDetailPanel({
       ) : (
         <div className="prose max-w-none">
           {content.type === "video" ? (
-            <div className="aspect-video bg-slate-100 rounded-lg flex items-center justify-center mb-4">
-              <div className="text-center">
-                <Video className="w-12 h-12 text-slate-400 mx-auto mb-2" />
-                <p className="text-slate-500">Video Player</p>
-              </div>
+            <div className="aspect-video bg-slate-100 rounded-lg flex items-center justify-center mb-4  w-full max-w-4xl mx-auto">
+              <iframe
+                width="100%"
+                height="100%"
+                src={content.content} // Thay ID video của bạn
+                title="YouTube video player"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="rounded-lg shadow-md"
+              ></iframe>
             </div>
           ) : content.type === "quiz" ? (
             <div className="bg-blue-50 p-4 rounded-lg mb-4">
@@ -396,10 +401,14 @@ function ContentDetailPanel({
               </h4>
             </div>
           ) : null}
+          {
+            content.type !== "video" && content.type !== "quiz" && (
+              <p className="text-slate-700 whitespace-pre-wrap">
+                {content.content}
+              </p>
+            )
+          }
 
-          <p className="text-slate-700 whitespace-pre-wrap">
-            {content.content}
-          </p>
 
           {/* Interactive Learning Button */}
           {isInteractiveContent && (

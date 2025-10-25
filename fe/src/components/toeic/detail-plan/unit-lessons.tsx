@@ -1,6 +1,5 @@
 "use client";
 
-import { MOCK_LESSONS, MOCK_LESSON_CONTENTS } from "@/app/(toeic)/study-plan/constants";
 import { cn } from "@/utils";
 import { m, AnimatePresence } from "framer-motion";
 import {

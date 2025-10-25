@@ -417,7 +417,7 @@ export default function DictationPracticePage({
 
           {/* Tuki Mascot */}
           <div className="rounded-full bg-gradient-to-tr from-pink-100 to-purple-100 p-[2px] shadow-sm w-full h-full overflow-hidden ">
-            <Spline scene="https://prod.spline.design/D6rvoprmxCW4MNMi/scene.splinecode" className="" />
+            <Spline scene="https://prod.spline.design/D6rvoprmxCW4MNMi/scene.splinecode" className="h-[373px] w-[354px]" />
           </div>
 
           {/* Exercise Info */}
