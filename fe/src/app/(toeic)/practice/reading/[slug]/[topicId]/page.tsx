@@ -35,15 +35,7 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { useEvaluateSpeakingAttempt } from "@/api/useSpeakingAttempt";
 import { AudioPlayer } from "@/components/toeic/test/Audio";
-import Link from "next/link";
-import {
-  Breadcrumb,
-  BreadcrumbList,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+import { PracticeBreadcrumb } from "@/components/practice/PracticeBreadcrumb";
 
 // Mock data cho từng loại bài tập nói
 const mockExerciseData = {
@@ -357,37 +349,13 @@ export default function SpeakingExercisePage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
       <div className="container mx-auto px-4 py-6">
         {/* Breadcrumb */}
-        <Breadcrumb className="mb-6">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href="/">Trang chủ</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href="/practice">Ôn luyện</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href="/practice/reading">Reading</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href={`/practice/reading/${slug}`}>Bài tập</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>{exerciseData?.vietnameseName || 'Chi tiết'}</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+        <PracticeBreadcrumb
+          items={[
+            { label: "Reading", href: "/practice/reading" },
+            { label: "Bài tập", href: `/practice/reading/${slug}` },
+            { label: exerciseData?.vietnameseName || 'Chi tiết' }
+          ]}
+        />
 
         {/* Header */}
         <motion.div
@@ -696,7 +664,7 @@ export default function SpeakingExercisePage() {
                             <div
                               className={`text-2xl font-bold ${colors[
                                 Math.floor(Math.random() * colors.length)
-                                ]
+                              ]
                                 }`}
                             >
                               {String(value)}

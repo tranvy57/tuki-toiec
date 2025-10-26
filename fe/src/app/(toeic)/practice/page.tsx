@@ -18,14 +18,7 @@ import { skillsData } from "@/data/SKILL";
 import { CustomCard } from "@/components/CustomCard";
 import { speakingExerciseTypes } from "@/data/mockMenuSpeaking";
 import { dataListening } from "@/components/listening/InteractiveListeningDemo";
-import {
-  Breadcrumb,
-  BreadcrumbList,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+import { PracticeBreadcrumb } from "@/components/practice/PracticeBreadcrumb";
 
 const SKILLS = skillsData;
 
@@ -58,19 +51,7 @@ const PracticePage = () => {
       />
       <div className="container mx-auto px-6 ">
         {/* Breadcrumb */}
-        <Breadcrumb className="mb-6">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href="/">Trang chủ</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Ôn luyện</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+        <PracticeBreadcrumb items={[]} />
 
         <h1 className="text-2xl font-bold text-[#23085A] mb-4">
           Ôn luyện TOEIC theo 4 kỹ năng

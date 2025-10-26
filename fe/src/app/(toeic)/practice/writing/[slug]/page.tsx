@@ -9,14 +9,7 @@ import Link from "next/link";
 import { Check, Clock, Edit3, Icon, Target } from "lucide-react";
 import { writingExerciseTypes } from "@/data/mockDataWritting";
 import { CustomCard } from "@/components/CustomCard";
-import {
-  Breadcrumb,
-  BreadcrumbList,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+import { PracticeBreadcrumb } from "@/components/practice/PracticeBreadcrumb";
 
 // Mock data tương tự phần bạn có
 
@@ -73,31 +66,12 @@ export default function WritingTopicsPage() {
     <div className="min-h-screen bg-gray-50  px-6">
       {/* Breadcrumb */}
       <div className="container mx-auto pt-6">
-        <Breadcrumb className="mb-6">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href="/">Trang chủ</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href="/practice">Ôn luyện</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href="/practice/writing">Writing</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>{exercise?.name || 'Bài tập'}</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+        <PracticeBreadcrumb
+          items={[
+            { label: "Writing", href: "/practice/writing" },
+            { label: exercise?.name || 'Bài tập' }
+          ]}
+        />
       </div>
 
       <motion.div

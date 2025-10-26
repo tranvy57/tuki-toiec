@@ -29,14 +29,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { speakingExerciseTypes } from "@/data/mockMenuSpeaking";
 import { CustomCard } from "@/components/CustomCard";
-import {
-  Breadcrumb,
-  BreadcrumbList,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+import { PracticeBreadcrumb } from "@/components/practice/PracticeBreadcrumb";
 
 // Mock data cho các loại bài tập nói
 
@@ -94,25 +87,11 @@ export default function SpeakingPracticePage() {
 
       <div className="container mx-auto px-4 py-4 relative z-10">
         {/* Breadcrumb */}
-        <Breadcrumb className="mb-6">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href="/">Trang chủ</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href="/practice">Ôn luyện</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Speaking</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+        <PracticeBreadcrumb
+          items={[
+            { label: "Speaking" }
+          ]}
+        />
 
         {/* Header */}
         <motion.div
