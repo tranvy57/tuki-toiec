@@ -9,6 +9,14 @@ import Link from "next/link";
 import { Check, Edit3, Mic } from "lucide-react";
 import { speakingExerciseTypes } from "@/data/mockMenuSpeaking";
 import { CustomCard } from "@/components/CustomCard";
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 // Mock data tương tự phần bạn có
 // const speakingExerciseTypes = [
@@ -233,6 +241,35 @@ export default function SpeakingTopicsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50  px-6">
+      {/* Breadcrumb */}
+      <div className="container mx-auto pt-6">
+        <Breadcrumb className="mb-6">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/">Trang chủ</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/practice">Ôn luyện</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/practice/speaking">Speaking</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{exercise?.name || 'Bài tập'}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+
       <motion.div
         className="absolute top-20 left-10 w-20 h-20 bg-pink-400/10 rounded-full blur-xl"
         animate={{

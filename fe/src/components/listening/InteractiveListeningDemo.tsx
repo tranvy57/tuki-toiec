@@ -203,30 +203,11 @@ export const dataListening = [
 ];
 
 export default function InteractiveListeningDemo() {
-  const router = useRouter();
-
-  const handleSelectExercise = (exerciseId: string) => {
-    // Navigate directly based on exercise type
-    switch (exerciseId) {
-      case "mcq":
-        router.push("/practice/listening/mcq");
-        break;
-      case "dictation":
-        router.push("/practice/listening/dictation");
-        break;
-      case "cloze-enhanced":
-        router.push("/practice/listening/cloze");
-        break;
-      default:
-        break;
-    }
-  };
-
   // Navigation is now handled in handleSelectExercise function
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
-      <div className="max-w-6xl mx-auto px-4">
+    <div className="min-h-screen">
+      <div className="">
         {/* Header */}
         <motion.div
           className="absolute top-20 left-10 w-20 h-20 bg-pink-400/10 rounded-full blur-xl"
@@ -253,7 +234,7 @@ export default function InteractiveListeningDemo() {
           }}
         />
 
-        <div className="container mx-auto px-4 py-4 relative z-10">
+        <div className="">
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -279,10 +260,8 @@ export default function InteractiveListeningDemo() {
           </motion.div>
 
           {/* Exercise Types Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {dataListening.map((exercise, index) => {
-              const IconComponent = exercise.icon;
-
               return (
                 <motion.div
                   key={exercise.id}

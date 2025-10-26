@@ -30,6 +30,14 @@ import Image from "next/image";
 
 import { writingExerciseTypes } from "@/data/mockDataWritting";
 import { CustomCard } from "@/components/CustomCard";
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 //   {
 //     id: "1",
@@ -283,6 +291,27 @@ export default function WritingPracticePage() {
       />
 
       <div className="container mx-auto px-4 py-4 relative z-10">
+        {/* Breadcrumb */}
+        <Breadcrumb className="mb-6">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/">Trang chủ</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/practice">Ôn luyện</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Writing</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}

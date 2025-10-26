@@ -35,6 +35,15 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { useEvaluateSpeakingAttempt } from "@/api/useSpeakingAttempt";
 import { AudioPlayer } from "@/components/toeic/test/Audio";
+import Link from "next/link";
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 // Mock data cho từng loại bài tập nói
 const mockExerciseData = {
@@ -347,6 +356,39 @@ export default function SpeakingExercisePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
       <div className="container mx-auto px-4 py-6">
+        {/* Breadcrumb */}
+        <Breadcrumb className="mb-6">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/">Trang chủ</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/practice">Ôn luyện</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/practice/reading">Reading</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href={`/practice/reading/${slug}`}>Bài tập</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{exerciseData?.vietnameseName || 'Chi tiết'}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -363,7 +405,7 @@ export default function SpeakingExercisePage() {
               <ArrowLeft className="w-4 h-4" />
               Quay lại
             </Button>
-            
+
           </div>
 
           {/* Progress */}
@@ -422,9 +464,8 @@ export default function SpeakingExercisePage() {
                       {Array.from({ length: 40 }).map((_, i) => (
                         <div
                           key={i}
-                          className={`w-1 bg-green-400 rounded-full transition-all duration-300 ${
-                            isPlaying ? "animate-pulse" : ""
-                          }`}
+                          className={`w-1 bg-green-400 rounded-full transition-all duration-300 ${isPlaying ? "animate-pulse" : ""
+                            }`}
                           style={{
                             height: `${Math.random() * 80 + 20}%`,
                             animationDelay: `${i * 50}ms`,
@@ -492,16 +533,14 @@ export default function SpeakingExercisePage() {
                       <motion.button
                         onClick={isRecording ? stopRecording : startRecording}
                         className={`w-16 h-16 rounded-full border-4 flex items-center justify-center transition-all duration-300
-              ${
-                isRecording
-                  ? "bg-red-500 border-red-300 hover:bg-red-600"
-                  : "bg-pink-500 border-pink-300 hover:bg-pink-600"
-              }
-              ${
-                isProcessing
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:scale-105"
-              }`}
+              ${isRecording
+                            ? "bg-red-500 border-red-300 hover:bg-red-600"
+                            : "bg-pink-500 border-pink-300 hover:bg-pink-600"
+                          }
+              ${isProcessing
+                            ? "opacity-50 cursor-not-allowed"
+                            : "hover:scale-105"
+                          }`}
                         animate={isRecording ? { scale: [1, 1.08, 1] } : {}}
                         transition={{
                           duration: 1,
@@ -655,11 +694,10 @@ export default function SpeakingExercisePage() {
                             className="text-center p-4 bg-white rounded-lg shadow-sm border"
                           >
                             <div
-                              className={`text-2xl font-bold ${
-                                colors[
-                                  Math.floor(Math.random() * colors.length)
+                              className={`text-2xl font-bold ${colors[
+                                Math.floor(Math.random() * colors.length)
                                 ]
-                              }`}
+                                }`}
                             >
                               {String(value)}
                             </div>
