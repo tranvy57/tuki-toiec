@@ -58,7 +58,9 @@ export function TestSidebar({
           {/* Timer */}
           <div className="text-center sticky top-2 mb-6">
             <div className="text-sm text-gray-600 mb-1">Thời gian còn lại:</div>
-            <CountdownTimer initialSeconds={timeRemaining} tickInterval={1000} onExpire={onSubmitTest} />
+            <div className="text-2xl font-bold">
+              <CountdownTimer initialSeconds={timeRemaining} tickInterval={1000} onExpire={onSubmitTest} />
+            </div>
             <Button
               size="sm"
               className="mt-3 bg-primary hover:bg-primary-2 text-xs px-4"

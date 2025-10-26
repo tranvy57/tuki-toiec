@@ -1,8 +1,6 @@
 "use client";
 
-import { BandPickerDialog } from "@/components/toeic/study-plan/band-picker-dialog";
 import { PhaseOverview } from "@/components/toeic/study-plan/phase-overview";
-import { ReviewTestWizard } from "@/components/toeic/study-plan/review-test-wizard";
 import { UpgradeProSheet } from "@/components/toeic/study-plan/upgrade-pro-sheet";
 import { MainSidebar } from "@/components/toeic/detail-plan";
 import { SidebarProvider } from "@/hooks/use-side-bar";
@@ -12,13 +10,14 @@ import { usePremiumStatus } from "@/api";
 import { useState, useEffect } from "react";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import { getTypeLesson, MOCK_LESSONS, MOCK_UNITS } from "./constants";
 
-type OnboardingStep = "band" | "test" | "overview" | "course";
+type PageStep = "overview" | "course";
 
 export default function LearnPage() {
-  const [step, setStep] = useState<OnboardingStep>("band");
-  const [targetBand, setTargetBand] = useState<string>("");
+  const router = useRouter();
+  const [step, setStep] = useState<PageStep>("overview");
   const [testResults, setTestResults] = useState<any>(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
 
@@ -52,24 +51,17 @@ export default function LearnPage() {
       } else if (myPlan) {
         // User has a plan but no course, go to overview with plan data
         setStep("overview");
-        setTargetBand(myPlan?.band?.toString() || "750");
         setTestResults(myPlan); // Pass the entire plan as results
       } else {
-        // User doesn't have plan or course, start with review test
-        setStep("test");
-        setTargetBand("750"); // Default band
+        // User doesn't have plan or course, redirect to review-test
+        router.push("/study-plan/review-test");
+        return;
       }
     }
-  }, [myPlan, latestCourse, isPlanLoading, isCourseLoading]);
+  }, [myPlan, latestCourse, isPlanLoading, isCourseLoading, router]);
 
-  const handleBandSelected = (band: string) => {
-    setTargetBand(band);
-    setStep("test");
-  };
-
-  const handleTestComplete = (results: any) => {
-    setTestResults(results);
-    setStep("overview");
+  const handleUpgradeClick = () => {
+    setShowUpgrade(true);
   };
 
   // Helper functions for course page
@@ -134,6 +126,18 @@ export default function LearnPage() {
     setIsLessonMode(false);
   };
 
+  // Loading state while checking plan and course
+  if (isPlanLoading || isCourseLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-600" />
+          <p className="text-gray-600">Đang tải thông tin học tập...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Error state for course page
   if (step === "course" && courseError) {
     return (
@@ -195,29 +199,13 @@ export default function LearnPage() {
 
   return (
     <div className="min-h-screen">
-      {step === "band" && (
-        <BandPickerDialog
-          open={true}
-          onBandSelected={handleBandSelected}
-          latestCourse={latestCourse || undefined}
-        />
-      )}
-
-      {step === "test" && (
-        <ReviewTestWizard
-          targetBand={targetBand}
-          onComplete={handleTestComplete}
-          latestCourse={latestCourse || undefined}
-        />
-      )}
-
       {step === "overview" && (
         <>
           <PhaseOverview
             testResults={testResults}
             studyPlan={myPlan || undefined}
             latestCourse={latestCourse || undefined}
-            onUpgradeClick={() => setShowUpgrade(true)}
+            onUpgradeClick={handleUpgradeClick}
           />
           <UpgradeProSheet
             open={showUpgrade}

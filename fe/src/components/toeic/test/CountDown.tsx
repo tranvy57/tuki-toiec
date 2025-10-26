@@ -17,6 +17,11 @@ export function CountdownTimer({
   const [timeLeft, setTimeLeft] = useState(initialSeconds);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Update timeLeft when initialSeconds changes
+  useEffect(() => {
+    setTimeLeft(initialSeconds);
+  }, [initialSeconds]);
+
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
@@ -30,11 +35,11 @@ export function CountdownTimer({
     }, tickInterval);
 
     return () => clearInterval(timer);
-  }, [tickInterval]);
+  }, [tickInterval, onExpire]);
 
   return (
-    <div className="text-2xl font-bold text-blue-600">
+    <span className={`font-mono font-medium text-blue-500`}>
       {formatTime(timeLeft)}
-    </div>
+    </span>
   );
 }

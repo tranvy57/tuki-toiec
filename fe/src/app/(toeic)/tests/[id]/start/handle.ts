@@ -195,7 +195,6 @@ export const useTestLogic = () => {
 
     setResultTest(result);
     router.replace(`/tests/${fullTest?.id}/result?attemptId=${attemptId}`);
-    
   }, [router, testId, attemptId]);
 
   // Countdown timer
@@ -254,14 +253,72 @@ export const useTestLogic = () => {
   // Change question with transition
   const handleQuestionChange = useCallback(
     (questionNumber: number, scrollToTop?: () => void) => {
+      console.log("handleQuestionChange called with:", questionNumber);
       setIsTransitioning(true);
+
+      // First, find the question and determine if we need to change part
+      const question = questionMap.get(questionNumber);
+      if (question && fullTest) {
+        const group = allGroups.find((g: any) =>
+          g.questions.some((gq: any) => gq.id === question.id)
+        );
+        if (group) {
+          const part = fullTest.parts.find((p: any) =>
+            p.groups.some((pg: any) => pg.id === group.id)
+          );
+          if (part && part.partNumber !== currentPart?.partNumber) {
+            // Need to change part first
+            setCurrentPart(part.partNumber);
+          }
+        }
+      }
+
       setTimeout(() => {
         setCurrentQuestion(questionNumber);
-        scrollToTop?.();
-        setIsTransitioning(false);
+
+        // Wait for both part change and question change to complete
+        setTimeout(() => {
+          // Scroll to specific question
+          const questionElement = document.getElementById(
+            `question-${questionNumber}`
+          );
+          console.log(
+            "Looking for element:",
+            `question-${questionNumber}`,
+            "Found:",
+            !!questionElement
+          );
+
+          if (questionElement) {
+            questionElement.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+              inline: "nearest",
+            });
+          } else {
+            console.log("Element not found, trying again in 200ms");
+            // Try again after more delay
+            setTimeout(() => {
+              const retryElement = document.getElementById(
+                `question-${questionNumber}`
+              );
+              if (retryElement) {
+                retryElement.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
+                  inline: "nearest",
+                });
+              } else {
+                scrollToTop?.();
+              }
+            }, 200);
+          }
+
+          setIsTransitioning(false);
+        }, 300); // Increased delay for part change + DOM update
       }, TRANSITION_DELAY);
     },
-    []
+    [questionMap, fullTest, allGroups, currentPart, setCurrentPart]
   );
 
   // Handle answer with API call

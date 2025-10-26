@@ -4,10 +4,9 @@ import json
 from typing import Tuple, List, Optional
 from sqlalchemy.orm import Session
 from app.utils.crawls import txt, normalize_url, uid, try_int
-from app.constants.crawl import PART_RANGES, DIFFICULTY_BY_PART, DIFFICULTY_BY_SKILL, TOEIC_PART_MODALITIES_MAP, COURSE_BAND
-from app.db.models.models import Tests, Parts, Groups, Questions, Answers, Skills, QuestionTags, Items
+from app.constants.crawl import PART_RANGES, DIFFICULTY_BY_PART, DIFFICULTY_BY_SKILL
+from app.db.models.models import Tests, Parts, Groups, Questions, Answers, Skills, QuestionTags
 import re
-import random
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -99,20 +98,14 @@ def parse_question(wrapper, q_order: int, group: Groups, content_listening=None,
     for fc in wrapper.find_all(class_="form-check"):
         label = fc.find("label")
         inp   = fc.find("input")
-        if not (label and inp):
-            continue
-
+        if not (label and inp): continue
         key = (inp.get("value") or "").strip().upper()  # A/B/C/D
-
-        # --- làm sạch nội dung ---
         label_text = label.get_text(" ", strip=True)
-        # Bỏ tiền tố A. / B) / (C) / D :
         label_text = re.sub(r"^[A-D][\.\)\s:-]*", "", label_text).strip()
-
         ans_rows.append({
-            "content": label_text,
-            "is_correct": (correct_key is not None and key == correct_key),
-            "answer_key": key or None,
+            'content': label_text,
+            'is_correct': (correct_key is not None and key == correct_key),
+            'answer_key': key or None,
         })
 
     # Explanation
@@ -410,6 +403,13 @@ def create_question_tags(skills_by_part, questions_instances: List[Questions], s
 def import_test(url: str, db: Session) -> Tests:
     """
     Import một test từ URL vào database
+    
+    Args:
+        url: URL của test cần crawl
+        db: SQLAlchemy session
+        
+    Returns:
+        Tests: Test instance đã được import
     """
     try:
         # Extract title from URL
@@ -418,6 +418,7 @@ def import_test(url: str, db: Session) -> Tests:
         
         # Fetch main test page
         soup = fetch_test_page(url, COOKIES, HEADERS)
+        # print(soup)
         
         # Fetch audio page if needed
         soup_audio = None
@@ -426,8 +427,8 @@ def import_test(url: str, db: Session) -> Tests:
             soup_audio, audio_url = fetch_audio_pages(url, COOKIES, HEADERS)
             temp = soup.find_all("audio")
             temp = temp[0] if temp else None
-            temp = temp.find_all("source")[0]
-            audio_main = temp.get("src")
+            temp = temp.find_all('source')[0]
+            audio_main = temp.get('src')
         except Exception as e:
             print(f"Warning: Could not fetch audio for {url}: {e}")
         
@@ -436,6 +437,7 @@ def import_test(url: str, db: Session) -> Tests:
             soup, audio_main, title, soup_audio
         )
 
+        
         db.add(test)
         for part in parts_instances:
             db.add(part)
@@ -445,51 +447,35 @@ def import_test(url: str, db: Session) -> Tests:
             db.add(question)
         for answer in answers_instances:
             db.add(answer)
-
+        
+        # Flush to get IDs
         db.flush()
-
-        # Generate items for each question
-        for question in questions_instances:
-            part_number = question.groups.parts.part_number
-            items = parse_question_to_items(question, part_number)
-            for item in items:
-                db.add(item)
-
-        db.flush()
-
-        # Fetch skill data
+        
+        # Fetch skills page để lấy skills information
         skills_by_part = []
         try:
             soup_skill = fetch_skill_page(url, COOKIES, HEADERS)
             skills_by_part = parse_skills(soup_skill)
         except Exception as e:
             print(f"Warning: Could not fetch skills for {url}: {e}")
-
+        
         if skills_by_part:
             # Create or get skills
             skill_map = create_or_get_skills(db, skills_by_part)
-
+            
             # Create skill parts
             create_skill_parts(skills_by_part, parts_instances, skill_map)
-
+            # for skill_part in skill_part_instances:
+            #     db.add(skill_part)
+            
             # Create question tags
             question_tag_instances = create_question_tags(skills_by_part, questions_instances, skill_map)
             for question_tag in question_tag_instances:
                 db.add(question_tag)
-
-            # ✅ Commit nhỏ để đảm bảo question_tags và skills có trong DB
-            db.flush()
-
-            # Enrich items with skills via question_ref
-            try:
-                enrich_items_with_skills(db, test)
-            except Exception as e:
-                db.rollback()
-                print(f"Warning: Could not enrich items with skills: {e}")
-
-        # ✅ Commit cuối
+        
+        # Commit transaction
         db.commit()
-
+        
         print(f"Successfully imported test: {title}")
         print(f"  - {len(parts_instances)} parts")
         print(f"  - {len(groups_instances)} groups")
@@ -497,14 +483,13 @@ def import_test(url: str, db: Session) -> Tests:
         print(f"  - {len(answers_instances)} answers")
         if skills_by_part:
             print(f"  - {len(set(s['skill'] for p in skills_by_part for s in p.get('skills', [])))} skills")
-
+        
         return test
-
+        
     except Exception as e:
         db.rollback()
         print(f"Error importing test from {url}: {e}")
         raise
-
 
 def upload_image_to_cloudinary(url: str) -> Optional[str]:
     """
@@ -540,301 +525,9 @@ def upload_image_to_cloudinary(url: str) -> Optional[str]:
         print(f"⚠️ Error uploading {url}: {e}")
         return None
 
-import re
-import random
-
-def generate_listening_cloze(text: str, blank_ratio: float = 0.3):
-    # Tách từ và dấu câu riêng biệt, ví dụ: ["He", "is", "running", "."]
-    tokens = re.findall(r"\w+|[^\w\s]", text, re.UNICODE)
-    word_indices = [i for i, t in enumerate(tokens) if re.match(r"\w+", t)]
-    total_words = len(word_indices)
-    
-    if total_words < 5:
-        return text, []
-
-    # Xác định số lượng từ cần ẩn
-    n_blanks = int(total_words * blank_ratio)
-    n_blanks = max(1, min(n_blanks, total_words))
-
-    # Chọn ngẫu nhiên các từ để ẩn
-    blank_indices = set(random.sample(word_indices, n_blanks))
-
-    blanks = []
-    for i in blank_indices:
-        word = tokens[i]
-        blanks.append(word)
-        tokens[i] = "_" * len(word)   # 👈 số lượng dấu _ bằng đúng số ký tự trong từ
-
-    # Ghép lại chuỗi, giữ dấu câu sát chữ
-    prompt_text = " ".join(tokens)
-    prompt_text = (
-        prompt_text.replace(" ,", ",")
-        .replace(" .", ".")
-        .replace(" !", "!")
-        .replace(" ?", "?")
-        .replace(" ;", ";")
-        .replace(" :", ":")
-    )
-
-    return prompt_text, blanks
-
-
-def get_band_hint(part_number: int, difficulty: str):
-    mapping = {
-        1: {"easy": 450, "medium": 550, "hard": 650},
-        2: {"easy": 450, "medium": 550, "hard": 650},
-        3: {"easy": 550, "medium": 650, "hard": 750},
-        4: {"easy": 550, "medium": 650, "hard": 750},
-        5: {"easy": 450, "medium": 650, "hard": 750},
-        6: {"easy": 550, "medium": 650, "hard": 750},
-        7: {"easy": 650, "medium": 750, "hard": 850},
-    }
-
-    band_value = mapping.get(part_number, {}).get(difficulty, 650) 
-    try:
-        return getattr(COURSE_BAND, f"{band_value}")
-    except AttributeError:
-        return COURSE_BAND.TOEIC_650  # fallback an toàn
-    
-def clean_html_to_text(html: str) -> str:
-    # Parse HTML
-    soup = BeautifulSoup(html, "html.parser")
-
-    # Thay <br> và <p> bằng xuống dòng
-    for br in soup.find_all("br"):
-        br.replace_with("\n")
-    for p in soup.find_all("p"):
-        p.insert_after("\n")
-
-    text = soup.get_text()
-
-    # Làm sạch khoảng trắng thừa
-    text = re.sub(r"\n+", "\n", text)   # gộp dòng liên tiếp
-    text = re.sub(r"[ \t]+", " ", text) # bỏ khoảng trắng thừa
-    text = text.strip()
-
-    return text
-
-def normalize_text(text: str) -> str:
-    replacements = {
-        "\u2013": "-",  # en dash
-        "\u2014": "-",  # em dash
-        "\u2019": "'",  # right single quote
-        "\u201c": '"',  # left double quote
-        "\u201d": '"',  # right double quote
-        "\xa0": " ",    # non-breaking space
-    }
-    for k, v in replacements.items():
-        text = text.replace(k, v)
-    return text.strip()
-
-    
-def parse_question_to_items(question, part_number):
-    """
-    Parse 1 Question ORM instance → list Items ORM instance phù hợp theo part_number.
-    """
-    modalities = TOEIC_PART_MODALITIES_MAP.get(part_number, [])
-    items = []
-
-    for modality in modalities:
-        prompt, solution, rubric, explanation = {}, {}, {}, ""
-        difficulty = "medium"
-
-        # --- MCQ ---
-        if modality == "mcq":
-            group = getattr(question, "groups", None)
-            prompt = {
-                "audio_url": getattr(group, "audio_url", None),
-                "image_url": getattr(group, "image_url", None),
-                "transcript": getattr(group, "parageraph_en", None) or "",
-                "explanation": getattr(group, "paragraph_vn", None) or "",
-                "text": question.content or "",
-                "choices": [
-                    {"answer_key": a.answer_key, "content": a.content}
-                    for a in (question.answers or [])
-                ],
-            }
-            solution = {
-                "correct_keys": [a.answer_key for a in question.answers if a.is_correct]
-            }
-            difficulty = "easy"
-
-            item = Items(
-                modality="mcq",
-                prompt_jsonb=prompt,
-                solution_jsonb=solution,
-                rubric_jsonb=rubric,
-                difficulty=difficulty,
-                skill_type="listening" if part_number in [1,2,3,4] else "reading",
-                status="active",
-                question_ref=str(question.id),
-                band_hint=str(get_band_hint(part_number, difficulty)),
-            )
-
-        # --- CLOZE ---
-        elif modality == "cloze":
-            group = getattr(question, "groups", None)
-            text = getattr(group, "parageraph_en", None) or question.content or ""
-            text = normalize_text(clean_html_to_text(text))
-            corrects = [a.content for a in question.answers if a.is_correct]
-
-            difficulty_levels = (
-                [{"label": "easy", "ratio": 0.2}, {"label": "medium", "ratio": 0.4}, {"label": "medium", "ratio": 0.6}]
-                if part_number in [3, 4]
-                else [{"label": "medium", "ratio": 0.35}, {"label": "medium", "ratio": 0.5}, {"label": "hard", "ratio": 0.7}]
-            )
-
-            for diff in difficulty_levels:
-                if not text or len(text) < 10:
-                    continue
-
-                prompt_text, blanks = generate_listening_cloze(text, blank_ratio=diff["ratio"])
-                prompt = {"text": prompt_text, "blank_ratio": diff["ratio"], "audio_url": getattr(group, "audio_url", None)}
-                solution = {"answers": blanks or corrects, "transcript": text}
-                difficulty = diff["label"]
-
-                item = Items(
-                    modality="cloze",
-                    prompt_jsonb=prompt,
-                    solution_jsonb=solution,
-                    rubric_jsonb={},
-                    difficulty=difficulty,
-                    skill_type="listening",
-                    status="active",
-                    question_ref=str(question.id),
-                    band_hint=str(get_band_hint(part_number, difficulty)),
-                )
-                item.question = question
-                items.append(item)
-            continue
-
-        # --- DICTATION ---
-        elif modality == "dictation":
-            group = getattr(question, "groups", None)
-            prompt = {"audio_url": getattr(group, "audio_url", None)}
-            solution = {"transcript": getattr(group, "parageraph_en", None) or ""}
-            rubric = {"criteria": ["spelling", "word order", "completeness"]}
-            difficulty = "medium"
-
-            item = Items(
-                modality="dictation",
-                prompt_jsonb=prompt,
-                solution_jsonb=solution,
-                rubric_jsonb=rubric,
-                difficulty=difficulty,
-                skill_type="listening",
-                status="active",
-                question_ref=str(question.id),
-                band_hint=str(get_band_hint(part_number, difficulty)),
-            )
-
-        # --- REPEAT SENTENCE ---
-        elif modality == "repeat_sentence":
-            group = getattr(question, "groups", None)
-            prompt = {"audio_url": getattr(group, "audio_url", None)}
-            solution = {"expected_text": question.content or ""}
-            rubric = {"criteria": ["pronunciation", "intonation", "fluency", "accuracy"]}
-            difficulty = "medium"
-
-            item = Items(
-                modality="repeat_sentence",
-                prompt_jsonb=prompt,
-                solution_jsonb=solution,
-                rubric_jsonb=rubric,
-                difficulty=difficulty,
-                skill_type="speaking",
-                status="active",
-                question_ref=str(question.id),
-                band_hint=str(get_band_hint(part_number, difficulty)),
-            )
-
-        # --- DESCRIBE PICTURE ---
-        elif modality == "describe_picture":
-            group = getattr(question, "groups", None)
-            correct = next((a for a in question.answers if a.is_correct), None)
-            prompt = {"image_url": getattr(group, "image_url", None)}
-            solution = {"expected": getattr(correct, "parageraph_en", None) or ""}
-            rubric = {"criteria": ["vocabulary", "grammar", "pronunciation"]}
-            difficulty = "hard"
-
-            item = Items(
-                modality="describe_picture",
-                prompt_jsonb=prompt,
-                solution_jsonb=solution,
-                rubric_jsonb=rubric,
-                difficulty=difficulty,
-                skill_type="speaking",
-                status="active",
-                question_ref=str(question.id),
-                band_hint=str(get_band_hint(part_number, difficulty)),
-            )
-
-        # --- ERROR FIX ---
-        elif modality == "error_fix":
-            raw_text = question.content.strip()
-            correct = next((a.content for a in question.answers if a.is_correct), None)
-            wrong = random.choice([a.content for a in question.answers if not a.is_correct]) if question.answers else None
-
-            stem = re.sub(r"(?:[A-D][\.\)]\s*)[A-Za-z'-]+__", "_____", raw_text)
-            wrong_text = stem.replace("_____", wrong or (correct + "s"))
-            correct_text = stem.replace("_____", correct or "")
-
-            prompt = {"text": wrong_text}
-            solution = {"correct_text": correct_text, "correct_word": correct, "wrong_word": wrong}
-            rubric = {"criteria": ["grammar"]}
-            difficulty = "easy"
-
-            item = Items(
-                modality="error_fix",
-                prompt_jsonb=prompt,
-                solution_jsonb=solution,
-                rubric_jsonb=rubric,
-                difficulty=difficulty,
-                skill_type="writing",
-                status="active",
-                question_ref=str(question.id),
-
-                band_hint=str(get_band_hint(part_number, difficulty)),
-            )
-
-        else:
-            continue
-
-        item.question = question
-        items.append(item)
-
-    return items
-
-
-def enrich_items_with_skills(db: Session, test: Tests):
-    question_tags = (
-        db.query(QuestionTags)
-        .join(Questions, QuestionTags.question_id == Questions.id)
-        .join(Groups, Questions.groupId == Groups.id)
-        .join(Parts, Groups.partId == Parts.id)
-        .filter(Parts.testId == test.id)
-        .all()
-    )
-    print(f"Enriching {len(question_tags)} question tags with skills into items...")
-    for tag in question_tags:
-        skill = db.get(Skills, tag.skill_id)
-        if not skill:
-            continue
-        items = db.query(Items).filter(Items.question_ref == str(tag.question_id)).all()
-        print(f" - Question {tag.question_id} has {len(items)} items to enrich with skill '{skill.name}'")
-        for item in items:
-            if skill not in (item.skills or []):
-                item.skills.append(skill)
-
-    db.commit()
-
-
-
 
 if __name__ == "__main__":
     from app.db.session import SessionLocal
     db = SessionLocal()
     test_url = "https://study4.com/tests/226/new-economy-toeic-test-3/results/29527020/details/"
     import_test(test_url, db)
-
-    # print(get_band_hint(1, "easy"))

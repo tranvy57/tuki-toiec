@@ -14,6 +14,7 @@ interface QuestionRendererProps {
   onAnswerChange: (questionId: number, value: string) => void;
   isTransitioning: boolean;
   mode?: "test" | "practice" | "review"; // Add mode prop
+  currentQuestion?: number; // Add current question number
 }
 
 export function QuestionRenderer({
@@ -22,6 +23,7 @@ export function QuestionRenderer({
   onAnswerChange,
   isTransitioning,
   mode = "test", // Default to test mode
+  currentQuestion, // Current question number
 }: QuestionRendererProps) {
   const { currentGroup, currentPart, currentGroupQuestion, fullTest } =
     usePracticeTest();
@@ -56,7 +58,7 @@ export function QuestionRenderer({
       case 3:
       case 4:
         return (
-          <div className="space-y-2">
+          <div className="ml-3 translate-y-2">
             {/* Hiển thị nội dung câu hỏi */}
             {question.content && (
               <p className="text-base text-gray-800 leading-relaxed font-medium">
@@ -74,7 +76,7 @@ export function QuestionRenderer({
 
       case 5:
         return (
-          <div className="space-y-2">
+          <div className="ml-3 translate-y-2">
             {/* Hiển thị nội dung câu hỏi */}
             {question.content && (
               <p className="text-base text-gray-800 leading-relaxed font-medium">
@@ -174,7 +176,7 @@ export function QuestionRenderer({
 
           {/* Reading parts (6-7) with passage layout */}
           {isReadingPart &&
-          (groupData.group?.paragraphEn || groupData.group?.paragraphVn) ? (
+            (groupData.group?.paragraphEn || groupData.group?.paragraphVn) ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Left: Passage */}
               <div className="space-y-4 col-span-2">
@@ -199,10 +201,15 @@ export function QuestionRenderer({
               {/* Right: Questions */}
               <div className="space-y-6">
                 {groupData.questions.map((question) => {
+                  const isCurrentQuestion = currentQuestion === question.numberLabel;
                   return (
                     <div
                       key={question.id}
-                      className="rounded-xl p-5 transition-all duration-200"
+                      id={`question-${question.numberLabel}`}
+                      className={cn(
+                        "rounded-xl p-5 transition-all duration-200 bg-white border border-gray-200",
+                       
+                      )}
                     >
                       <div className="flex items-start gap-4">
                         {/* Question number with circle */}
@@ -238,7 +245,7 @@ export function QuestionRenderer({
                                   key={option.id}
                                   htmlFor={`${question.id}-${option.id}`}
                                   className={cn(
-                                    "flex items-start gap-3 p-2 rounded-md cursor-pointer transition-colors border border-transparent",
+                                    "flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors border border-transparent",
                                     isChosen
                                       ? isRight
                                         ? "bg-green-50 border-green-300"
@@ -251,6 +258,9 @@ export function QuestionRenderer({
                                     id={`${question.id}-${option.id}`}
                                     className="mt-0.5"
                                   />
+                                  <span className="text-gray-700 font-semibold leading-relaxed">
+                                    {option.answerKey}
+                                  </span>
                                   <span className="text-gray-700 text-sm leading-relaxed">
                                     {option.content}
                                   </span>
@@ -291,7 +301,7 @@ export function QuestionRenderer({
               <div>
                 <div className="space-y-4">
                   {groupData?.group.imageUrl ? (
-                    <div className="relative h-96 w-full flex justify-start items-start">
+                    <div className="relative h-96 w-full flex justify-start items-start mb-4">
                       <Image
                         src={groupData.group.imageUrl}
                         alt="Question Image"
@@ -303,68 +313,79 @@ export function QuestionRenderer({
                     <span className="text-gray-500"></span>
                   )}
                 </div>
-                {groupData.questions.map((question) => (
-                  <div key={question.id} className="mt-8 pb-6">
-                    <div className="flex items-start ">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-pink-50 border border-pink-200 text-pink-500 font-semibold text-base">
-                        {question.numberLabel}
-                      </div>
+                {groupData.questions.map((question) => {
+                  const isCurrentQuestion = currentQuestion === question.numberLabel;
+                  return (
+                    <div
+                      key={question.id}
+                      id={`question-${question.numberLabel}`}
+                      className={cn(
+                        "p-4 rounded-xl transition-all duration-200 bg-transparent",
+    
+                      )}
+                    >
+                      <div className="flex items-start ">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-pink-50 border border-pink-200 text-pink-500 font-semibold text-base">
+                          {question.numberLabel}
+                        </div>
 
-                      <div
-                        className={`flex-1 ${
-                          currentPart.partNumber > 2 ? "space-y-4" : "mt-1"
-                        }`}
-                      >
-                        {renderQuestionContent(question, groupData.group)}
+                        <div
+                          className={`flex-1 ${currentPart.partNumber > 2 ? "space-y-4" : "mt-1"
+                            }`}
+                        >
+                          {renderQuestionContent(question, groupData.group)}
 
-                        {/* Answer options */}
-                        <RadioGroup
-                          value={answers[question.numberLabel] || ""}
-                          onValueChange={(value) =>
-                            onAnswerChange(question.numberLabel, value)
-                          }
-                          className={`${
-                            currentPart.partNumber <= 2
+                          {/* Answer options */}
+                          <RadioGroup
+                            value={answers[question.numberLabel] || ""}
+                            onValueChange={(value) =>
+                              onAnswerChange(question.numberLabel, value)
+                            }
+                            className={`${currentPart.partNumber <= 2
                               ? "pl-4 translate-y-1"
                               : ""
-                          }`}
-                        >
-                          {question.answers.map((option) => {
-                            // const isChosen = userAnswer === option.answerKey;
-                            // const isRight =
-                            //   option.answerKey === correctAnswer;
-                            const isChosen = false;
-                            const isRight = false;
+                              }`}
+                          >
+                            {question.answers.map((option) => {
+                              // const isChosen = userAnswer === option.answerKey;
+                              // const isRight =
+                              //   option.answerKey === correctAnswer;
+                              const isChosen = false;
+                              const isRight = false;
 
-                            return (
-                              <label
-                                key={option.id}
-                                htmlFor={`${question.id}-${option.id}`}
-                                className={cn(
-                                  "flex items-start gap-3 p-2 rounded-md cursor-pointer transition-colors border border-transparent",
-                                  isChosen
-                                    ? isRight
-                                      ? "bg-green-50 border-green-300"
-                                      : "bg-red-50 border-red-300"
-                                    : "hover:bg-blue-50/40 hover:border-blue-200"
-                                )}
-                              >
-                                <RadioGroupItem
-                                  value={option.answerKey}
-                                  id={`${question.id}-${option.id}`}
-                                  className="mt-0.5"
-                                />
-                                <span className="text-gray-700 text-sm leading-relaxed">
-                                  {option.content}
-                                </span>
-                              </label>
-                            );
-                          })}
-                        </RadioGroup>
+                              return (
+                                <label
+                                  key={option.id}
+                                  htmlFor={`${question.id}-${option.id}`}
+                                  className={cn(
+                                    "flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors border border-transparent",
+                                    isChosen
+                                      ? isRight
+                                        ? "bg-green-50 border-green-300"
+                                        : "bg-red-50 border-red-300"
+                                      : "hover:bg-blue-50/40 hover:border-blue-200"
+                                  )}
+                                >
+                                  <RadioGroupItem
+                                    value={option.answerKey}
+                                    id={`${question.id}-${option.id}`}
+                                    className="mt-0.5"
+                                  />
+                                  <span className="text-gray-700 font-semibold leading-relaxed">
+                                    {option.answerKey}
+                                  </span>
+                                  <span className="text-gray-700 text-sm leading-relaxed">
+                                    {option.content}
+                                  </span>
+                                </label>
+                              );
+                            })}
+                          </RadioGroup>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </>
           )}

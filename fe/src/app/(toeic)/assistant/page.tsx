@@ -20,16 +20,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
-
-// Dynamically import Spline component for SSR compatibility
-const Spline = dynamic(() => import('@splinetool/react-spline'), {
-    ssr: false,
-    loading: () => (
-        <div className="flex items-center justify-center h-full">
-            <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
-        </div>
-    )
-});
+import Spline from "@splinetool/react-spline";
 
 // Types
 interface Message {

@@ -27,7 +27,6 @@ import { MobileDrawer, MobileMenuButton } from "./mobile-navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HeaderBreadcrumb } from "./header-breadcrumb";
 import { ContentPane } from "./content-pane";
-import { findLessonByType } from "@/app/(toeic)/study-plan/[id]/exercise-lessons";
 import { LessonContentLearningInterface } from "@/components/learning";
 import { UnitLessons, LESSON_CONTENT_ICONS } from "./unit-lessons";
 import { SidebarToggle } from "./sidebar-toggle";

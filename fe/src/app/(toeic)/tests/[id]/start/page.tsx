@@ -125,7 +125,7 @@ export default function TestStartPage() {
           <div
             ref={contentRef}
             className={cn(
-              "px-6 py-6 transition-opacity duration-300 bg-white",
+              "px-6 transition-opacity duration-300 bg-white",
               isTransitioning ? "opacity-50" : "opacity-100"
             )}
           >
@@ -134,6 +134,7 @@ export default function TestStartPage() {
               answers={mappedAnswers}
               onAnswerChange={handleQuestionAnswerChange}
               isTransitioning={isTransitioning}
+              currentQuestion={currentQuestion}
             />
           </div>
         </div>

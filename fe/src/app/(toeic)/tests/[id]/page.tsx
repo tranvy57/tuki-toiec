@@ -256,17 +256,6 @@ export default function TestDetailPage() {
             </tbody>
           </table>
         </div>
-
-        {/* Empty state nếu không có kết quả */}
-        {/* <div className="text-center py-8">
-                      <div className="text-gray-400 mb-2">
-                        <FileText className="w-12 h-12 mx-auto" />
-                      </div>
-                      <p className="text-gray-500 text-sm">
-                        Bạn chưa có kết quả làm bài nào. Hãy bắt đầu làm bài thi để xem kết quả.
-                      </p>
-                    </div> */}
-
         {/* Tabs Section */}
         <motion.div
           initial="hidden"
@@ -310,7 +299,7 @@ export default function TestDetailPage() {
                       <strong>Chế độ Luyện tập</strong> cho phép bạn chọn các
                       phần cụ thể để tập trung luyện tập. Hoàn hảo cho việc
                       luyện tập có mục tiêu và cải thiện kỹ năng. Để có điểm số
-                      chính thức, hãy chuyển sang{" "}
+                      chính thức, hãy chuyển sang
                       <strong>Chế độ Thi đầy đủ</strong> mô phỏng trải nghiệm
                       thi thật với đầy đủ 7 phần và thời gian nghiêm ngặt.
                     </p>
