@@ -290,7 +290,7 @@ export default function DictationExerciseList({
         </div>
 
         {/* Title & Stats */}
-        <div className="text-center mb-8">
+        {/* <div className="text-center mb-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -308,7 +308,6 @@ export default function DictationExerciseList({
             Luyện tập kỹ năng nghe và chép chính tả với các bài tập tương tác
           </p>
 
-          {/* Quick Stats */}
           <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
             <div className="flex items-center gap-2">
               <Target className="w-4 h-4" />
@@ -323,13 +322,12 @@ export default function DictationExerciseList({
               <span>Luyện tập linh hoạt</span>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Filters */}
-        <Card className="mb-6">
+        {/* <Card className="mb-6">
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {/* Search */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
@@ -340,7 +338,6 @@ export default function DictationExerciseList({
                 />
               </div>
 
-              {/* Difficulty Filter */}
               <select
                 value={selectedDifficulty}
                 onChange={(e) => setSelectedDifficulty(e.target.value)}
@@ -352,7 +349,6 @@ export default function DictationExerciseList({
                 <option value="hard">Khó</option>
               </select>
 
-              {/* Level Filter */}
               <select
                 value={selectedLevel}
                 onChange={(e) => setSelectedLevel(e.target.value)}
@@ -365,7 +361,6 @@ export default function DictationExerciseList({
                 <option value="7">Band 7+</option>
               </select>
 
-              {/* Clear Filters */}
               <Button
                 variant="outline"
                 onClick={() => {
@@ -380,7 +375,7 @@ export default function DictationExerciseList({
               </Button>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Exercise List */}
         <motion.div
@@ -401,7 +396,7 @@ export default function DictationExerciseList({
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {filteredItems.map((item, index) => (
                 <motion.div
                   key={item.id}
@@ -432,7 +427,6 @@ export default function DictationExerciseList({
                     </CardHeader>
 
                     <CardContent className="space-y-4">
-                      {/* Badges */}
                       <div className="flex items-center gap-2 flex-wrap">
                         <Badge
                           variant="outline"
@@ -441,8 +435,8 @@ export default function DictationExerciseList({
                           {item.difficulty === "easy"
                             ? "Dễ"
                             : item.difficulty === "medium"
-                              ? "Trung bình"
-                              : "Khó"}
+                            ? "Trung bình"
+                            : "Khó"}
                         </Badge>
                         <Badge
                           variant="outline"
@@ -472,10 +466,7 @@ export default function DictationExerciseList({
                       </div>
 
                       {/* Action Button */}
-                      <Button
-                        className="w-full group-hover:bg-blue-600 transition-colors"
-                        size="sm"
-                      >
+                      <Button className="w-full  transition-colors" size="sm">
                         <Play className="w-4 h-4 mr-2" />
                         Bắt đầu luyện tập
                       </Button>

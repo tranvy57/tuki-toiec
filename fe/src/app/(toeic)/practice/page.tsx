@@ -17,6 +17,7 @@ import { writingExerciseTypes } from "@/data/mockDataWritting";
 import { skillsData } from "@/data/SKILL";
 import { CustomCard } from "@/components/CustomCard";
 import { speakingExerciseTypes } from "@/data/mockMenuSpeaking";
+import { dataListening } from "@/components/listening/InteractiveListeningDemo";
 
 const SKILLS = skillsData;
 
@@ -71,6 +72,8 @@ const PracticePage = () => {
           })}
         </div>
       </div>
+
+      {/* Writting Section */}
       <div className="container mx-auto px-6 ">
         <div className="flex gap-2 justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -100,6 +103,8 @@ const PracticePage = () => {
           ))}
         </div>
       </div>
+
+      {/* Speaking Section */}
       <div className="container mx-auto px-6 ">
         <div className="flex gap-2 justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -128,6 +133,47 @@ const PracticePage = () => {
               href={`/practice/speaking/${exercise.slug}`}
             />
           ))}
+        </div>
+      </div>
+
+      {/* Listening Section */}
+      <div className="container mx-auto px-6 ">
+        <div className="flex gap-2 justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
+              <Mic className="w-7 h-7 text-[#23085A] " />
+              <h1 className="text-2xl font-bold text-[#23085A]">Listening </h1>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {/* <Target className="w-4 h-4" /> */}
+
+              <span>(3 bài tập)</span>
+            </div>
+          </div>
+          <p className="underline">Xem tất cả </p>
+        </div>
+
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 w-full">
+          {dataListening.map((exercise, index) => {
+            const IconComponent = exercise.icon;
+
+            return (
+              <motion.div
+                key={exercise.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <CustomCard
+                  slug={exercise.id}
+                  name={exercise.name}
+                  description={exercise.description}
+                  icon={exercise.icon}
+                  href={exercise.href}
+                />
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </div>

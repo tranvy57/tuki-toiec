@@ -9,7 +9,7 @@ interface CustomCardProps {
   slug: string;
   name: string;
   description: string;
-  imageUrl: string;
+  imageUrl?: string;
   icon?: React.ElementType;
   href?: string;
 }
@@ -31,15 +31,21 @@ export function CustomCard({
     >
       <Link href={href || `/practice`}>
         <div className="relative h-40 w-full overflow-hidden">
-          <Image
-            src={
-              imageUrl ||
-              "https://media.istockphoto.com/id/1310251720/vi/vec-to/ti%E1%BA%BFng-anh.jpg?s=612x612&w=0&k=20&c=GMzb5QBeg3JRW_AkNpwjysezvISmt1oS7LtPIeGOTyc="
-            }
-            alt={name}
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-          />
+          {imageUrl ? (
+            <Image
+              src={imageUrl}
+              alt={name}
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          ) : (
+            <div
+              className="flex items-center justify-center w-full h-full text-white text-xl font-semibold text-center p-4"
+              style={{ backgroundColor: "#23085A" }}
+            >
+              {name}
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t opacity-60" />
 
           <div className="absolute top-3 left-3 px-2 py-1 rounded-md bg-white/80 text-sm font-semibold text-gray-800">
@@ -57,7 +63,9 @@ export function CustomCard({
               <h2 className="text-lg font-semibold text-gray-900">{name}</h2>
             </div>
 
-            <p className="text-sm text-gray-600 line-clamp-2">{description}</p>
+            <p className="text-sm text-gray-600 leading-5 line-clamp-2 min-h-[2.5rem]">
+              {description}
+            </p>
           </div>
         </div>
       </Link>

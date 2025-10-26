@@ -294,7 +294,7 @@ export default function WritingPracticePage() {
             <div className="p-3  rounded-xl ">
               <Edit3 className="w-4 h-4 " />
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-[#23085A]">
+            <h1 className="text-2xl md:text-2xl font-bold text-[#23085A]">
               Writting
             </h1>
           </div>

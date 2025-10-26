@@ -16,9 +16,7 @@ export function App() {
     setSelectedExerciseType(null);
   };
 
-  return (
-    <InteractiveListeningDemo />
-  );
+  return <InteractiveListeningDemo />;
 }
 
 export default App;
