@@ -1,0 +1,49 @@
+@startuml Course Purchase and Payment Flow - Tuki TOEIC
+!theme plain
+
+actor User
+boundary WebApp
+control Backend
+database Database
+entity VNPAY
+
+title Course Purchase and Payment Flow - Tuki TOEIC
+
+== Course Selection ==
+User -> WebApp: Select course and plan
+
+== Order Creation ==
+WebApp -> Backend: POST /orders\n{courseId, planId, userId}
+Backend -> Database: Create Order record\n{status: "pending", amount, courseId, planId}
+Database -> Backend: Order created with ID
+
+== Payment URL Generation ==
+Backend -> VNPAY: Generate payment URL\n{orderId, amount, returnUrl, ipnUrl}
+VNPAY -> Backend: Payment URL + transaction ID
+Backend -> WebApp: Return payment URL
+
+== Payment Process ==
+WebApp -> User: Redirect to payment page
+VNPAY -> User: Display payment form
+User -> VNPAY: Complete payment\n(enter card details, confirm)
+
+== Payment Callback (IPN) ==
+VNPAY -> Backend: Send IPN callback\n{vnp_ResponseCode, vnp_TxnRef, vnp_SecureHash}
+Backend -> Backend: Verify payment signature
+
+alt Payment Successful
+    Backend -> Database: Update Order status = "paid"
+    Backend -> Database: Create active Plan for user
+    Database -> Backend: Order and Plan updated
+    Backend -> VNPAY: Return success response
+else Payment Failed
+    Backend -> Database: Update Order status = "failed"
+    Backend -> VNPAY: Return failure response
+end
+
+== Return to WebApp ==
+Backend -> WebApp: Return payment success status
+WebApp -> User: Show "Payment successful"
+WebApp -> User: Start course access
+
+@enduml

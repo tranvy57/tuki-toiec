@@ -1,0 +1,117 @@
+@startuml Submit Attempt Business Flow - Tuki TOEIC
+!theme plain
+
+actor User
+boundary "AttemptController" as Controller
+control "AttemptService" as Service
+control "UserProgressService" as ProgressService
+control "StudyTasksService" as TaskService
+control "PlanService" as PlanService
+entity "AttemptRepository" as AttemptRepo
+entity "AttemptAnswerRepository" as AnswerRepo
+entity "UserVocabularyRepository" as VocabRepo
+entity "VocabularyRepository" as VocabDictRepo
+database "Database" as DB
+
+title Submit Attempt Business Flow - TOEIC Test Submission
+
+== Test Submission ==
+User -> Controller: POST /attempts/{id}/submit
+Controller -> Service: submitAttemptReview(attemptId, user)
+
+== Database Transaction Start ==
+Service -> DB: Begin Transaction
+
+== Load Attempt Data ==
+Service -> AttemptRepo: findOne(attemptId) with relations\n{user, test, parts, groups, questions, answers, questionTags, skill}
+AttemptRepo -> DB: SELECT attempt with deep relations
+DB --> AttemptRepo: attempt data
+AttemptRepo --> Service: loaded attempt
+
+== Validate User Permission ==
+Service -> Service: Check if attempt.user.id === user.id
+note right: Throws UnauthorizedException if not owner
+
+== Load User Answers ==
+Service -> AnswerRepo: find({attempt: attemptId}) with relations
+AnswerRepo -> DB: SELECT attempt_answers with answer & question
+DB --> AnswerRepo: user's answers
+AnswerRepo --> Service: answerMap (questionId -> AttemptAnswer)
+
+== Process Questions & Calculate Score ==
+Service -> Service: processQuestions(attempt, answerMap)
+note right
+  For each part > group > question:
+  - Check if user answer is correct
+  - Calculate totalScore, correctCount
+  - Build skillMap for progress tracking
+  - Extract lemmas/phrases for vocabulary
+end note
+Service --> Service: {totalScore, correctCount, totalQuestions, skillMap, allKeys}
+
+== Update User Vocabulary ==
+Service -> Service: updateUserVocabulary(userId, allKeys, attempt)
+Service -> VocabDictRepo: find({lemma: IN(allKeys)})
+VocabDictRepo -> DB: SELECT vocabularies by lemmas
+DB --> VocabDictRepo: matching vocabularies
+VocabDictRepo --> Service: vocabulary definitions
+
+Service -> VocabRepo: find({user: userId, vocabulary: IN(vocabIds)})
+VocabRepo -> DB: SELECT user_vocabularies
+DB --> VocabRepo: existing user vocab records
+VocabRepo --> Service: existing user vocabularies
+
+Service -> Service: Calculate correctCount/wrongCount per vocabulary\nUpdate status (new/learning/review/mastered)
+Service -> VocabRepo: save(updatedUserVocabularies)
+VocabRepo -> DB: INSERT/UPDATE user_vocabularies
+DB --> VocabRepo: saved
+
+== Update User Progress (Skills) ==
+Service -> ProgressService: updateUserProgress(userId, skillMap)
+ProgressService -> DB: UPDATE user_progress SET proficiency per skill
+DB --> ProgressService: updated skills
+ProgressService --> Service: updatedSkills[]
+
+== Mark Completed Study Tasks ==
+Service -> TaskService: markSkippableStudyTasks(userId, threshold=0.6)
+TaskService -> DB: UPDATE study_tasks SET status='skipped' WHERE proficiency >= 0.6
+DB --> TaskService: affected tasks count
+TaskService --> Service: skippedTasks count
+
+== Update User Plan Status ==
+Service -> PlanService: getActivePlanByUserId(userId)
+PlanService -> DB: SELECT plan WHERE userId AND status='active'
+DB --> PlanService: active plan
+PlanService --> Service: active plan
+
+alt Plan exists
+    Service -> PlanService: updatePlan(planId, "in_progress")
+    PlanService -> DB: UPDATE plan SET status='in_progress'
+    DB --> PlanService: updated plan
+end
+
+== Finalize Attempt ==
+Service -> Service: updateAttempt(attempt, totalScore)
+Service -> AttemptRepo: save(attempt) with status='submitted', finishAt=now()
+AttemptRepo -> DB: UPDATE attempt SET status, finishAt, totalScore
+DB --> AttemptRepo: saved attempt
+
+== Commit Transaction ==
+Service -> DB: Commit Transaction
+
+== Return Results ==
+Service --> Controller: {attemptId, score, correctCount, totalQuestions,\nupdatedSkills, parts, skippedTasks}
+Controller --> User: 200 OK with detailed results
+
+note over User, DB
+  **Key Business Logic:**
+  • Validates user ownership of attempt
+  • Calculates comprehensive scoring (total, listening, reading)
+  • Updates vocabulary learning status based on question performance
+  • Tracks skill proficiency improvements
+  • Marks study tasks as completed based on skill threshold
+  • Updates learning plan progression status
+  • All operations wrapped in database transaction for consistency
+end note
+
+@enduml

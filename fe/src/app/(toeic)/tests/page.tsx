@@ -55,7 +55,6 @@ export default function TestListPage() {
     const matchesSearch = test.title
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
-    console.log(data);
     return matchesSearch;
   });
 

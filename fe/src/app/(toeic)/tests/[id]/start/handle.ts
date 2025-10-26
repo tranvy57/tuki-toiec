@@ -175,10 +175,6 @@ export const useTestLogic = () => {
           alert("There was an error submitting your test. Please try again.");
           return;
         }
-        console.log(
-          "Redirecting to:",
-          `/tests/${fullTest?.id}/result?attemptId=${attemptId}`
-        );
 
         setResultTest(result);
         router.replace(`/tests/${fullTest?.id}/result?attemptId=${attemptId}`);

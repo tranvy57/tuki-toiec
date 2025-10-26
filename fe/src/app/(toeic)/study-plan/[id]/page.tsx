@@ -21,8 +21,6 @@ export default function CoursePage() {
   const { data: courseData, isLoading, error, refetch } = useLatestCourse();
   const { data, isLoading: isLoadingPremium, error: premiumError } = usePremiumStatus();
 
-  console.log(data)
-
   // Transform API data to match component expectations
   const transformApiDataToUnits = (course: any) => {
     if (!course?.phases) return MOCK_UNITS;

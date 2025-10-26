@@ -26,7 +26,6 @@ async function addAttemptAnswer(attemptAnswer: CreateAttemptAnswerReq) {
     `/attempts/${attemptAnswer.attemptId}/answers`,
     attemptAnswer
   );
-  console.log(res);
 
   return res;
 }

@@ -1,9 +1,9 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import Providers from "@/provider/provider";
+import type { Metadata } from "next";
 import { getLocale, getMessages } from "next-intl/server";
-import AppInit from "@/components/AppInit";
-import Header from "@/components/layout/header/header";
+import { Geist, Geist_Mono } from "next/font/google";
+import "@/styles/globals.css";
+
 
 
 
@@ -36,11 +36,15 @@ export default async function RootLayout({
   const timeZone = "Asia/Ho_Chi_Minh"; // hoặc lấy động
 
   return (
-    <>
-      <AppInit />
-      <Header />
-      <div className="mt-18">{children}</div>
-    </>
+    <html lang={locale}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <Providers locale={locale} messages={messages} timeZone={timeZone}>
+            {children}
+        </Providers>
+      </body>
+    </html>
   );
 }
 

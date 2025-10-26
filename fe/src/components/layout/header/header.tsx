@@ -6,14 +6,6 @@ import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { TOEIC_NAVIGATION } from "@/constants/navigation";
 
-const navItems = [
-  { name: "Trang chủ", href: "/" },
-  { name: "Lộ trình", href: "/study-plan" },
-  { name: "Thư viện", href: "/library" },
-  { name: "Blog", href: "/blog" },
-  { name: "Liên hệ", href: "/contact" },
-];
-
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

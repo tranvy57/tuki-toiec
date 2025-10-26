@@ -134,18 +134,6 @@ export default function LearnPage() {
     setIsLessonMode(false);
   };
 
-  // Loading state
-  if (isPlanLoading || isCourseLoading || isLoadingPremium) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Đang tải kế hoạch học...</p>
-        </div>
-      </div>
-    );
-  }
-
   // Error state for course page
   if (step === "course" && courseError) {
     return (
@@ -164,22 +152,22 @@ export default function LearnPage() {
     );
   }
 
-  // Error state for other cases
-  if (planError || courseError) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <p className="text-red-600">Có lỗi xảy ra khi tải dữ liệu</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
-          >
-            Thử lại
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // // Error state for other cases
+  // if (planError || courseError) {
+  //   return (
+  //     <div className="min-h-screen flex items-center justify-center">
+  //       <div className="text-center space-y-4">
+  //         <p className="text-red-600">Có lỗi xảy ra khi tải dữ liệu</p>
+  //         <button
+  //           onClick={() => window.location.reload()}
+  //           className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+  //         >
+  //           Thử lại
+  //         </button>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   // Render course page if user has a course
   if (step === "course") {

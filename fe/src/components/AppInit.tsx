@@ -9,7 +9,6 @@ export default function AppInit() {
   const router = useRouter();
 
   useEffect(() => {
-    console.log("auth:", authenticated, "loading:", loading, "hydrated:", hydrated);
 
     if (!hydrated) return; 
 
