@@ -31,7 +31,7 @@ export class Vocabulary extends BaseEntity {
   lemma: string;
 
   @Column({ name: 'type', nullable: true })
-  type: string;
+  type: 'ai_generated' | 'toeic' | 'exercise';
 
   @Column({ name: 'is_phrase', default: false })
   isPhrase: boolean;

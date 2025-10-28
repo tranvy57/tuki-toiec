@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateVocabularyDto } from './dto/create-vocabulary.dto';
 import { UpdateVocabularyDto } from './dto/update-vocabulary.dto';
 import * as XLSX from 'xlsx';
@@ -6,12 +11,17 @@ import { Repository } from 'typeorm';
 import { Vocabulary } from './entities/vocabulary.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { VocabularyMapper } from './utils/vocabulary.mapper';
+import axios from 'axios';
+import { UserVocabulariesService } from 'src/user_vocabularies/user_vocabularies.service';
+import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class VocabularyService {
   constructor(
     @InjectRepository(Vocabulary)
     private vocabularyRepo: Repository<Vocabulary>,
+    @Inject()
+    private readonly userVocabService: UserVocabulariesService,
   ) {}
   async create(dto: CreateVocabularyDto) {
     const entity = VocabularyMapper.fromCreateDto(dto);
@@ -75,5 +85,121 @@ export class VocabularyService {
       success: true,
       count: vocabularies.length,
     };
+  }
+
+  /**
+   * Tra từ (nếu chưa có thì gọi API để bổ sung)
+   */
+  async lookupWord(word: string, user: User) {
+    word = word.trim().toLowerCase();
+
+    let vocab = await this.vocabularyRepo.findOne({ where: { word } });
+    if (vocab) {
+      await this.userVocabService.track(user.id, vocab.id, {
+        source: 'search',
+        incrementStrength: true,
+      });
+      return { vocab };
+    }
+
+    let res;
+    try {
+      res = await axios.get(
+        `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`,
+      );
+    } catch (e) {
+      throw new HttpException(
+        `Không tìm thấy định nghĩa cho từ "${word}"`,
+        404,
+      );
+    }
+
+    const data = Array.isArray(res.data) ? res.data[0] : res.data;
+    const parsed = this.parseDictionaryApiResponse(data);
+
+    try {
+      const [meaningVi, exampleVi] = await Promise.all([
+        this.translateToVietnamese(parsed.meaning),
+        parsed.exampleEn
+          ? this.translateToVietnamese(parsed.exampleEn)
+          : Promise.resolve(undefined),
+      ]);
+
+      parsed.meaning = meaningVi;
+      parsed.exampleVn = exampleVi;
+    } catch (err) {
+      console.warn('⚠️ Bỏ qua phần dịch tiếng Việt:', err.message);
+    }
+
+    vocab = this.vocabularyRepo.create({
+      ...parsed,
+      type: 'ai_generated',
+    });
+    const vocabSaved = await this.vocabularyRepo.save(vocab);
+
+    const userVocab = await this.userVocabService.track(
+      user.id,
+      vocabSaved.id,
+      {
+        source: 'search',
+        incrementStrength: true,
+      },
+    );
+
+    return { vocab: vocabSaved };
+  }
+
+  /**
+   * Parse dữ liệu từ dictionaryapi.dev
+   */
+  private parseDictionaryApiResponse(entry: any) {
+    const phonetic =
+      entry.phonetics?.find((p) => p.text)?.text ??
+      entry.phonetics?.[0]?.text ??
+      null;
+
+    const audioUrl =
+      entry.phonetics?.find((p) => p.audio)?.audio ??
+      entry.phonetics?.[0]?.audio ??
+      null;
+
+    const meaning = entry.meanings
+      ?.map((m) => {
+        const def = m.definitions?.[0]?.definition ?? '';
+        return `${m.partOfSpeech}: ${def}`;
+      })
+      .join('; ');
+
+    const exampleEn =
+      entry.meanings?.flatMap((m) => m.definitions).find((d) => d.example)
+        ?.example || null;
+
+    return {
+      word: entry.word,
+      pronunciation: phonetic,
+      meaning,
+      exampleEn,
+      partOfSpeech: entry.meanings?.[0]?.partOfSpeech ?? null,
+      exampleVn: undefined,
+      audioUrl,
+    };
+  }
+
+  private async translateToVietnamese(text: string) {
+    if (!text) return null;
+
+    const apiKey = process.env.GOOGLE_TRANSLATE_KEY;
+    console.log(apiKey);
+    if (!apiKey) return text; //
+
+    const res = await axios.post(
+      `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`,
+      {
+        q: text,
+        target: 'vi',
+      },
+    );
+
+    return res.data.data.translations[0].translatedText;
   }
 }

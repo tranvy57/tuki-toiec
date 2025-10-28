@@ -54,7 +54,6 @@ export const createVocabulary = async (
   }
 };
 
-// Cập nhật vocabulary (nếu cần)
 export const updateVocabulary = async (
   id: number,
   vocabulary: Partial<Vocabulary>

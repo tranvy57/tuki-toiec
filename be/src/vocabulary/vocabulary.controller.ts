@@ -8,6 +8,7 @@ import {
   Delete,
   UseInterceptors,
   UploadedFile,
+  Query,
 } from '@nestjs/common';
 import { VocabularyService } from './vocabulary.service';
 import { CreateVocabularyDto } from './dto/create-vocabulary.dto';
@@ -15,6 +16,8 @@ import { UpdateVocabularyDto } from './dto/update-vocabulary.dto';
 import { Roles } from 'src/common/decorator/roles.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Public } from 'src/common/decorator/public.decorator';
+import { CurrentUser } from 'src/common/decorator/current-user.decorator';
+import { User } from 'src/user/entities/user.entity';
 
 @Controller('vocabularies')
 export class VocabularyController {
@@ -32,11 +35,11 @@ export class VocabularyController {
     return this.vocabularyService.findAll();
   }
 
-  @Get(':id')
-  @Public()
-  findOne(@Param('id') id: string) {
-    return this.vocabularyService.findOne(id);
-  }
+  // @Get(':id')
+  // @Public()
+  // findOne(@Param('id') id: string) {
+  //   return this.vocabularyService.findOne(id);
+  // }
 
   @Patch(':id')
   update(
@@ -56,5 +59,11 @@ export class VocabularyController {
   async importExcel(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new Error('File not found!');
     return await this.vocabularyService.importFromExcel(file);
+  }
+
+  @Get('lookup')
+  async lookup(@Query('word') word: string, @CurrentUser() user: User) {
+    const result = await this.vocabularyService.lookupWord(word, user);
+    return { data: result };
   }
 }

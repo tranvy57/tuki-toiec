@@ -45,6 +45,7 @@ import { VnpayModule } from './vnpay/vnpay.module';
 import { OrderModule } from './order/order.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Order } from './order/entities/order.entity';
+import { UserVocabularySessionModule } from './user_vocabulary_session/user_vocabulary_session.module';
 
 @Module({
   imports: [
@@ -86,6 +87,7 @@ import { Order } from './order/entities/order.entity';
     OrderModule,
     VnpayModule,
     TypeOrmModule.forFeature([Order]),
+    UserVocabularySessionModule,
   ],
   controllers: [AppController],
   providers: [
