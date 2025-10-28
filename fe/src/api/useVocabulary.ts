@@ -7,6 +7,7 @@ export interface VocabularyResponse {
   data: Vocabulary;
 }
 
+
 export interface VocabularySearchParams {
   page?: number;
   limit?: number;
@@ -26,43 +27,6 @@ export const getUserVocabularies = async (): Promise<UserVocabularyResponse> => 
     return parsed;
   } catch (error) {
     console.error('Error fetching vocabularies:', error);
-    throw error;
-  }
-};
-
-// Lấy vocabulary theo ID
-export const getVocabularyById = async (id: number): Promise<VocabularyResponse> => {
-  try {
-    const response = await api.get(`/vocabularies/${id}`);
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching vocabulary with id ${id}:`, error);
-    throw error;
-  }
-};
-
-// Tạo vocabulary mới (nếu cần)
-export const createVocabulary = async (
-  vocabulary: Omit<Vocabulary, 'vocabulary_id'>
-): Promise<VocabularyResponse> => {
-  try {
-    const response = await api.post('/vocabularies', vocabulary);
-    return response.data;
-  } catch (error) {
-    console.error('Error creating vocabulary:', error);
-    throw error;
-  }
-};
-
-export const updateVocabulary = async (
-  id: number,
-  vocabulary: Partial<Vocabulary>
-): Promise<VocabularyResponse> => {
-  try {
-    const response = await api.put(`/vocabularies/${id}`, vocabulary);
-    return response.data;
-  } catch (error) {
-    console.error(`Error updating vocabulary with id ${id}:`, error);
     throw error;
   }
 };
@@ -95,3 +59,28 @@ export const getWordAudioUrl = async (word: string): Promise<string | null> => {
     return null;
   }
 };
+
+
+async function fetchVocab(word: string): Promise<Vocabulary | null> {
+  try {
+    const res = await api.get<VocabularyResponse>(`/vocabularies/lookup?word=${encodeURIComponent(word)}`);
+    console.log(res)
+    return res.data.data;
+  } catch (err) {
+    console.error("fetchVocab error", err);
+    return null;
+  }
+}
+
+export const useLookUp = (word: string) => {
+  return useQuery({
+    queryKey: ["vocab", word],
+    queryFn: async () => {
+      if (!word) return null;
+      return await fetchVocab(word);
+    },
+    enabled: false,
+    retry: 1,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+}

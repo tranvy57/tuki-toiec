@@ -5,13 +5,27 @@ import React, { useEffect, useRef, useState } from "react";
 // Position type compatible with useWordSelection's returned position
 type Pos = { x: number; y: number } | null;
 
+// Vocab type
+type Vocab = {
+    id?: string;
+    word: string;
+    meaning?: string;
+    pronunciation?: string;
+    partOfSpeech?: string;
+    exampleEn?: string;
+    exampleVn?: string;
+    audioUrl?: string;
+    type?: string;
+    isPhrase?: boolean;
+};
+
 // Props for the WordPopup
 interface WordPopupProps {
-    word: string;
-    position: Pos;
+    isOpen: boolean;
+    data?: Vocab | null;
+    isLoading?: boolean;
+    position?: Pos;
     onClose: () => void;
-    getCached?: (word: string) => string | null;
-    setCached?: (word: string, meaning: string) => void;
 }
 
 /**
@@ -21,88 +35,57 @@ interface WordPopupProps {
  *   const json = await res.json();
  *   return json.meaning;
  */
-export const mockTranslate = async (word: string) => {
-    const dict: Record<string, string> = {
-        happy: "vui vẻ",
-        study: "học",
-        listen: "nghe",
-        speak: "nói",
-        practice: "luyện tập",
-    };
-    return new Promise<string>((resolve) => {
-        setTimeout(() => {
-            const lower = word.toLowerCase();
-            resolve(dict[lower] ?? `Nghĩa tạm cho "${word}"`);
-        }, 500);
-    });
-};
 
-export const mockSaveWord = async (word: string, meaning: string) => {
-    return new Promise<void>((resolve) => {
-        setTimeout(() => {
-            console.log("Saved word:", { word, meaning });
-            // demo: replace with fetch('/api/user-vocabularies', { method:'POST', body: JSON.stringify(...) })
-            alert(`Saved \"${word}\" — ${meaning}`);
-            resolve();
-        }, 300);
-    });
-};
-
-export const WordPopup: React.FC<WordPopupProps> = ({ word, position, onClose, getCached, setCached }) => {
+export const WordPopup: React.FC<WordPopupProps> = ({ isOpen, data, isLoading, position, onClose }) => {
     const ref = useRef<HTMLDivElement | null>(null);
-    const [meaning, setMeaning] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [saving, setSaving] = useState(false);
     const [visible, setVisible] = useState(false);
 
-    // clamp popup to viewport
+    // Position popup relative to cursor with smart placement
     const computeStyle = (): React.CSSProperties => {
-        if (!position) return { left: 0, top: 0 };
-        const margin = 8;
-        let left = position.x + 6;
-        let top = position.y + 6;
-        // basic clamp
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
-        const maxWidth = Math.min(360, vw - 16);
-        if (left + maxWidth + margin > vw) left = vw - maxWidth - margin;
-        if (top + 160 + margin > vh) top = Math.max(margin, position.y - 140);
-        return { left, top, maxWidth } as React.CSSProperties;
+        if (!position) {
+            return { display: 'none' };
+        }
+
+        const margin = 12;
+        const popupWidth = 320; // approximate width
+        const popupHeight = 200; // approximate height
+
+        let left = position.x;
+        let top = position.y;
+
+        // Check if cursor is in bottom third of viewport
+        const isInBottomThird = position.y > (window.innerHeight * 2 / 3);
+
+        if (isInBottomThird) {
+            // Show above cursor
+            top = position.y - popupHeight - margin;
+        } else {
+            // Show below cursor
+            top = position.y + margin;
+        }
+
+        // Clamp horizontally to viewport
+        const maxLeft = window.innerWidth - popupWidth - margin;
+        left = Math.max(margin, Math.min(left, maxLeft));
+
+        // Clamp vertically to viewport
+        top = Math.max(margin, Math.min(top, window.innerHeight - popupHeight - margin));
+
+        return {
+            position: 'fixed' as const,
+            left: `${left}px`,
+            top: `${top}px`,
+            zIndex: 50,
+        };
     };
 
     useEffect(() => {
-        // Show popup immediately and load translation asynchronously to reduce perceived delay
-        let mounted = true;
-
-        const cached = getCached?.(word) ?? null;
-        if (cached) {
-            setMeaning(cached);
-            setLoading(false);
-            // show immediately
+        if (isOpen) {
             requestAnimationFrame(() => setVisible(true));
-            return () => {
-                mounted = false;
-            };
+        } else {
+            setVisible(false);
         }
-
-        // no cache -> show popup quickly with loading state
-        setMeaning(null);
-        setLoading(true);
-        // show popup immediately to reduce perceived delay
-        requestAnimationFrame(() => setVisible(true));
-
-        (async () => {
-            const m = await mockTranslate(word);
-            if (!mounted) return;
-            setLoading(false);
-            setMeaning(m);
-            setCached?.(word, m);
-        })();
-
-        return () => {
-            mounted = false;
-        };
-    }, [word, getCached, setCached]);
+    }, [isOpen]);
 
     useEffect(() => {
         const onDown = (ev: MouseEvent) => {
@@ -126,71 +109,64 @@ export const WordPopup: React.FC<WordPopupProps> = ({ word, position, onClose, g
     }, [onClose]);
 
     const pronounce = () => {
+        if (!data?.audioUrl) return;
         try {
-            const msg = new SpeechSynthesisUtterance(word);
-            msg.lang = "en-US";
-            window.speechSynthesis.cancel();
-            window.speechSynthesis.speak(msg);
+            const audio = new Audio(data.audioUrl);
+            audio.play().catch(() => { });
         } catch (e) {
-            console.warn("speechSynthesis not available", e);
+            console.warn("Audio playback not available", e);
         }
     };
 
-    const save = async () => {
-        setSaving(true);
-        await mockSaveWord(word, meaning ?? "");
-        setSaving(false);
-        onClose();
-    };
+    if (!isOpen) return null;
 
-    if (!position) return null;
+    const meaningLines = (data?.meaning || "").split(";").map(s => s.trim()).filter(Boolean);
 
     return (
         <div
             ref={ref}
             style={computeStyle()}
-            className={`fixed z-50 bg-white text-gray-800 rounded-lg shadow-lg p-4 border border-gray-100 transform transition-all duration-150 ease-out ${visible ? "opacity-100 scale-100" : "opacity-0 scale-95"
-                }`}
-            role="dialog"
-            aria-label={`Definition of ${word}`}>
-            <div className="flex items-start gap-3">
+            className={`fixed z-50 bg-white rounded-2xl shadow-2xl p-6 transition-opacity duration-200 ease-out max-w-sm w-full md:max-w-md ${visible ? "opacity-100" : "opacity-0"}`}
+            role="tooltip"
+            aria-label={data?.word ?? "Vocabulary"}>
+
+            <button onClick={onClose} className="absolute right-3 top-3 text-gray-500 hover:text-gray-700">✕</button>
+
+            <div className="flex items-start gap-4">
                 <div className="flex-1">
-                    <div className="flex items-center justify-between gap-3">
-                        <h4 className="font-semibold text-lg">{word}</h4>
-                        <button
-                            onClick={onClose}
-                            aria-label="Close"
-                            className="text-gray-400 hover:text-gray-600">✖</button>
-                    </div>
-                    <div className="mt-2 text-sm text-gray-600">
-                        {loading ? (
-                            <div className="italic text-sm text-gray-400">Đang tra nghĩa...</div>
-                        ) : (
-                            <div>{meaning}</div>
+                    <div className="flex items-center gap-3">
+                        <h2 className="text-2xl font-bold">{data?.word ?? (isLoading ? '...' : '')}</h2>
+                        {data?.pronunciation && <span className="text-gray-500 italic">{data.pronunciation}</span>}
+                        {data?.audioUrl && (
+                            <button onClick={pronounce} className="ml-auto text-sm px-2 py-1 bg-gray-100 rounded">▶</button>
                         )}
                     </div>
+
+                    {data?.partOfSpeech && (
+                        <div className="mt-1 text-indigo-600 text-sm uppercase">{data.partOfSpeech}</div>
+                    )}
+
+                    <div className="mt-2 leading-relaxed text-gray-800">
+                        {isLoading && <div className="text-sm text-gray-400">Đang tải...</div>}
+                        {!isLoading && meaningLines.length === 0 && <div className="text-sm text-gray-500">Không có dữ liệu nghĩa.</div>}
+
+                        {!isLoading && meaningLines.map((line, i) => (
+                            <div key={i} className="mt-2">{line}</div>
+                        ))}
+                    </div>
+
+                    {(data?.exampleEn || data?.exampleVn) && (
+                        <div className="mt-4 text-sm italic text-gray-600">
+                            <div className="flex items-start gap-2">
+                                <span>💬</span>
+                                <div>
+                                    {data?.exampleEn && <div className="mb-1">{data.exampleEn}</div>}
+                                    {data?.exampleVn && <div className="text-gray-500">{data.exampleVn}</div>}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
-            </div>
-
-            <div className="mt-3 flex items-center gap-2">
-                <button
-                    onClick={pronounce}
-                    className="px-3 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm">
-                    🔊 Phát âm
-                </button>
-
-                <button
-                    onClick={save}
-                    disabled={saving}
-                    className="px-3 py-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm disabled:opacity-60">
-                    {saving ? "Đang lưu…" : "💾 Lưu từ"}
-                </button>
-
-                <button
-                    onClick={onClose}
-                    className="ml-auto text-sm text-gray-500 px-2 py-1 rounded hover:bg-gray-50">
-                    Đóng
-                </button>
             </div>
         </div>
     );

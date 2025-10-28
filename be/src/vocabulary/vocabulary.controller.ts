@@ -64,6 +64,6 @@ export class VocabularyController {
   @Get('lookup')
   async lookup(@Query('word') word: string, @CurrentUser() user: User) {
     const result = await this.vocabularyService.lookupWord(word, user);
-    return { data: result };
+    return result;
   }
 }

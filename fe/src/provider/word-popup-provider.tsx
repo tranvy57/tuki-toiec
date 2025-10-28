@@ -1,47 +1,45 @@
 "use client";
 
 import WordPopup from "@/components/layout/word-popup";
-import React, { useCallback, useEffect, useState } from "react";
-
-/** Vị trí popup */
-type Pos = { x: number; y: number } | null;
+import { useWordSelection } from "@/hooks/useWordSelection";
+import React, { useCallback, useEffect } from "react";
 
 /**
  * Provider toàn cục cho tính năng double click để dịch & lưu từ
  * - Nghe sự kiện double-click toàn trang
- * - Hiển thị WordPopup với từ được chọn
- * - Dùng cache nhỏ để tránh gọi lại API dịch
+ * - Hiển thị WordPopup với từ được chọn và dữ liệu từ API
  */
 export const WordPopupProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [selectedWord, setSelectedWord] = useState<string | null>(null);
-    const [position, setPosition] = useState<Pos>(null);
-    const [cache] = useState<Record<string, string>>({}); // bộ nhớ tạm cho từ đã dịch
-
-    const getCached = (w: string) => cache[w] ?? null;
-    const setCached = (w: string, meaning: string) => (cache[w] = meaning);
+    const {
+        selectedWord,
+        position,
+        isPopupOpen,
+        vocabData,
+        isLoading,
+        clearSelection,
+        openPopup
+    } = useWordSelection();
 
     const handleClose = () => {
-        setSelectedWord(null);
-        setPosition(null);
+        clearSelection();
     };
 
     /**
      * Xử lý khi double-click — popup sẽ chỉ hiển thị khi user dblclick
-     * - Nếu có selection text, dùng bounding rect của selection để đặt vị trí
-     * - Ngược lại, fallback về vị trí click
+     * - Lấy từ được selection hoặc từ dưới con trỏ
+     * - Gọi openPopup từ hook để fetch API
      */
     const handleSelect = useCallback((e: MouseEvent) => {
         // bỏ qua khi đang click trong input, textarea, contenteditable
         const target = e.target as HTMLElement | null;
         if (target?.closest("input, textarea, [contenteditable=true]")) return;
 
-        // Only respond to actual double-click events (for robustness when using 'click' listener)
+        // Only respond to actual double-click events
         if (e.detail !== 2) return;
 
         // Try selection first
         const sel = window.getSelection();
         let word: string | null = null;
-        let pos: Pos | null = null;
 
         if (sel && sel.toString().trim()) {
             const raw = sel.toString().trim();
@@ -53,7 +51,7 @@ export const WordPopupProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                     const range = sel.getRangeAt(0);
                     const rect = range.getBoundingClientRect();
                     // place near the bottom-center of selection
-                    pos = { x: rect.left + rect.width / 2, y: rect.bottom };
+                    // pos = { x: rect.left + rect.width / 2, y: rect.bottom };
                 }
             } catch (err) {
                 // ignore and fallback to click coords
@@ -128,7 +126,7 @@ export const WordPopupProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                 }
                 if (range) {
                     const r = range.getBoundingClientRect();
-                    if (r && r.left !== 0 && r.top !== 0) pos = { x: r.left, y: r.bottom };
+                    // if (r && r.left !== 0 && r.top !== 0) pos = { x: r.left, y: r.bottom };
                 }
             } catch (err) {
                 // ignore
@@ -137,10 +135,9 @@ export const WordPopupProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
         if (!word) return;
 
-        setSelectedWord(word);
-        // prefer selection-based pos (viewport coords), otherwise fallback to click client coords
-        setPosition(pos ?? { x: e.clientX, y: e.clientY });
-    }, []);
+        // Use openPopup from hook with mouse coordinates
+        openPopup(word, e.clientX, e.clientY);
+    }, [openPopup]);
 
     useEffect(() => {
         document.addEventListener("click", handleSelect);
@@ -150,15 +147,13 @@ export const WordPopupProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return (
         <>
             {children}
-            {selectedWord && position && (
-                <WordPopup
-                    word={selectedWord}
-                    position={position}
-                    onClose={handleClose}
-                    getCached={getCached}
-                    setCached={setCached}
-                />
-            )}
+            <WordPopup
+                isOpen={isPopupOpen}
+                data={vocabData}
+                isLoading={isLoading}
+                position={position}
+                onClose={handleClose}
+            />
         </>
     );
 };

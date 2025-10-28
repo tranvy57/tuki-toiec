@@ -99,7 +99,7 @@ export class VocabularyService {
         source: 'search',
         incrementStrength: true,
       });
-      return { vocab };
+      return vocab;
     }
 
     let res;
@@ -146,7 +146,7 @@ export class VocabularyService {
       },
     );
 
-    return { vocab: vocabSaved };
+    return vocabSaved ;
   }
 
   /**

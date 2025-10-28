@@ -1,6 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useLookUp } from "@/api/useVocabulary";
 
 export type Position = { x: number; y: number } | null;
+
 
 /**
  * useWordSelection
@@ -15,7 +18,10 @@ export type Position = { x: number; y: number } | null;
 export function useWordSelection() {
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [position, setPosition] = useState<Position>(null);
+  const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
 
+  // TanStack Query for vocab API
+  const { data, isFetching, isLoading, refetch } = useLookUp(selectedWord || "");
   // Simple in-memory cache for translations: word -> meaning
   const cacheRef = useRef<Map<string, string>>(new Map());
 
@@ -58,6 +64,10 @@ export function useWordSelection() {
         }
 
         setSelectedWord(word);
+        setPosition({ x: e.clientX, y: e.clientY });
+        setIsPopupOpen(true);
+        // Trigger API fetch
+        refetch();
       } catch (err) {
         // ignore selection errors
         console.warn("useWordSelection dblclick error:", err);
@@ -81,26 +91,48 @@ export function useWordSelection() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const clearSelection = () => {
+  const clearSelection = useCallback(() => {
     setSelectedWord(null);
     setPosition(null);
+    setIsPopupOpen(false);
     try {
       const sel = window.getSelection();
       sel?.removeAllRanges();
     } catch (e) {
       // ignore
     }
-  };
+  }, []);
+
+  const openPopup = useCallback(
+    async (word: string, mouseX?: number, mouseY?: number) => {
+      setSelectedWord(word);
+      if (mouseX !== undefined && mouseY !== undefined) {
+        setPosition({ x: mouseX, y: mouseY });
+      }
+      setIsPopupOpen(true);
+      try {
+        await refetch();
+      } catch (e) {
+        // ignore
+      }
+    },
+    [data]
+  );
 
   const getCached = (word: string) => cacheRef.current.get(word) ?? null;
   const setCached = (word: string, meaning: string) =>
     cacheRef.current.set(word, meaning);
+  // console.log(data.data.vocab);
 
   return {
     selectedWord,
     position,
+    isPopupOpen,
+    vocabData: (data as any)?.vocab ?? null,
+    isLoading: isFetching || isLoading,
     clearSelection,
-    // cache helpers for translations
+    openPopup,
+    // cache helpers for translations (legacy)
     getCached,
     setCached,
   } as const;
