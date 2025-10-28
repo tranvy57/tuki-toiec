@@ -40,6 +40,7 @@ export const VocabularySchema = z.object({
   isPhrase: z.boolean(),
   lemma: z.string(),
   type: z.string(),
+  isMarked: z.boolean().optional(),
 });
 
 export const UserVocabularySchema = z.object({

@@ -149,7 +149,7 @@ export const WordPopupProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             {children}
             <WordPopup
                 isOpen={isPopupOpen}
-                data={vocabData}
+                data={vocabData || null}
                 isLoading={isLoading}
                 position={position}
                 onClose={handleClose}

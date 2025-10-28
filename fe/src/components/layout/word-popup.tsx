@@ -1,6 +1,9 @@
 "use client";
 
+import { Vocabulary } from "@/types/implements/vocabulary";
+import { Volume2 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 // Position type compatible with useWordSelection's returned position
 type Pos = { x: number; y: number } | null;
@@ -22,7 +25,7 @@ type Vocab = {
 // Props for the WordPopup
 interface WordPopupProps {
     isOpen: boolean;
-    data?: Vocab | null;
+    data?: Vocabulary | null;
     isLoading?: boolean;
     position?: Pos;
     onClose: () => void;
@@ -39,6 +42,8 @@ interface WordPopupProps {
 export const WordPopup: React.FC<WordPopupProps> = ({ isOpen, data, isLoading, position, onClose }) => {
     const ref = useRef<HTMLDivElement | null>(null);
     const [visible, setVisible] = useState(false);
+    const [saving, setSaving] = useState(false);
+
 
     // Position popup relative to cursor with smart placement
     const computeStyle = (): React.CSSProperties => {
@@ -47,8 +52,8 @@ export const WordPopup: React.FC<WordPopupProps> = ({ isOpen, data, isLoading, p
         }
 
         const margin = 12;
-        const popupWidth = 320; // approximate width
-        const popupHeight = 200; // approximate height
+        const popupWidth = 280; // compact width
+        const popupHeight = 180; // compact height
 
         let left = position.x;
         let top = position.y;
@@ -118,49 +123,103 @@ export const WordPopup: React.FC<WordPopupProps> = ({ isOpen, data, isLoading, p
         }
     };
 
+    const handleSaveToggle = async () => {
+        if (saving || !data?.word) return;
+
+        setSaving(true);
+        try {
+            if (data?.isMarked) {
+                // DELETE request to remove from saved words
+                // await fetch(`/api/user-vocabularies/${data.id || data.word}`, {
+                //     method: 'DELETE',
+                // });
+                toast.success(`Đã xoá "${data.word}" khỏi sổ từ vựng`);
+            } else {
+                // POST request to save word
+                // await fetch('/api/user-vocabularies', {
+                //     method: 'POST',
+                //     headers: { 'Content-Type': 'application/json' },
+                //     body: JSON.stringify({
+                //         word: data.word,
+                //         meaning: data.meaning,
+                //         pronunciation: data.pronunciation,
+                //         partOfSpeech: data.partOfSpeech,
+                //         exampleEn: data.exampleEn,
+                //         exampleVn: data.exampleVn,
+                //         audioUrl: data.audioUrl,
+                //     }),
+                // });
+                toast.success(`Đã thêm "${data.word}" vào sổ từ của bạn`);
+            }
+        } catch (error) {
+            console.error('Save/unsave error:', error);
+            toast.error(`Có lỗi xảy ra, vui lòng thử lại`);
+        }
+        setSaving(false);
+    };
+
     if (!isOpen) return null;
 
     const meaningLines = (data?.meaning || "").split(";").map(s => s.trim()).filter(Boolean);
 
     return (
-        <div
-            ref={ref}
-            style={computeStyle()}
-            className={`fixed z-50 bg-white rounded-2xl shadow-2xl p-6 transition-opacity duration-200 ease-out max-w-sm w-full md:max-w-md ${visible ? "opacity-100" : "opacity-0"}`}
-            role="tooltip"
-            aria-label={data?.word ?? "Vocabulary"}>
+        <>
+            <div
+                ref={ref}
+                style={computeStyle()}
+                className={`fixed z-50 rounded-2xl shadow-2xl p-4 transition-all duration-300 ease-out max-w-xs w-full ${visible ? "opacity-100 scale-100" : "opacity-0 scale-95"
+                    } ${data?.isMarked ? "bg-pink-50 border border-pink-200" : "bg-white border border-gray-200"
+                    }`}
+                role="tooltip"
+                aria-label={data?.word ?? "Vocabulary"}>
 
-            <button onClick={onClose} className="absolute right-3 top-3 text-gray-500 hover:text-gray-700">✕</button>
+                {/* Close button */}
+                <button onClick={onClose} className="absolute right-2 top-2 text-gray-400 hover:text-gray-600 text-sm">✕</button>
 
-            <div className="flex items-start gap-4">
-                <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                        <h2 className="text-2xl font-bold">{data?.word ?? (isLoading ? '...' : '')}</h2>
-                        {data?.pronunciation && <span className="text-gray-500 italic">{data.pronunciation}</span>}
+                {/* Save heart button */}
+                <button
+                    onClick={handleSaveToggle}
+                    disabled={saving}
+                    className={`absolute right-8 top-2 transition-all duration-200 transform hover:scale-110 ${saving ? "opacity-50" : ""
+                        } ${data?.isMarked ? "text-pink-500" : "text-gray-300 hover:text-pink-400"
+                        }`}>
+                    {data?.isMarked ? "💜" : "🤍"}
+                </button>
+
+                <div className="pr-12">
+                    <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-bold text-gray-800">{data?.word ?? (isLoading ? '...' : '')}</h3>
                         {data?.audioUrl && (
-                            <button onClick={pronounce} className="ml-auto text-sm px-2 py-1 bg-gray-100 rounded">▶</button>
+                            <button
+                                onClick={pronounce}
+                                className="inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                title="Phát âm"
+                            >
+                                <Volume2 className="w-4 h-4 text-gray-700" />
+                            </button>
                         )}
                     </div>
+                    {data?.pronunciation && <span className="text-gray-500 italic text-sm mb-1">{data.pronunciation}</span>}
 
                     {data?.partOfSpeech && (
-                        <div className="mt-1 text-indigo-600 text-sm uppercase">{data.partOfSpeech}</div>
+                        <div className="text-indigo-600 text-xs uppercase mb-1">{data.partOfSpeech}</div>
                     )}
 
-                    <div className="mt-2 leading-relaxed text-gray-800">
-                        {isLoading && <div className="text-sm text-gray-400">Đang tải...</div>}
-                        {!isLoading && meaningLines.length === 0 && <div className="text-sm text-gray-500">Không có dữ liệu nghĩa.</div>}
+                    <div className="text-sm leading-relaxed text-gray-700">
+                        {isLoading && <div className="text-gray-400 italic">Đang tải...</div>}
+                        {!isLoading && meaningLines.length === 0 && <div className="text-gray-500">Không có dữ liệu nghĩa.</div>}
 
-                        {!isLoading && meaningLines.map((line, i) => (
-                            <div key={i} className="mt-2">{line}</div>
+                        {!isLoading && meaningLines.slice(0, 2).map((line, i) => (
+                            <div key={i} className="mb-1">{line}</div>
                         ))}
                     </div>
 
                     {(data?.exampleEn || data?.exampleVn) && (
-                        <div className="mt-4 text-sm italic text-gray-600">
-                            <div className="flex items-start gap-2">
+                        <div className="mt-3 text-xs italic text-gray-600">
+                            <div className="flex items-start gap-1">
                                 <span>💬</span>
                                 <div>
-                                    {data?.exampleEn && <div className="mb-1">{data.exampleEn}</div>}
+                                    {data?.exampleEn && <div className="mb-0.5">{data.exampleEn}</div>}
                                     {data?.exampleVn && <div className="text-gray-500">{data.exampleVn}</div>}
                                 </div>
                             </div>
@@ -168,7 +227,9 @@ export const WordPopup: React.FC<WordPopupProps> = ({ isOpen, data, isLoading, p
                     )}
                 </div>
             </div>
-        </div>
+
+
+        </>
     );
 };
 

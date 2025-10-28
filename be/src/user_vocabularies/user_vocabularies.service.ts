@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserVocabularyDto } from './dto/create-user_vocabulary.dto';
 import { UpdateUserVocabularyDto } from './dto/update-user_vocabulary.dto';
 import { UserVocabulary } from './entities/user_vocabulary.entity';
@@ -46,13 +46,25 @@ export class UserVocabulariesService {
     return `This action removes a #${id} userVocabulary`;
   }
 
+  async markAsImportant(vocabId: string, userId: string, status: boolean) {
+    const record = await this.userVocabRepo.findOne({
+      where: { vocabulary: { id: vocabId }, user: { id: userId } },
+      relations: ['user'],
+    });
+
+    if (!record) throw new NotFoundException('UserVocabulary not found');
+
+    record.isBookmarked = status;
+    return await this.userVocabRepo.save(record);
+  }
+
   async track(userId: string, vocabId: string, options: TrackingOptions = {}) {
     const {
       source = 'lesson',
       correct,
       incrementStrength = true,
       customDelta,
-      sourceLog
+      sourceLog,
     } = options;
 
     let userVocab = await this.userVocabRepo.findOne({

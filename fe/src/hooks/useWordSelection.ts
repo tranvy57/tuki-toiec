@@ -122,13 +122,12 @@ export function useWordSelection() {
   const getCached = (word: string) => cacheRef.current.get(word) ?? null;
   const setCached = (word: string, meaning: string) =>
     cacheRef.current.set(word, meaning);
-  // console.log(data.data.vocab);
 
   return {
     selectedWord,
     position,
     isPopupOpen,
-    vocabData: (data as any)?.vocab ?? null,
+    vocabData: data ?? null,
     isLoading: isFetching || isLoading,
     clearSelection,
     openPopup,

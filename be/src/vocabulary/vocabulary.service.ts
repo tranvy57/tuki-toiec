@@ -146,7 +146,7 @@ export class VocabularyService {
       },
     );
 
-    return vocabSaved ;
+    return { ...vocabSaved, isMarked: userVocab.isBookmarked } ;
   }
 
   /**
@@ -189,7 +189,6 @@ export class VocabularyService {
     if (!text) return null;
 
     const apiKey = process.env.GOOGLE_TRANSLATE_KEY;
-    console.log(apiKey);
     if (!apiKey) return text; //
 
     const res = await axios.post(
