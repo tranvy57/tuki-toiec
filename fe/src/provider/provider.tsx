@@ -62,7 +62,7 @@ function HideLayoutWrapper({ children }: { children: React.ReactNode }) {
   return (
     <>
       {!hideLayout && <Header />}
-      <main className="flex flex-col md:gap-8 max-w-full mx-auto">
+      <main className="flex flex-col max-w-full ">
         {children}
       </main>
       {!hideLayout && !hideFooter && <Footer />}

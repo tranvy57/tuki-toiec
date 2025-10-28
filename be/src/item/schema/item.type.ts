@@ -12,6 +12,9 @@ export const ITEM_MODALITIES = [
   'read_aloud',
   'repeat_sentence',
   'describe_picture',
+  'respond_to_questions',
+  'respond_using_info',
+  'express_opinion',
   'true_false',
   'hotspot',
 ] as const;

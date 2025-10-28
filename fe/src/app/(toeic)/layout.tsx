@@ -4,6 +4,7 @@ import Providers from "@/provider/provider";
 import { getLocale, getMessages } from "next-intl/server";
 import AppInit from "@/components/AppInit";
 import Header from "@/components/layout/header/header";
+import WordPopupProvider from "@/provider/word-popup-provider";
 
 
 
@@ -39,7 +40,9 @@ export default async function RootLayout({
     <>
       <AppInit />
       <Header />
-      <div className="mt-18">{children}</div>
+      <WordPopupProvider>
+        <div className="mt-18">{children}</div>
+      </WordPopupProvider>
     </>
   );
 }

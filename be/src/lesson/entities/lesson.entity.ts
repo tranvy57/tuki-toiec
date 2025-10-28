@@ -1,4 +1,5 @@
 import {
+  Check,
   Column,
   Entity,
   Index,
@@ -31,6 +32,13 @@ export class Lesson extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   description?: string;
 
+  @Column({
+    type: 'varchar',
+    length: 20,
+    default: 'plan',
+  })
+  type: 'plan' | 'exercise' | 'mock' | 'review' | 'ai';
+
   @Column({ type: 'varchar', length: 32, nullable: true })
   level?: string;
 
@@ -48,5 +56,4 @@ export class Lesson extends BaseEntity {
 
   @OneToMany(() => LessonSkill, (ls) => ls.lesson, { cascade: true })
   skills: LessonSkill[];
-
 }
