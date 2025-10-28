@@ -95,11 +95,11 @@ export class VocabularyService {
 
     let vocab = await this.vocabularyRepo.findOne({ where: { word } });
     if (vocab) {
-      await this.userVocabService.track(user.id, vocab.id, {
+      const userVocab = await this.userVocabService.track(user.id, vocab.id, {
         source: 'search',
         incrementStrength: true,
       });
-      return vocab;
+      return { ...vocab, isMarked: userVocab.isBookmarked };
     }
 
     let res;

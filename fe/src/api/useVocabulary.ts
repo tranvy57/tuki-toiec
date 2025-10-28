@@ -1,6 +1,6 @@
 import api from "@/libs/axios-config";
 import { UserVocabulary, UserVocabularyResponse, UserVocabularyResponseSchema, Vocabulary } from "@/types/implements/vocabulary";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 
 export interface VocabularyResponse {
@@ -85,3 +85,25 @@ export const useLookUp = (word: string) => {
   });
 }
 
+async function markUserVocab(id: string, status: boolean) {
+
+  const res = await api.patch(`/user-vocabularies/${id}/mark`,
+    { status }
+  );
+
+  return res.data.data;
+}
+
+export const useMarkUserVocab = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["mark-user-vocab"],
+    mutationFn: ({ id, status }: { id: string; status: boolean }) =>
+      markUserVocab(id, status),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-vocabs"] });
+    },
+  });
+};

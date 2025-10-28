@@ -1,6 +1,7 @@
 "use client";
 
 import { Vocabulary } from "@/types/implements/vocabulary";
+import { useMarkUserVocab } from "@/api/useVocabulary";
 import { Volume2 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -8,21 +9,6 @@ import { toast } from "sonner";
 // Position type compatible with useWordSelection's returned position
 type Pos = { x: number; y: number } | null;
 
-// Vocab type
-type Vocab = {
-    id?: string;
-    word: string;
-    meaning?: string;
-    pronunciation?: string;
-    partOfSpeech?: string;
-    exampleEn?: string;
-    exampleVn?: string;
-    audioUrl?: string;
-    type?: string;
-    isPhrase?: boolean;
-};
-
-// Props for the WordPopup
 interface WordPopupProps {
     isOpen: boolean;
     data?: Vocabulary | null;
@@ -31,18 +17,19 @@ interface WordPopupProps {
     onClose: () => void;
 }
 
-/**
- * Mock API: Replace these with real fetch calls when integrating.
- * Example replacement:
- *   const res = await fetch('/api/translate', { method: 'POST', body: JSON.stringify({ word }) });
- *   const json = await res.json();
- *   return json.meaning;
- */
-
 export const WordPopup: React.FC<WordPopupProps> = ({ isOpen, data, isLoading, position, onClose }) => {
     const ref = useRef<HTMLDivElement | null>(null);
     const [visible, setVisible] = useState(false);
-    const [saving, setSaving] = useState(false);
+    const [localMarkedState, setLocalMarkedState] = useState<boolean>(false);
+
+    const markUserVocabMutation = useMarkUserVocab();
+
+    // Sync local state with data when data changes
+    useEffect(() => {
+        if (data) {
+            setLocalMarkedState(data.isMarked || false);
+        }
+    }, [data]);
 
 
     // Position popup relative to cursor with smart placement
@@ -124,38 +111,38 @@ export const WordPopup: React.FC<WordPopupProps> = ({ isOpen, data, isLoading, p
     };
 
     const handleSaveToggle = async () => {
-        if (saving || !data?.word) return;
+        if (markUserVocabMutation.isPending || !data?.id) return;
 
-        setSaving(true);
         try {
-            if (data?.isMarked) {
-                // DELETE request to remove from saved words
-                // await fetch(`/api/user-vocabularies/${data.id || data.word}`, {
-                //     method: 'DELETE',
-                // });
-                toast.success(`Đã xoá "${data.word}" khỏi sổ từ vựng`);
-            } else {
-                // POST request to save word
-                // await fetch('/api/user-vocabularies', {
-                //     method: 'POST',
-                //     headers: { 'Content-Type': 'application/json' },
-                //     body: JSON.stringify({
-                //         word: data.word,
-                //         meaning: data.meaning,
-                //         pronunciation: data.pronunciation,
-                //         partOfSpeech: data.partOfSpeech,
-                //         exampleEn: data.exampleEn,
-                //         exampleVn: data.exampleVn,
-                //         audioUrl: data.audioUrl,
-                //     }),
-                // });
+            const newStatus = !localMarkedState;
+
+            // Optimistically update UI
+            setLocalMarkedState(newStatus);
+
+            // Call API
+            const result = await markUserVocabMutation.mutateAsync({
+                id: data.id,
+                status: newStatus
+            });
+
+            // Show success message
+            if (newStatus) {
                 toast.success(`Đã thêm "${data.word}" vào sổ từ của bạn`);
+            } else {
+                toast.success(`Đã xoá "${data.word}" khỏi sổ từ vựng`);
             }
+
+            // Update with actual result if needed
+            if (result && typeof result.isMarked === 'boolean') {
+                setLocalMarkedState(result.isMarked);
+            }
+
         } catch (error) {
-            console.error('Save/unsave error:', error);
+            // Revert optimistic update on error
+            setLocalMarkedState(!localMarkedState);
+            console.error('Mark/unmark vocabulary error:', error);
             toast.error(`Có lỗi xảy ra, vui lòng thử lại`);
         }
-        setSaving(false);
     };
 
     if (!isOpen) return null;
@@ -168,7 +155,7 @@ export const WordPopup: React.FC<WordPopupProps> = ({ isOpen, data, isLoading, p
                 ref={ref}
                 style={computeStyle()}
                 className={`fixed z-50 rounded-2xl shadow-2xl p-4 transition-all duration-300 ease-out max-w-xs w-full ${visible ? "opacity-100 scale-100" : "opacity-0 scale-95"
-                    } ${data?.isMarked ? "bg-pink-50 border border-pink-200" : "bg-white border border-gray-200"
+                    } ${localMarkedState ? "bg-pink-50 border border-pink-200" : "bg-white border border-gray-200"
                     }`}
                 role="tooltip"
                 aria-label={data?.word ?? "Vocabulary"}>
@@ -179,11 +166,11 @@ export const WordPopup: React.FC<WordPopupProps> = ({ isOpen, data, isLoading, p
                 {/* Save heart button */}
                 <button
                     onClick={handleSaveToggle}
-                    disabled={saving}
-                    className={`absolute right-8 top-2 transition-all duration-200 transform hover:scale-110 ${saving ? "opacity-50" : ""
-                        } ${data?.isMarked ? "text-pink-500" : "text-gray-300 hover:text-pink-400"
+                    disabled={markUserVocabMutation.isPending}
+                    className={`absolute right-8 top-2 transition-all duration-200 transform hover:scale-110 ${markUserVocabMutation.isPending ? "opacity-50" : ""
+                        } ${localMarkedState ? "text-pink-500" : "text-gray-300 hover:text-pink-400"
                         }`}>
-                    {data?.isMarked ? "💜" : "🤍"}
+                    {localMarkedState ? "💜" : "🤍"}
                 </button>
 
                 <div className="pr-12">
