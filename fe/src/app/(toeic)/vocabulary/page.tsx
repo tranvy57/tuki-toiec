@@ -16,7 +16,8 @@ import { useGetVocabularies } from "@/api/useVocabulary";
 
 export default function VocabularyPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [vocabularies, setVocabularies] = useState<WeakVocabulary[]>(mockWeakVocabularies);
+  const [vocabularies, setVocabularies] =
+    useState<WeakVocabulary[]>(mockWeakVocabularies);
   const [filterLevel, setFilterLevel] = useState<string>("all");
 
   const { data, isLoading, isError } = useGetVocabularies();
@@ -59,7 +60,6 @@ export default function VocabularyPage() {
     (v) => v.isMarkedForReview
   ).length;
 
-  // Show review session if in review mode
   if (isReviewMode && currentReviewWord) {
     return (
       <ReviewSession
@@ -88,13 +88,6 @@ export default function VocabularyPage() {
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-6">
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold text-gray-800">Từ vựng</h1>
-        <p className="text-muted-foreground">
-          Ôn luyện và cải thiện những từ vựng bạn thường mắc lỗi
-        </p>
-      </div>
-
       <StatsOverview vocabularies={vocabularies} />
 
       <SearchAndFilter
@@ -107,7 +100,7 @@ export default function VocabularyPage() {
         onStartQuiz={startQuizSession}
       />
 
-      <div className="space-y-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
         {filteredVocabularies.map((vocab) => (
           <VocabularyCard
             key={vocab.id}

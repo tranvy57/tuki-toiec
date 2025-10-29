@@ -99,55 +99,55 @@ export default function QuizSession({
   };
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto">
+    <div className="space-y-2 flex gap-4  flex justify-center rounded-md">
       {/* Quiz Header */}
-      <div className="text-center">
-        <Badge className="mb-3">
-          {getQuizTypeLabel(currentQuizType)}
-        </Badge>
-        <h3 className="text-lg font-semibold text-gray-700">
+      <div className=" space-y-4 min-w-150">
+        <div className="text-center">
+          <Badge className="mb-3">{getQuizTypeLabel(currentQuizType)}</Badge>
+          {/* <h3 className="text-lg font-semibold text-gray-700">
           Câu hỏi kiểm tra nhanh
-        </h3>
+        </h3> */}
+        </div>
+
+        {/* Quiz Content */}
+        {renderQuiz()}
+        {!isCompleted && (
+          <div className="flex gap-3 justify-center">
+            <Button
+              variant="default"
+              onClick={onSubmit}
+              disabled={!isAnswerProvided()}
+            >
+              <CheckCircle2 className="h-4 w-4 mr-2" />
+              Kiểm tra
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={onSkip}
+              className="text-gray-600"
+            >
+              <ArrowRight className="h-4 w-4 mr-2" />
+              Bỏ qua
+            </Button>
+          </div>
+        )}
       </div>
 
-      {/* Quiz Content */}
-      {renderQuiz()}
-
       {/* Submit Button */}
-      {!isCompleted && (
-        <div className="flex gap-3 justify-center">
-          <Button
-            onClick={onSubmit}
-            disabled={!isAnswerProvided()}
-            className="bg-toeic-primary hover:bg-red-600"
-          >
-            <CheckCircle2 className="h-4 w-4 mr-2" />
-            Kiểm tra
-          </Button>
-
-          <Button
-            variant="outline"
-            onClick={onSkip}
-            className="text-gray-600"
-          >
-            <ArrowRight className="h-4 w-4 mr-2" />
-            Bỏ qua
-          </Button>
-        </div>
-      )}
 
       {/* Quiz Completed - Show Answer */}
       {isCompleted && (
-        <div className="space-y-4">
-          <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+        <div className="space-y-4 text-left ">
+          <div className="  rounded-lg  ">
             <h4 className="font-medium text-green-800 mb-2">
               Đáp án đúng: {currentWord.word}
             </h4>
-            <div className="text-green-700 mb-2">
+            <div className=" mb-2">
               <strong>[{currentWord.partOfSpeech}]</strong>{" "}
               {currentWord.meaning}
             </div>
-            <div className="text-sm text-green-600">
+            <div className="text-sm ">
               <div>
                 <strong>Ví dụ:</strong> {currentWord.exampleEn}
               </div>
@@ -158,12 +158,9 @@ export default function QuizSession({
           </div>
 
           <div className="text-center">
-            <p className="text-sm text-muted-foreground mb-3">
-              Tự động chuyển sang câu tiếp theo trong 2 giây...
-            </p>
-            <Button variant="outline" onClick={onSkip}>
+            <Button variant="default" onClick={onSkip}>
               <ArrowRight className="h-4 w-4 mr-2" />
-              Tiếp tục ngay
+              Tiếp tục
             </Button>
           </div>
         </div>
@@ -171,4 +168,3 @@ export default function QuizSession({
     </div>
   );
 }
-

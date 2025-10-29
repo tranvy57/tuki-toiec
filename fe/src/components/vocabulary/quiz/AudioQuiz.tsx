@@ -25,9 +25,7 @@ export default function AudioQuiz({
 
   return (
     <div className="space-y-4">
-      <p className="text-center text-gray-600">
-        Nghe audio và chọn từ đúng:
-      </p>
+      <p className="text-center text-gray-600">Nghe audio và chọn từ đúng:</p>
       <div className="flex justify-center">
         <Button
           variant="outline"
@@ -63,4 +61,3 @@ export default function AudioQuiz({
     </div>
   );
 }
-

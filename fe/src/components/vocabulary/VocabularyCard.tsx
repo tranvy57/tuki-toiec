@@ -3,7 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Volume2, Star } from "lucide-react";
 import { WeakVocabulary } from "@/types/implements/vocabulary";
-import { getWeaknessColor, getWeaknessLabel, playAudio } from "@/utils/vocabularyUtils";
+import {
+  getWeaknessColor,
+  getWeaknessLabel,
+  playAudio,
+} from "@/utils/vocabularyUtils";
 
 interface VocabularyCardProps {
   vocabulary: WeakVocabulary;
@@ -15,8 +19,8 @@ export default function VocabularyCard({
   onToggleMarkForReview,
 }: VocabularyCardProps) {
   return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="p-6">
+    <div className="hover:shadow-md transition-shadow border rounded-lg bg-white">
+      <div className="p-4">
         <div className="flex items-start justify-between">
           <div className="flex-1 space-y-3">
             <div className="flex items-center gap-3">
@@ -36,9 +40,7 @@ export default function VocabularyCard({
 
             <div className="space-y-2">
               <p className="text-gray-700">
-                <span className="font-medium">
-                  [{vocabulary.partOfSpeech}]
-                </span>{" "}
+                <span className="font-medium">[{vocabulary.partOfSpeech}]</span>{" "}
                 {vocabulary.meaning}
               </p>
               <div className="text-sm text-muted-foreground">
@@ -84,8 +86,7 @@ export default function VocabularyCard({
             </Button>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
-

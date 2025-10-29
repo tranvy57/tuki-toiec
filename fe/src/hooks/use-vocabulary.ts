@@ -1,9 +1,17 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
-import { WeakVocabulary, ReviewSession, ReviewMode, QuizType } from "@/types/implements/vocabulary";
+import {
+  WeakVocabulary,
+  ReviewSession,
+  ReviewMode,
+  QuizType,
+} from "@/types/implements/vocabulary";
 import { generateQuizOptions } from "@/utils/vocabularyUtils";
 
-export function useVocabularyReview(vocabularies: WeakVocabulary[], setVocabularies: React.Dispatch<React.SetStateAction<WeakVocabulary[]>>) {
+export function useVocabularyReview(
+  vocabularies: WeakVocabulary[],
+  setVocabularies: React.Dispatch<React.SetStateAction<WeakVocabulary[]>>
+) {
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
   const [isReviewMode, setIsReviewMode] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
@@ -45,7 +53,9 @@ export function useVocabularyReview(vocabularies: WeakVocabulary[], setVocabular
       total: reviewWords.length,
       sessionActive: true,
     });
-    toast.success(`Bắt đầu ôn tập Flashcard với ${reviewWords.length} từ vựng!`);
+    toast.success(
+      `Bắt đầu ôn tập Flashcard với ${reviewWords.length} từ vựng!`
+    );
   }, [vocabularies]);
 
   const startQuizSession = useCallback(() => {
@@ -73,20 +83,24 @@ export function useVocabularyReview(vocabularies: WeakVocabulary[], setVocabular
     toast.success(`Bắt đầu Quiz với ${reviewWords.length} từ vựng!`);
   }, [vocabularies]);
 
-  const startQuiz = useCallback((word: WeakVocabulary) => {
-    const randomType = quizTypes[Math.floor(Math.random() * quizTypes.length)];
+  const startQuiz = useCallback(
+    (word: WeakVocabulary) => {
+      const randomType =
+        quizTypes[Math.floor(Math.random() * quizTypes.length)];
 
-    setCurrentQuizType(randomType);
-    setShowQuiz(true);
-    setQuizCompleted(false);
-    setSelectedOption("");
-    setQuizAnswer("");
+      setCurrentQuizType(randomType);
+      setShowQuiz(true);
+      setQuizCompleted(false);
+      setSelectedOption("");
+      setQuizAnswer("");
 
-    if (randomType === "multiple-choice") {
-      const options = generateQuizOptions(word.meaning, vocabularies);
-      setQuizOptions(options);
-    }
-  }, [vocabularies]);
+      if (randomType === "multiple-choice") {
+        const options = generateQuizOptions(word.meaning, vocabularies);
+        setQuizOptions(options);
+      }
+    },
+    [vocabularies]
+  );
 
   const endReviewSession = useCallback(() => {
     setIsReviewMode(false);
@@ -112,7 +126,8 @@ export function useVocabularyReview(vocabularies: WeakVocabulary[], setVocabular
     if (currentQuizType === "multiple-choice") {
       isQuizCorrect = selectedOption === currentWord.meaning;
     } else if (currentQuizType === "fill-blank") {
-      isQuizCorrect = quizAnswer.toLowerCase().trim() === currentWord.word.toLowerCase();
+      isQuizCorrect =
+        quizAnswer.toLowerCase().trim() === currentWord.word.toLowerCase();
     } else if (currentQuizType === "audio") {
       isQuizCorrect = selectedOption === currentWord.word;
     }
@@ -128,22 +143,29 @@ export function useVocabularyReview(vocabularies: WeakVocabulary[], setVocabular
     }
 
     // Auto advance after 2 seconds
-    setTimeout(() => {
-      proceedToNextWord();
-    }, 2000);
-  }, [currentReviewIndex, currentQuizType, selectedOption, quizAnswer, reviewWords]);
+  }, [
+    currentReviewIndex,
+    currentQuizType,
+    selectedOption,
+    quizAnswer,
+    reviewWords,
+  ]);
 
   const proceedToNextWord = useCallback(() => {
     const reviewWords = vocabularies.filter((v) => v.isMarkedForReview);
     if (currentReviewIndex < reviewWords.length - 1) {
-      const randomType = quizTypes[Math.floor(Math.random() * quizTypes.length)];
+      const randomType =
+        quizTypes[Math.floor(Math.random() * quizTypes.length)];
       setCurrentReviewIndex(currentReviewIndex + 1);
       setShowAnswer(false);
       setShowQuiz(true);
       setCurrentQuizType(randomType);
-      
+
       if (randomType === "multiple-choice") {
-        const options = generateQuizOptions(reviewWords[currentReviewIndex + 1].meaning, vocabularies);
+        const options = generateQuizOptions(
+          reviewWords[currentReviewIndex + 1].meaning,
+          vocabularies
+        );
         setQuizOptions(options);
       } else if (randomType === "fill-blank") {
         setQuizAnswer("");
@@ -170,13 +192,18 @@ export function useVocabularyReview(vocabularies: WeakVocabulary[], setVocabular
     }
   }, [currentReviewIndex, vocabularies, endReviewSession]);
 
-  const toggleMarkForReview = useCallback((vocabId: string) => {
-    setVocabularies((prev) =>
-      prev.map((v) =>
-        v.id === vocabId ? { ...v, isMarkedForReview: !v.isMarkedForReview } : v
-      )
-    );
-  }, [setVocabularies]);
+  const toggleMarkForReview = useCallback(
+    (vocabId: string) => {
+      setVocabularies((prev) =>
+        prev.map((v) =>
+          v.id === vocabId
+            ? { ...v, isMarkedForReview: !v.isMarkedForReview }
+            : v
+        )
+      );
+    },
+    [setVocabularies]
+  );
 
   return {
     // State
@@ -192,7 +219,7 @@ export function useVocabularyReview(vocabularies: WeakVocabulary[], setVocabular
     selectedOption,
     quizCompleted,
     currentReviewWord,
-    
+
     // Actions
     startFlashcardSession,
     startQuizSession,
