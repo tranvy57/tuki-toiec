@@ -2,7 +2,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { BookOpen, Brain, X } from "lucide-react";
-import { WeakVocabulary, ReviewSession as ReviewSessionType, ReviewMode, QuizType } from "@/types/implements/vocabulary";
+import {
+  WeakVocabulary,
+  ReviewSession as ReviewSessionType,
+  ReviewMode,
+  QuizType,
+} from "@/types/implements/vocabulary";
 import FlashcardSession from "./FlashcardSession";
 import QuizSession from "./quiz/QuizSession";
 
@@ -13,12 +18,12 @@ interface ReviewSessionProps {
   currentReviewIndex: number;
   allVocabularies: WeakVocabulary[];
   onEndSession: () => void;
-  
+
   // Flashcard props
   showAnswer: boolean;
   onShowAnswer: () => void;
   onFlashcardNext: () => void;
-  
+
   // Quiz props
   showQuiz: boolean;
   currentQuizType: QuizType;
@@ -54,12 +59,12 @@ export default function ReviewSession({
   onProceedToNext,
 }: ReviewSessionProps) {
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl">
+    <div className="container mx-auto px-4 py-2">
       {/* Review Header */}
-      <Card className="mb-6">
-        <CardHeader>
+      <div className="mb-4 p-4 rounded-sm space-y-2">
+        <div>
           <div className="flex justify-between items-center">
-            <CardTitle className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
               {reviewMode === "flashcard" ? (
                 <>
                   <BookOpen className="h-5 w-5 text-blue-600" />
@@ -71,15 +76,19 @@ export default function ReviewSession({
                   Quiz từ vựng
                 </>
               )}
-            </CardTitle>
+            </div>
             <Button variant="outline" onClick={onEndSession}>
               <X className="h-4 w-4 mr-2" />
               Kết thúc
             </Button>
           </div>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div>
           <div className="space-y-4">
+            <Progress
+              value={((currentReviewIndex + 1) / reviewSession.total) * 100}
+              className="h-2"
+            />
             <div className="flex justify-between text-sm text-muted-foreground">
               <span>
                 Tiến độ: {currentReviewIndex + 1}/{reviewSession.total}
@@ -91,17 +100,13 @@ export default function ReviewSession({
                 </span>
               )}
             </div>
-            <Progress
-              value={((currentReviewIndex + 1) / reviewSession.total) * 100}
-              className="h-2"
-            />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Review Content */}
-      <Card className="mb-6">
-        <CardContent className="p-8 text-center">
+      <div className="mb-20">
+        <div className=" text-center">
           {reviewMode === "flashcard" && (
             <FlashcardSession
               currentWord={currentWord}
@@ -127,9 +132,8 @@ export default function ReviewSession({
               onSkip={onProceedToNext}
             />
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
-
