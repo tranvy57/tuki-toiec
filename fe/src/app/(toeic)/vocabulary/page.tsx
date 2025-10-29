@@ -100,7 +100,7 @@ export default function VocabularyPage() {
         onStartQuiz={startQuizSession}
       />
 
-      <div className="space-y-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
         {filteredVocabularies.map((vocab) => (
           <VocabularyCard
             key={vocab.id}

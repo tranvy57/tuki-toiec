@@ -82,9 +82,9 @@ export default function StatsOverview({
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           <StatRow
-            icon={<TrendingDown className="text-red-600 w-5 h-5" />}
-            label="Rất yếu"
-            value={criticalWords}
+            icon={<Star className="text-blue-600 w-5 h-5" />}
+            label="Từ mới"
+            value={50}
           />
           <StatRow
             icon={<Target className="text-orange-600 w-5 h-5" />}
@@ -97,9 +97,9 @@ export default function StatsOverview({
             value={mildWords}
           />
           <StatRow
-            icon={<Star className="text-blue-600 w-5 h-5" />}
-            label="Đánh dấu ôn"
-            value={markedForReview}
+            icon={<TrendingDown className="text-red-600 w-5 h-5" />}
+            label="Rất yếu"
+            value={criticalWords}
           />
         </div>
       </div>
@@ -107,7 +107,6 @@ export default function StatsOverview({
   );
 }
 
-/* --- COMPONENT CON DẠNG DÀI --- */
 interface StatRowProps {
   icon: React.ReactNode;
   label: string;
