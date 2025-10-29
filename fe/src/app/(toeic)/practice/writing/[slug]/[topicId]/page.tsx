@@ -384,7 +384,6 @@ export default function WritingExercisePage() {
             </div>
           </motion.div>
 
-          {/* Right Side - Writing Editor */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -406,7 +405,7 @@ export default function WritingExercisePage() {
                         className="flex items-center gap-2"
                       >
                         <CheckCircle className="w-4 h-4" />
-                        Kiểm tra ngữ pháp
+                        Kiểm tra chính tả
                       </Button>
 
                       {/* {slug === "email-response" && (
