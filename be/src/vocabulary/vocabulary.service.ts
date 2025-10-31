@@ -146,7 +146,7 @@ export class VocabularyService {
       },
     );
 
-    return { ...vocabSaved, isMarked: userVocab.isBookmarked } ;
+    return { ...vocabSaved, isMarked: userVocab.isBookmarked };
   }
 
   /**
