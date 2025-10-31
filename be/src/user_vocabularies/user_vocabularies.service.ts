@@ -42,7 +42,7 @@ export class UserVocabulariesService {
       process.env.GOOGLE_GENAI_API_KEY || '',
     );
     this.model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash-lite-preview-06-17',
+      model: 'gemini-2.5-flash-lite',
       generationConfig: {
         temperature: 0.3,
         responseMimeType: 'application/json',

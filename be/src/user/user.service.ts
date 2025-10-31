@@ -112,6 +112,9 @@ export class UserService {
     const uVocabList = await this.userVocabRepository.find({
       where: { user: { id: user.id } },
       relations: { vocabulary: true },
+      order: {
+        updatedAt: 'DESC',
+      }
     });
 
     return uVocabList.map(({ vocabulary, ...rest }) => ({

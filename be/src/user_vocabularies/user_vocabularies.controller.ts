@@ -76,7 +76,7 @@ export class UserVocabulariesController {
     };
   }
 
-  @Get('items')
+  @Get('review-vocab')
   async getReviewItems(
     @CurrentUser() user: User,
     @Query('limit') limit?: string,
