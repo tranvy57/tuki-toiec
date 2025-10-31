@@ -24,6 +24,7 @@ import {
   Zap,
   Check,
   Icon,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -31,6 +32,7 @@ import Image from "next/image";
 import { writingExerciseTypes } from "@/data/mockDataWritting";
 import { CustomCard } from "@/components/CustomCard";
 import { PracticeBreadcrumb } from "@/components/practice/PracticeBreadcrumb";
+import { useLessonsByModality } from "@/api/useLessons";
 
 //   {
 //     id: "1",
@@ -252,8 +254,21 @@ const itemVariants = {
   },
 };
 
-export default function WritingPracticePage() {
+export default function WritingPage() {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+
+  // Fetch API lessons
+  const { data: emailLessons, isLoading: emailLoading, error: emailError } = useLessonsByModality({
+    modality: "email_reply"
+  });
+
+  const { data: pictureLessons, isLoading: pictureLoading, error: pictureError } = useLessonsByModality({
+    modality: "describe_picture"
+  });
+
+  const { data: opinionLessons, isLoading: opinionLoading, error: opinionError } = useLessonsByModality({
+    modality: "opinion_paragraph"
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -322,6 +337,25 @@ export default function WritingPracticePage() {
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 w-full">
           {writingExerciseTypes.map((exercise, i) => {
             console.log("exercise", exercise);
+
+            // Determine loading and error states for API-backed exercises
+            const isLoading = (exercise.slug === "email-response" && emailLoading) ||
+              (exercise.slug === "describe-picture" && pictureLoading) ||
+              (exercise.slug === "opinion-essay" && opinionLoading);
+
+            const isError = Boolean((exercise.slug === "email-response" && emailError) ||
+              (exercise.slug === "describe-picture" && pictureError) ||
+              (exercise.slug === "opinion-essay" && opinionError));
+
+            // Get exercise count from API data
+            let exerciseCount = exercise.exerciseCount;
+            if (exercise.slug === "email-response" && emailLessons) {
+              exerciseCount = emailLessons.reduce((total, lesson) => total + lesson.items.length, 0);
+            } else if (exercise.slug === "describe-picture" && pictureLessons) {
+              exerciseCount = pictureLessons.reduce((total, lesson) => total + lesson.items.length, 0);
+            } else if (exercise.slug === "opinion-essay" && opinionLessons) {
+              exerciseCount = opinionLessons.reduce((total, lesson) => total + lesson.items.length, 0);
+            }
 
             return (
               <CustomCard

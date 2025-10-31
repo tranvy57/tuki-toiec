@@ -2,52 +2,28 @@ import { BookOpen, ImageIcon, Mail } from "lucide-react";
 
 // Mock data tương tự phần bạn có
 export const writingExerciseTypes = [
-  // {
-  //   slug: "describe-picture",
-  //   name: "Mô tả hình ảnh",
-  //   imageUrl: "https://static.athenaonline.vn//img.tmp/48%20edit.png",
-  //   instruction: [
-  //     "Quan sát bức ảnh cẩn thận: xác định bối cảnh, đối tượng chính và hành động trong hình.",
-  //     "Bắt đầu bằng câu giới thiệu tổng quát (e.g. 'The picture shows...').",
-  //     "Sử dụng thì hiện tại tiếp diễn (Present Continuous) để mô tả hành động đang diễn ra.",
-  //     "Tập trung vào các yếu tố chính: người, vật, địa điểm, và hoạt động.",
-  //     "Tránh liệt kê rời rạc — hãy kết nối các câu mô tả bằng logic tự nhiên.",
-  //     "Kiểm tra lại ngữ pháp và chính tả sau khi viết.",
-  //   ],
-  //   subTopics: [
-  //     {
-  //       id: "1-1",
-  //       title: "Địa điểm công cộng",
-  //       description:
-  //         "Luyện viết mô tả các địa điểm như công viên, thư viện, nhà hàng...",
-
-  //       level: "Easy",
-  //       progress: 2,
-  //       total: 10,
-  //       gradient: "from-green-50 to-emerald-50",
-  //     },
-  //     {
-  //       id: "1-2",
-  //       title: "Hoạt động thường ngày",
-  //       description:
-  //         "Mô tả hành động của con người trong cuộc sống thường nhật.",
-
-  //       level: "Medium",
-  //       progress: 0,
-  //       total: 8,
-  //       gradient: "from-lime-50 to-green-50",
-  //     },
-  //     {
-  //       id: "1-3",
-  //       title: "Tình huống tại nơi làm việc",
-  //       description:
-  //         "Viết mô tả nhân viên đang họp, sử dụng máy tính, hoặc giao tiếp.",
-
-  //       level: "Medium",
-  //       progress: 0,
-  //       total: 7,
-  //       gradient: "from-emerald-50 to-teal-50",
-  //     },
+  {
+    slug: "describe-picture",
+    name: "Mô tả hình ảnh",
+    description: "Viết câu mô tả dựa trên hình ảnh và từ khóa cho sẵn",
+    imageUrl: "https://static.athenaonline.vn//img.tmp/48%20edit.png",
+    icon: ImageIcon,
+    difficulty: "Easy",
+    difficultyColor: "bg-green-100 text-green-800",
+    order: 1,
+    exerciseCount: 25,
+    estimatedTime: "5-10 phút",
+    gradient: "from-green-50 to-emerald-50",
+    borderColor: "border-green-200",
+    instruction: [
+      "Quan sát bức ảnh cẩn thận: xác định bối cảnh, đối tượng chính và hành động trong hình.",
+      "Sử dụng cả hai từ khóa được cung cấp trong câu mô tả.",
+      "Viết một câu hoàn chỉnh, ngữ pháp chính xác.",
+      "Sử dụng thì hiện tại tiếp diễn hoặc hiện tại đơn phù hợp.",
+      "Đảm bảo câu mô tả phản ánh chính xác nội dung hình ảnh."
+    ],
+    subTopics: [] // Will be populated from API
+  },
   //   ],
   // },
   {

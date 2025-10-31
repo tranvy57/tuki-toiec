@@ -358,7 +358,7 @@ export default function SpeakingExercisePage() {
         />
 
         {/* Header */}
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center justify-between mb-8"
@@ -376,14 +376,13 @@ export default function SpeakingExercisePage() {
 
           </div>
 
-          {/* Progress */}
           <div className="text-right hidden md:block">
             <div className="text-sm text-gray-600 mb-1">
               Tiến độ: {Math.round(progress)}%
             </div>
             <Progress value={progress} className="w-32" />
           </div>
-        </motion.div>
+        </motion.div> */}
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

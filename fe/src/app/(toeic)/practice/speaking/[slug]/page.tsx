@@ -6,10 +6,11 @@ import Image from "next/image";
 import { Progress } from "@/components/ui/progress";
 import { useState } from "react";
 import Link from "next/link";
-import { Check, Edit3, Mic } from "lucide-react";
+import { Check, Edit3, Mic, Loader2, AlertCircle } from "lucide-react";
 import { speakingExerciseTypes } from "@/data/mockMenuSpeaking";
 import { CustomCard } from "@/components/CustomCard";
 import { PracticeBreadcrumb } from "@/components/practice/PracticeBreadcrumb";
+import { useLessonsByModality } from "@/api/useLessons";
 
 // Mock data tương tự phần bạn có
 // const speakingExerciseTypes = [
@@ -211,16 +212,48 @@ export default function SpeakingTopicsPage() {
   const params = useParams();
   const router = useRouter();
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const slug = params.slug as string;
 
-  const exercise = speakingExerciseTypes.find((ex) => ex.slug === params.slug);
-  console.log(exercise);
+  // Fetch API data for read_aloud
+  const { data: readAloudLessons, isLoading: readAloudLoading, error: readAloudError } = useLessonsByModality({
+    modality: "read_aloud",
+    enabled: slug === "read-aloud"
+  });
 
-  if (!exercise)
+  const exercise = speakingExerciseTypes.find((ex) => ex.slug === slug);
+
+  // Show loading for API-backed exercises
+  if (slug === "read-aloud" && readAloudLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-blue-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-700">Đang tải danh sách bài tập...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error for API-backed exercises
+  if (slug === "read-aloud" && readAloudError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-700 mb-2">Không thể tải danh sách bài tập</h2>
+          <p className="text-gray-500 mb-4">Vui lòng thử lại sau</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!exercise) {
     return (
       <div className="p-8 text-center text-gray-600">
         Không tìm thấy dạng bài.
       </div>
     );
+  }
 
   const container = {
     hidden: { opacity: 0 },
@@ -320,17 +353,35 @@ export default function SpeakingTopicsPage() {
           className=" flex  gap-6 w-full mx-auto "
         >
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {exercise.subTopics.map((topic) => (
-              <CustomCard
-                key={topic.id}
-                slug={topic.id}
-                name={topic.title}
-                description={topic.description}
-                imageUrl={topic.imageUrl}
-                icon={topic.icon}
-                href={`/practice/speaking/${exercise.slug}/${topic.id}`}
-              />
-            ))}
+            {slug === "read-aloud" && readAloudLessons ? (
+              // Render API data for read-aloud
+              readAloudLessons.flatMap(lesson =>
+                lesson.items.map((item) => (
+                  <CustomCard
+                    key={item.id}
+                    slug={item.id}
+                    name={item.title}
+                    description={`${item.difficulty} - Band ${item.bandHint}`}
+                    imageUrl={item.promptJsonb?.image_url}
+                    icon={Mic}
+                    href={`/practice/speaking/${exercise.slug}/${item.id}`}
+                  />
+                ))
+              )
+            ) : (
+              // Render mock data for other types
+              exercise.subTopics.map((topic) => (
+                <CustomCard
+                  key={topic.id}
+                  slug={topic.id}
+                  name={topic.title}
+                  description={topic.description}
+                  imageUrl={topic.imageUrl}
+                  icon={topic.icon}
+                  href={`/practice/speaking/${exercise.slug}/${topic.id}`}
+                />
+              ))
+            )}
           </div>
         </motion.div>
       </div>

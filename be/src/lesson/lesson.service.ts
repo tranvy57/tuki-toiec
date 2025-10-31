@@ -33,7 +33,10 @@ export class LessonService {
     return `This action removes a #${id} lesson`;
   }
 
-  async findLessonsByModality(modality: string): Promise<LessonWithItemsDto[]> {
+  async findLessonsByModality(
+    modality: string,
+    skillType?: string,
+  ): Promise<LessonWithItemsDto[]> {
     const qb = this.dataSrc
       .getRepository('Lesson')
       .createQueryBuilder('l')
@@ -43,8 +46,14 @@ export class LessonService {
       .where('l.type = :type', { type: 'exercise' })
       .andWhere('i.modality = :modality', { modality });
 
+    if (skillType) {
+      qb.andWhere('i.skillType = :skillType', {
+        skillType,
+      });
+    }
+
     const lessons = await qb.getMany();
-    lessons.map((x) => console.log(x))
+    lessons.map((x) => console.log(x));
 
     return lessons.map((lesson: any) => ({
       lessonId: lesson.id,
@@ -62,4 +71,4 @@ export class LessonService {
         })),
     }));
   }
-}  
+}
