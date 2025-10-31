@@ -43,7 +43,6 @@ export class LessonService {
       .leftJoinAndSelect('l.contents', 'lc')
       .leftJoinAndSelect('lc.lessonContentItems', 'lci')
       .leftJoinAndSelect('lci.item', 'i')
-      .where('l.type = :type', { type: 'exercise' })
       .andWhere('i.modality = :modality', { modality });
 
     if (skillType) {
