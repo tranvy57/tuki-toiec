@@ -1,12 +1,14 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SpeakingExerciseBase from "@/components/practice/speaking/SpeakingExerciseBase";
 import ReadAloudExercise from "@/components/practice/speaking/ReadAloudExercise";
 import RepeatSentenceExercise from "@/components/practice/speaking/RepeatSentenceExercise";
 import DescribePictureExercise from "@/components/practice/speaking/DescribePictureExercise";
+import RespondUsingInfoExercise from "@/components/practice/speaking/RespondUsingInfoExercise";
+import ExpressOpinionExercise from "@/components/practice/speaking/ExpressOpinionExercise";
 import { useLessonsByModality, type LessonItem } from "@/api/useLessons";
 import { PracticeBreadcrumb } from "@/components/practice";
 
@@ -47,6 +49,7 @@ const mockExerciseData = {
   },
   "describe-picture": {
     id: "3",
+    type: "describe_picture",
     name: "Describe a Picture",
     vietnameseName: "Mô tả hình ảnh",
     title: "Mô tả hình ảnh trong 30 giây",
@@ -81,7 +84,29 @@ export default function SpeakingExercisePage() {
   // Fetch API data for read_aloud
   const { data: readAloudLessons, isLoading: readAloudLoading, error: readAloudError } = useLessonsByModality({
     modality: "read_aloud",
+    skillType: "speaking",
     enabled: slug === "read-aloud"
+  });
+
+  // Fetch API data for describe_picture
+  const { data: describePictureLessons, isLoading: describePictureLoading, error: describePictureError } = useLessonsByModality({
+    modality: "describe_picture",
+    skillType: "speaking",
+    enabled: slug === "describe-picture"
+  });
+
+  // Fetch API data for respond_using_info
+  const { data: respondUsingInfoLessons, isLoading: respondUsingInfoLoading, error: respondUsingInfoError } = useLessonsByModality({
+    modality: "respond_using_info",
+    skillType: "speaking",
+    enabled: slug === "respond-using-info"
+  });
+
+  // Fetch API data for express_opinion
+  const { data: expressOpinionLessons, isLoading: expressOpinionLoading, error: expressOpinionError } = useLessonsByModality({
+    modality: "express_opinion",
+    skillType: "speaking",
+    enabled: slug === "express-opinion"
   });
 
   // Get current lesson item from API or mock data
@@ -99,6 +124,7 @@ export default function SpeakingExercisePage() {
           ...found,
           name: "Read Aloud",
           vietnameseName: "Đọc đoạn văn",
+          type: "read_aloud",
           // Map speaking_time to duration for compatibility with existing logic
           duration: found.promptJsonb?.speaking_time || 45,
           timeLimit: `${found.promptJsonb?.speaking_time || 45} giây`,
@@ -106,13 +132,62 @@ export default function SpeakingExercisePage() {
         break;
       }
     }
+  } else if (slug === "describe-picture" && describePictureLessons) {
+    // Find item in describe_picture API data
+    for (const lesson of describePictureLessons) {
+      const found = lesson.items.find(item => item.id === topicId);
+      if (found) {
+        currentItem = found;
+        // Map API data to exerciseData format
+        exerciseData = {
+          ...found,
+          name: "Describe a Picture",
+          vietnameseName: "Mô tả hình ảnh",
+          // Map speaking_time to duration for compatibility with existing logic
+          duration: found.promptJsonb?.speaking_time || 30,
+          timeLimit: `${found.promptJsonb?.speaking_time || 30} giây`,
+        };
+        break;
+      }
+    }
+  } else if (slug === "respond-using-info" && respondUsingInfoLessons) {
+    // Find lesson by lessonId in respond_using_info API data
+    const foundLesson = respondUsingInfoLessons.find(lesson => lesson.lessonId === topicId);
+    if (foundLesson) {
+      // Use the entire lesson with all items
+      exerciseData = {
+        lessonId: foundLesson.lessonId,
+        items: foundLesson.items,
+        name: "Respond Using Information",
+        vietnameseName: "Trả lời thông tin",
+        // Use the first item's duration as default
+        duration: foundLesson.items[0]?.promptJsonb?.speaking_time || 15,
+        timeLimit: `${foundLesson.items[0]?.promptJsonb?.speaking_time || 15} giây`,
+      };
+    }
+  } else if (slug === "express-opinion" && expressOpinionLessons) {
+    // Find lesson by lessonId in express_opinion API data
+    const foundLesson = expressOpinionLessons.find(lesson => lesson.lessonId === topicId);
+    if (foundLesson) {
+      // Use the entire lesson with all items
+      exerciseData = {
+        lessonId: foundLesson.lessonId,
+        type: "express_opinion",
+        items: foundLesson.items,
+        name: "Express Opinion",
+        vietnameseName: "Nêu quan điểm cá nhân",
+        // Use the first item's duration as default
+        duration: foundLesson.items[0]?.promptJsonb?.speaking_time || 60,
+        timeLimit: `${foundLesson.items[0]?.promptJsonb?.speaking_time || 60} giây`,
+      };
+    }
   } else {
     // Use mock data for other types
     exerciseData = mockExerciseData[slug as keyof typeof mockExerciseData];
   }
 
   // Show loading for API-backed exercises
-  if (slug === "read-aloud" && readAloudLoading) {
+  if ((slug === "read-aloud" && readAloudLoading) || (slug === "describe-picture" && describePictureLoading) || (slug === "respond-using-info" && respondUsingInfoLoading) || (slug === "express-opinion" && expressOpinionLoading)) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -124,7 +199,7 @@ export default function SpeakingExercisePage() {
   }
 
   // Show error for API-backed exercises
-  if (slug === "read-aloud" && readAloudError) {
+  if ((slug === "read-aloud" && readAloudError) || (slug === "describe-picture" && describePictureError) || (slug === "respond-using-info" && respondUsingInfoError) || (slug === "express-opinion" && expressOpinionError)) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -151,28 +226,97 @@ export default function SpeakingExercisePage() {
   const renderExerciseContent = () => {
     switch (slug) {
       case "read-aloud":
-        return <ReadAloudExercise exerciseData={exerciseData} />;
+        return (
+          <div className="container mx-auto mt-4">
+            <PracticeBreadcrumb
+              items={[
+                { label: "Speaking", href: "/practice/speaking" },
+                { label: "Bài tập", href: `/practice/speaking/${slug}` },
+                { label: exerciseData?.vietnameseName || 'Chi tiết' }
+              ]}
+            />
+            <SpeakingExerciseBase exerciseData={exerciseData}>
+              <ReadAloudExercise exerciseData={exerciseData} />
+            </SpeakingExerciseBase>
+          </div>
+        );
       case "repeat-sentence":
-        return <RepeatSentenceExercise exerciseData={exerciseData} />;
+        return (
+          <div className="container mx-auto mt-4">
+            <PracticeBreadcrumb
+              items={[
+                { label: "Speaking", href: "/practice/speaking" },
+                { label: "Bài tập", href: `/practice/speaking/${slug}` },
+                { label: exerciseData?.vietnameseName || 'Chi tiết' }
+              ]}
+            />
+            <SpeakingExerciseBase exerciseData={exerciseData}>
+              <RepeatSentenceExercise exerciseData={exerciseData} />
+            </SpeakingExerciseBase>
+          </div>
+        );
       case "describe-picture":
-        return <DescribePictureExercise exerciseData={exerciseData} />;
+        return (
+          <div className="container mx-auto mt-4">
+            <PracticeBreadcrumb
+              items={[
+                { label: "Speaking", href: "/practice/speaking" },
+                { label: "Bài tập", href: `/practice/speaking/${slug}` },
+                { label: exerciseData?.vietnameseName || 'Chi tiết' }
+              ]}
+            />
+            <SpeakingExerciseBase exerciseData={exerciseData}>
+              <DescribePictureExercise exerciseData={exerciseData} />
+            </SpeakingExerciseBase>
+          </div>
+        );
+      case "respond-using-info":
+        return (
+          <div className="min-h-screen bg-gray-50">
+            <div className="container mx-auto px-4 py-6">
+              <PracticeBreadcrumb
+                items={[
+                  { label: "Speaking", href: "/practice/speaking" },
+                  { label: "Bài tập", href: `/practice/speaking/${slug}` },
+                  { label: exerciseData?.vietnameseName || 'Chi tiết' }
+                ]}
+              />
+              <RespondUsingInfoExercise exerciseData={exerciseData} />
+            </div>
+          </div>
+        );
+      case "express-opinion":
+        return (
+          <div className="container mx-auto mt-4">
+            <PracticeBreadcrumb
+              items={[
+                { label: "Speaking", href: "/practice/speaking" },
+                { label: "Bài tập", href: `/practice/speaking/${slug}` },
+                { label: exerciseData?.vietnameseName || 'Chi tiết' }
+              ]}
+            />
+            <SpeakingExerciseBase exerciseData={exerciseData}>
+              <ExpressOpinionExercise exerciseData={exerciseData} />
+            </SpeakingExerciseBase>
+          </div>
+        );
       default:
-        return <ReadAloudExercise exerciseData={exerciseData} />;
+        return (
+          <div className="container mx-auto mt-4">
+            <PracticeBreadcrumb
+              items={[
+                { label: "Speaking", href: "/practice/speaking" },
+                { label: "Bài tập", href: `/practice/speaking/${slug}` },
+                { label: exerciseData?.vietnameseName || 'Chi tiết' }
+              ]}
+            />
+            <SpeakingExerciseBase exerciseData={exerciseData}>
+              <ReadAloudExercise exerciseData={exerciseData} />
+            </SpeakingExerciseBase>
+          </div>
+        );
     }
   };
 
-  return (
-    <div className="container mx-auto mt-4">
-      <PracticeBreadcrumb
-        items={[
-          { label: "Speaking", href: "/practice/speaking" },
-          { label: "Bài tập", href: `/practice/speaking/${slug}` },
-          { label: exerciseData?.vietnameseName || 'Chi tiết' }
-        ]}
-      />
-      <SpeakingExerciseBase exerciseData={exerciseData}>
-        {renderExerciseContent()}
-      </SpeakingExerciseBase>
-    </div>
-  );
+  return renderExerciseContent();
 }

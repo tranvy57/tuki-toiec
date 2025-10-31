@@ -52,6 +52,8 @@ export default function SpeakingExerciseBase({
     // Speech recognition states
     const [expectedText, setExpectedText] = useState("");
     const [isReadAloudExercise, setIsReadAloudExercise] = useState(false);
+    const [isExpressOpinionExercise, setIsExpressOpinionExercise] = useState(false);
+    const [finalTranscript, setFinalTranscript] = useState(""); // Lưu transcript cuối cùng
     const [lastErrorCount, setLastErrorCount] = useState(0);
     const [currentWordPosition, setCurrentWordPosition] = useState(0);
     const [processedWords, setProcessedWords] = useState<Set<number>>(new Set());
@@ -72,8 +74,9 @@ export default function SpeakingExerciseBase({
         enableVibration: true,
         volume: 0.2
     });
+    console.log(isReadAloudExercise)
 
-    // Speech recognition hook - only active for read_aloud exercises
+    // Speech recognition hook - active for both read_aloud and express_opinion
     const {
         transcript: realtimeTranscript,
         listening: speechListening,
@@ -85,15 +88,15 @@ export default function SpeakingExerciseBase({
         reset: resetSpeechRecognition,
         getFinalAnalysis
     } = useSpeechRecognition({
-        expectedText: isReadAloudExercise ? expectedText : "",
+        expectedText: isReadAloudExercise ? expectedText : "", // Chỉ so sánh với expected text cho read_aloud
         language: 'en-US',
         continuous: true,
         interimResults: true,
         onRealTimeAnalysis: (analysis) => {
             console.log('Real-time analysis during recording:', analysis);
 
-            // Phát âm thanh feedback realtime với position tracking
-            if (analysis && isRecording) {
+            // Chỉ phát âm thanh feedback cho read_aloud exercises
+            if (analysis && isRecording && isReadAloudExercise) {
                 // Tìm vị trí từ hiện tại dựa trên số từ đã nói
                 const wordsSpoken = analysis.error_segments.filter(seg =>
                     seg.status === 'correct' || seg.status === 'mispronounced'
@@ -148,15 +151,14 @@ export default function SpeakingExerciseBase({
 
     // Initialize expected text and exercise type
     useEffect(() => {
-        // Check if this is a read_aloud exercise
-        const isReadAloud = exerciseData.type === 'read_aloud' ||
-            exerciseData.name?.toLowerCase().includes('read') ||
-            exerciseData.title?.toLowerCase().includes('read') ||
-            exerciseData.promptJsonb?.content;
+        // Check exercise types
+        const isReadAloud = exerciseData.type === 'read_aloud';
+        const isExpressOpinion = exerciseData.type === 'express_opinion';
 
         setIsReadAloudExercise(isReadAloud);
+        setIsExpressOpinionExercise(isExpressOpinion);
 
-        // Set expected text for read_aloud exercises
+        // Set expected text only for read_aloud exercises
         if (isReadAloud && exerciseData.promptJsonb?.content) {
             setExpectedText(exerciseData.promptJsonb.content);
         }
@@ -187,7 +189,7 @@ export default function SpeakingExerciseBase({
             console.log("Component unmounting - cleaning up...");
 
             // Stop speech recognition
-            if (isReadAloudExercise) {
+            if (isReadAloudExercise || isExpressOpinionExercise) {
                 try {
                     stopSpeechRecognition();
                     resetSpeechRecognition();
@@ -216,7 +218,7 @@ export default function SpeakingExerciseBase({
                 console.warn("Error during cleanup media recorder:", error);
             }
         };
-    }, [isReadAloudExercise, stopSpeechRecognition, resetSpeechRecognition]);
+    }, [isReadAloudExercise, isExpressOpinionExercise, stopSpeechRecognition, resetSpeechRecognition]);
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -250,9 +252,10 @@ export default function SpeakingExerciseBase({
             setRecordingTime(0);
             setAudioLevel(0);
 
-            // Start speech recognition for read_aloud exercises
-            if (isReadAloudExercise && speechRecognitionSupported && expectedText) {
+            // Start speech recognition for both read_aloud and express_opinion exercises
+            if ((isReadAloudExercise || isExpressOpinionExercise) && speechRecognitionSupported) {
                 resetSpeechRecognition();
+                setFinalTranscript(""); // Reset final transcript
                 startSpeechRecognition();
             }
 
@@ -283,21 +286,29 @@ export default function SpeakingExerciseBase({
         clearInterval(recordingIntervalRef.current);
         clearInterval(audioLevelIntervalRef.current);
 
-        // Stop speech recognition for read_aloud exercises - FORCE STOP
-        if (isReadAloudExercise) {
-            console.log("🛑 Forcefully stopping speech recognition...", {
+        // Stop speech recognition and save final transcript
+        if (isReadAloudExercise || isExpressOpinionExercise) {
+            console.log("🛑 Stopping speech recognition...", {
                 speechListening,
-                isReadAloudExercise
+                isReadAloudExercise,
+                isExpressOpinionExercise
             });
             try {
+                // Lưu transcript cuối cùng trước khi stop
+                if (realtimeTranscript) {
+                    setFinalTranscript(realtimeTranscript);
+                }
+
                 stopSpeechRecognition();
                 console.log("✅ Speech recognition stop command sent");
 
-                // Add a small delay to ensure it's fully stopped
-                setTimeout(() => {
-                    resetSpeechRecognition();
-                    console.log("🔄 Speech recognition reset completed");
-                }, 100);
+                // Chỉ reset cho read_aloud, giữ transcript cho express_opinion
+                if (isReadAloudExercise) {
+                    setTimeout(() => {
+                        resetSpeechRecognition();
+                        console.log("🔄 Speech recognition reset completed");
+                    }, 100);
+                }
             } catch (error) {
                 console.error("❌ Error stopping speech recognition:", error);
             }
@@ -356,22 +367,27 @@ export default function SpeakingExerciseBase({
         setAudioBlob(null);
         setAudioUrl(null);
 
-        // FORCE STOP and reset speech recognition for read_aloud exercises
-        if (isReadAloudExercise) {
-            console.log("Resetting speech recognition completely...");
+        // Reset speech recognition
+        if (isReadAloudExercise || isExpressOpinionExercise) {
+            console.log("Resetting speech recognition...");
             try {
                 // First stop listening
                 stopSpeechRecognition();
 
-                // Then reset after a small delay
+                // Reset after a small delay
                 setTimeout(() => {
                     resetSpeechRecognition();
                 }, 100);
 
                 // Reset states
-                setLastErrorCount(0);
-                setCurrentWordPosition(0);
-                setProcessedWords(new Set());
+                if (isReadAloudExercise) {
+                    setLastErrorCount(0);
+                    setCurrentWordPosition(0);
+                    setProcessedWords(new Set());
+                }
+
+                // Reset final transcript for both types
+                setFinalTranscript("");
             } catch (error) {
                 console.warn("Error resetting speech recognition:", error);
             }
@@ -394,7 +410,7 @@ export default function SpeakingExerciseBase({
     };
 
     return (
-        <div className="max-h-[calc(100vh-175px)]  bg-white flex flex-col">            
+        <div className="max-h-[calc(100vh-175px)]  bg-white flex flex-col">
 
             {/* Main Content - 2 Column Layout */}
             <div className="flex-1 flex overflow-hidden">
@@ -480,7 +496,7 @@ export default function SpeakingExerciseBase({
                                         </div>
 
                                         {/* Compact state line */}
-                                       
+
                                     </div>
 
                                     {/* Action row: Nộp bài + Ghi lại */}
@@ -547,9 +563,9 @@ export default function SpeakingExerciseBase({
                                 )}
                             </AnimatePresence>
 
-                            {/* Real-time Speech Recognition Feedback for Read Aloud */}
+                            {/* Real-time Speech Recognition Feedback */}
                             <AnimatePresence>
-                                {isReadAloudExercise && speechRecognitionSupported && expectedText && (
+                                {(isReadAloudExercise || isExpressOpinionExercise) && speechRecognitionSupported && (
                                     <motion.div
                                         initial={{ opacity: 0, height: 0 }}
                                         animate={{ opacity: 1, height: "auto" }}
@@ -560,7 +576,7 @@ export default function SpeakingExerciseBase({
                                             <div className="flex items-center gap-2 mb-3">
                                                 <Volume2 className="w-5 h-5 text-blue-600" />
                                                 <h4 className="font-semibold text-blue-900">
-                                                    Real-time Pronunciation Check
+                                                    {isReadAloudExercise ? "Real-time Pronunciation Check" : "Voice Recognition"}
                                                 </h4>
                                                 {isRecording && speechListening && (
                                                     <div className="flex items-center gap-1 text-sm text-green-600">
@@ -623,11 +639,13 @@ export default function SpeakingExerciseBase({
                                             )} */}
 
                                             {/* Real-time transcript */}
-                                            {realtimeTranscript && (
+                                            {(realtimeTranscript || finalTranscript) && (
                                                 <div className="mb-3">
-                                                    <div className="text-sm text-gray-600 mb-1">Bạn đang nói:</div>
-                                                    <div className="bg-white rounded-lg p-3 border text-sm italic text-blue-800">
-                                                        "{realtimeTranscript}"
+                                                    <div className="text-sm text-gray-600 mb-1">
+                                                        {isRecording ? "Bạn đang nói:" : "Transcript cuối cùng:"}
+                                                    </div>
+                                                    <div className={`bg-white rounded-lg p-3 border text-sm ${isRecording ? 'italic text-blue-800' : 'text-gray-800'}`}>
+                                                        "{isRecording ? realtimeTranscript : (finalTranscript || realtimeTranscript)}"
                                                     </div>
                                                 </div>
                                             )}
@@ -635,8 +653,8 @@ export default function SpeakingExerciseBase({
                                             {/* Instant error alerts during speaking */}
 
 
-                                            {/* Real-time analysis */}
-                                            {currentAnalysis && (
+                                            {/* Real-time analysis - chỉ hiển thị cho read_aloud */}
+                                            {(currentAnalysis && expectedText && isReadAloudExercise) && (
                                                 <div className="space-y-3">
                                                     <div className="grid grid-cols-3 gap-3">
                                                         <div className="text-center p-2 bg-white rounded border">
@@ -780,9 +798,12 @@ export default function SpeakingExerciseBase({
                                                 </div>
                                             )}
 
-                                            {!isRecording && !realtimeTranscript && (
+                                            {!isRecording && !realtimeTranscript && !finalTranscript && (
                                                 <div className="text-center text-gray-500 text-sm py-4">
-                                                    Start recording to see real-time feedback
+                                                    {isExpressOpinionExercise
+                                                        ? "Bắt đầu ghi âm để thấy voice recognition"
+                                                        : "Start recording to see real-time feedback"
+                                                    }
                                                 </div>
                                             )}
                                         </div>

@@ -9,9 +9,10 @@ export interface LessonItem {
   bandHint: number;
   difficulty: string;
   promptJsonb: {
-    // Email response fields
+    // General fields
     content?: string;
     directions?: string;
+    // Email response fields
     writing_type?: string;
     // Describe picture fields
     keywords?: string[];
@@ -21,6 +22,18 @@ export interface LessonItem {
     speaking_time?: number;
     question_number?: number;
     preparation_time?: number;
+    // Respond using info fields
+    basic_info?: string;
+    basic_info_audio?: string;
+    // Listening MCQ fields
+    text?: string;
+    choices?: Array<{
+      content: string;
+      answer_key: string;
+    }>;
+    audio_url?: string;
+    transcript?: string;
+    explanation?: string;
   };
   solutionJsonb: {
     tips?: string;
@@ -44,14 +57,21 @@ export interface LessonsByModalityResponse {
 
 interface UseLessonsByModalityOptions {
   modality: string;
+  skillType?: string;
   enabled?: boolean;
 }
 
 async function fetchLessonsByModality(
-  modality: string
+  modality: string,
+  skillType?: string
 ): Promise<LessonByModality[]> {
   try {
-    const res = await api.get(`/lesson/by-modality?modality=${modality}`);
+    let url = `/lesson/by-modality?modality=${modality}`;
+    if (skillType) {
+      url += `&skillType=${skillType}`;
+    }
+
+    const res = await api.get(url);
 
     // Validate response structure
     if (!res.data || typeof res.data !== "object") {
@@ -73,11 +93,12 @@ async function fetchLessonsByModality(
 
 export function useLessonsByModality({
   modality,
+  skillType,
   enabled = true,
 }: UseLessonsByModalityOptions) {
   return useQuery({
-    queryKey: ["lessons", "by-modality", modality],
-    queryFn: () => fetchLessonsByModality(modality),
+    queryKey: ["lessons", "by-modality", modality, skillType],
+    queryFn: () => fetchLessonsByModality(modality, skillType),
     enabled: enabled && !!modality,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes (garbage collection time)

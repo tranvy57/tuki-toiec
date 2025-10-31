@@ -62,66 +62,6 @@ export const speakingExerciseTypes = [
     ],
   },
   {
-    id: "2",
-    name: "Lặp lại câu",
-    slug: "repeat-sentence",
-    imageUrl:
-      "https://kajabi-storefronts-production.kajabi-cdn.com/kajabi-storefronts-production/blogs/8689/images/xHeyL1NkS6mq53wl2tsW_Copy_of_GET_PAID.png",
-    description:
-      "Nghe một câu tiếng Anh và lặp lại chính xác để luyện khả năng nghe-nói liền mạch.",
-    difficulty: "Medium",
-    difficultyColor: "bg-yellow-100 text-yellow-800",
-    order: 2,
-    exerciseCount: 25,
-    estimatedTime: "10-15 phút",
-    gradient: "from-yellow-50 to-orange-50",
-    borderColor: "border-yellow-200",
-    instruction: [
-      "Nghe kỹ câu mẫu — tập trung vào ngữ điệu và cách nối âm.",
-      "Lặp lại ngay sau khi nghe, cố gắng giữ nguyên tốc độ và nhịp nói.",
-      "Nếu không nghe kịp, chia nhỏ câu thành từng cụm và luyện lại nhiều lần.",
-      "Đừng đọc quá chậm — hãy giữ nhịp tự nhiên như người bản xứ.",
-      "Ghi âm lại để so sánh độ chính xác và cải thiện dần.",
-    ],
-    subTopics: [
-      {
-        id: "2-1",
-        title: "Câu ngắn thường gặp",
-        slug: "short-sentences",
-
-        description: "Luyện lặp lại các câu ngắn 4–6 từ trong giao tiếp.",
-        level: "Easy",
-        progress: 5,
-        total: 10,
-        gradient: "from-yellow-50 to-orange-50",
-      },
-      {
-        id: "2-2",
-        slug: "mid-length-sentences",
-
-        title: "Câu trung bình",
-        description:
-          "Nghe và lặp lại câu dài hơn (8–12 từ), chú ý trọng âm và nối âm.",
-        level: "Medium",
-        progress: 2,
-        total: 8,
-        gradient: "from-orange-50 to-amber-50",
-      },
-      {
-        id: "2-3",
-        title: "Câu phức tạp",
-        slug: "complex-sentences",
-
-        description:
-          "Thực hành lặp lại câu chứa mệnh đề phụ hoặc cấu trúc phức tạp.",
-        level: "Hard",
-        progress: 0,
-        total: 7,
-        gradient: "from-amber-50 to-yellow-50",
-      },
-    ],
-  },
-  {
     id: "3",
     name: "Mô tả hình ảnh",
     slug: "describe-picture",
@@ -182,6 +122,123 @@ export const speakingExerciseTypes = [
         progress: 0,
         total: 6,
         gradient: "from-indigo-50 to-blue-50",
+      },
+    ],
+  },
+  {
+    id: "4",
+    name: "Trả lời thông tin",
+    slug: "respond-using-info",
+    imageUrl:
+      "https://img.freepik.com/free-vector/customer-support-flat-design-illustration_23-2148889374.jpg",
+    description:
+      "Đọc thông tin được cung cấp và trả lời các câu hỏi dựa trên nội dung đó một cách chính xác và logic.",
+    difficulty: "Medium",
+    difficultyColor: "bg-blue-100 text-blue-800",
+    order: 4,
+    exerciseCount: 18,
+    estimatedTime: "15-20 phút",
+    gradient: "from-purple-50 to-pink-50",
+    borderColor: "border-purple-200",
+    instruction: [
+      "Đọc kỹ thông tin được cung cấp trước khi nghe câu hỏi.",
+      "Tập trung vào những chi tiết quan trọng như thời gian, địa điểm, số liệu.",
+      "Nghe câu hỏi một cách cẩn thận và xác định thông tin cần thiết để trả lời.",
+      "Trả lời trực tiếp, ngắn gọn dựa trên thông tin đã cho.",
+      "Sử dụng từ ngữ chính xác và cấu trúc câu rõ ràng.",
+    ],
+    subTopics: [
+      {
+        id: "4-1",
+        title: "Thông tin hội nghị",
+        slug: "conference-info",
+        description:
+          "Trả lời câu hỏi về lịch trình, địa điểm và nội dung hội nghị.",
+        level: "Medium",
+        progress: 0,
+        total: 6,
+        gradient: "from-purple-50 to-pink-50",
+      },
+      {
+        id: "4-2",
+        title: "Thông báo công ty",
+        slug: "company-announcements",
+        description:
+          "Phản hồi câu hỏi về chính sách, sự kiện và thông báo trong công ty.",
+        level: "Medium",
+        progress: 0,
+        total: 6,
+        gradient: "from-pink-50 to-fuchsia-50",
+      },
+      {
+        id: "4-3",
+        title: "Thông tin sự kiện",
+        slug: "event-information",
+        description:
+          "Trả lời về thời gian, địa điểm và yêu cầu tham gia các sự kiện.",
+        level: "Hard",
+        progress: 0,
+        total: 6,
+        gradient: "from-fuchsia-50 to-purple-50",
+      },
+    ],
+  },
+  {
+    id: "5",
+    name: "Nêu quan điểm cá nhân",
+    vietnameseName: "Nêu quan điểm cá nhân",
+    slug: "express-opinion",
+    imageUrl:
+      "https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+    description:
+      "Phát triển kỹ năng trình bày quan điểm cá nhân về các chủ đề đa dạng với lý lẽ thuyết phục và ví dụ cụ thể.",
+    difficulty: "Hard",
+    difficultyColor: "bg-red-100 text-red-800",
+    order: 5,
+    exerciseCount: 15,
+    estimatedTime: "20-25 phút",
+    gradient: "from-red-50 to-pink-50",
+    borderColor: "border-red-200",
+    instruction: [
+      "Đọc kỹ chủ đề và suy nghĩ về quan điểm của bạn trước khi nói.",
+      "Bắt đầu với câu thesis statement rõ ràng về lập trường của bạn.",
+      "Đưa ra 2-3 lý lẽ chính để ủng hộ quan điểm với ví dụ cụ thể.",
+      "Sử dụng từ nối để tạo mạch lạc: 'First', 'Moreover', 'In conclusion'.",
+      "Kết thúc bằng cách tóm tắt quan điểm và khẳng định lại lập trường.",
+    ],
+    subTopics: [
+      {
+        id: "5-1",
+        title: "Công nghệ và đời sống",
+        slug: "technology-life",
+        description:
+          "Trình bày quan điểm về tác động của công nghệ trong cuộc sống hiện đại.",
+        level: "Medium",
+        progress: 0,
+        total: 5,
+        gradient: "from-red-50 to-pink-50",
+      },
+      {
+        id: "5-2",
+        title: "Giáo dục và học tập",
+        slug: "education-learning",
+        description:
+          "Nêu ý kiến về phương pháp học tập và hệ thống giáo dục hiện tại.",
+        level: "Hard",
+        progress: 0,
+        total: 5,
+        gradient: "from-pink-50 to-fuchsia-50",
+      },
+      {
+        id: "5-3",
+        title: "Môi trường làm việc",
+        slug: "work-environment",
+        description:
+          "Thảo luận về các xu hướng làm việc và môi trường công ty lý tưởng.",
+        level: "Hard",
+        progress: 0,
+        total: 5,
+        gradient: "from-fuchsia-50 to-red-50",
       },
     ],
   },

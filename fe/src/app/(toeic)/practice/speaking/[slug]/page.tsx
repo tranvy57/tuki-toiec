@@ -217,13 +217,35 @@ export default function SpeakingTopicsPage() {
   // Fetch API data for read_aloud
   const { data: readAloudLessons, isLoading: readAloudLoading, error: readAloudError } = useLessonsByModality({
     modality: "read_aloud",
+    skillType: "speaking",
     enabled: slug === "read-aloud"
+  });
+
+  // Fetch API data for describe_picture
+  const { data: describePictureLessons, isLoading: describePictureLoading, error: describePictureError } = useLessonsByModality({
+    modality: "describe_picture",
+    skillType: "speaking",
+    enabled: slug === "describe-picture"
+  });
+
+  // Fetch API data for respond_using_info
+  const { data: respondUsingInfoLessons, isLoading: respondUsingInfoLoading, error: respondUsingInfoError } = useLessonsByModality({
+    modality: "respond_using_info",
+    skillType: "speaking",
+    enabled: slug === "respond-using-info"
+  });
+
+  // Fetch API data for express_opinion
+  const { data: expressOpinionLessons, isLoading: expressOpinionLoading, error: expressOpinionError } = useLessonsByModality({
+    modality: "express_opinion",
+    skillType: "speaking",
+    enabled: slug === "express-opinion"
   });
 
   const exercise = speakingExerciseTypes.find((ex) => ex.slug === slug);
 
   // Show loading for API-backed exercises
-  if (slug === "read-aloud" && readAloudLoading) {
+  if ((slug === "read-aloud" && readAloudLoading) || (slug === "describe-picture" && describePictureLoading) || (slug === "respond-using-info" && respondUsingInfoLoading) || (slug === "express-opinion" && expressOpinionLoading)) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -235,7 +257,7 @@ export default function SpeakingTopicsPage() {
   }
 
   // Show error for API-backed exercises
-  if (slug === "read-aloud" && readAloudError) {
+  if ((slug === "read-aloud" && readAloudError) || (slug === "describe-picture" && describePictureError) || (slug === "respond-using-info" && respondUsingInfoError) || (slug === "express-opinion" && expressOpinionError)) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -368,9 +390,50 @@ export default function SpeakingTopicsPage() {
                   />
                 ))
               )
+            ) : slug === "describe-picture" && describePictureLessons ? (
+              // Render API data for describe-picture
+              describePictureLessons.flatMap(lesson =>
+                lesson.items.map((item) => (
+                  <CustomCard
+                    key={item.id}
+                    slug={item.id}
+                    name={item.title}
+                    description={`${item.difficulty} - Band ${item.bandHint}`}
+                    imageUrl={item.promptJsonb?.image_url}
+                    icon={Mic}
+                    href={`/practice/speaking/${exercise.slug}/${item.id}`}
+                  />
+                ))
+              )
+            ) : slug === "respond-using-info" && respondUsingInfoLessons ? (
+              // Render API data for respond-using-info (by lesson, not individual items)
+              respondUsingInfoLessons.map((lesson, index) => (
+                <CustomCard
+                  key={lesson.lessonId}
+                  slug={lesson.lessonId}
+                  name={`Lesson ${index + 1}`}
+                  description={`${lesson.items.length} câu hỏi - Questions ${lesson.items.map(item => item.promptJsonb?.question_number).join(', ')}`}
+                  imageUrl="/images/respond-info-placeholder.jpg"
+                  icon={Mic}
+                  href={`/practice/speaking/${exercise.slug}/${lesson.lessonId}`}
+                />
+              ))
+            ) : slug === "express-opinion" && expressOpinionLessons ? (
+              // Render API data for express-opinion (by lesson, not individual items)
+              expressOpinionLessons.map((lesson, index) => (
+                <CustomCard
+                  key={lesson.lessonId}
+                  slug={lesson.lessonId}
+                  name={`Lesson ${index + 1}`}
+                  description={`${lesson.items.length} câu hỏi - Questions ${lesson.items.map(item => item.promptJsonb?.question_number).join(', ')}`}
+                  imageUrl="/images/express-opinion-placeholder.jpg"
+                  icon={Mic}
+                  href={`/practice/speaking/${exercise.slug}/${lesson.lessonId}`}
+                />
+              ))
             ) : (
               // Render mock data for other types
-              exercise.subTopics.map((topic) => (
+              exercise?.subTopics?.map((topic) => (
                 <CustomCard
                   key={topic.id}
                   slug={topic.id}
