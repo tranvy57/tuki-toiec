@@ -18,7 +18,7 @@ export class LessonItemDto {
 export class LessonWithItemsDto {
   lessonId: string;
 
-  lessonTitle: string;
+  name: string;
 
   items: LessonItemDto[];
 }

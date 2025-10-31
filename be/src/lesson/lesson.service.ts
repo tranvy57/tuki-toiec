@@ -57,7 +57,7 @@ export class LessonService {
 
     return lessons.map((lesson: any) => ({
       lessonId: lesson.id,
-      lessonTitle: lesson.title,
+      name: lesson.name,
       items: (lesson.contents ?? [])
         .flatMap((c) => c.lessonContentItems ?? [])
         .map((ci) => ({
