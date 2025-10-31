@@ -83,14 +83,13 @@ export class UserVocabulariesController {
   ) {
     const userVocabs = await this.userVocabulariesService.selectReviewList(
       user.id,
-      Number(limit) || 10,
+      Number(limit) || 100,
     );
 
     const vocabularies = userVocabs.map((uv) => uv.vocabulary);
     const items = await this.userVocabulariesService.createItems(vocabularies);
 
     return {
-      sessionId: `review_${Date.now()}`,
       totalItems: items.length,
       items,
     };

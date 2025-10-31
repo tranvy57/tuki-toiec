@@ -47,7 +47,7 @@ export class UserVocabulariesService {
         temperature: 0.3,
         responseMimeType: 'application/json',
       },
-    });;
+    });
   }
 
   create(createUserVocabularyDto: CreateUserVocabularyDto) {
@@ -155,15 +155,18 @@ export class UserVocabulariesService {
     for (const v of vocabularies) {
       const rand = Math.random();
 
-      if (rand < 0.4) items.push(await this.createMCQ(v));
-      else if (rand < 0.8) items.push(this.createPronunciation(v));
+      if (rand < 0.3) {
+        const mcq = await this.createMCQ(v);
+        if (mcq) items.push(mcq)
+        else items.push(this.createCloze(v));
+      } else if (rand < 0.6) items.push(this.createPronunciation(v));
       else items.push(this.createCloze(v));
     }
 
     return items;
   }
 
-  async selectReviewList(userId: string, limit = 20) {
+  async selectReviewList(userId: string, limit = 100) {
     const qb = this.dataSource
       .getRepository(UserVocabulary)
       .createQueryBuilder('uv')
@@ -232,48 +235,76 @@ export class UserVocabulariesService {
     return record;
   }
 
-  async generateDistractors(vocab: Vocabulary): Promise<string[]> {
+  private async generateDistractors(vocab: Vocabulary): Promise<string[]> {
     const prompt = `
-    Từ: "${vocab.word}" (${vocab.partOfSpeech})
-    Nghĩa đúng: "${vocab.meaning}"
+  Từ: "${vocab.word}" (${vocab.partOfSpeech})
+  Nghĩa đúng: "${vocab.meaning}"
 
-    Hãy tạo 3 lựa chọn sai bằng tiếng Việt, cùng loại từ và cùng chủ đề, 
-    nhưng không trùng nghĩa đúng. 
-    Trả về mảng JSON hợp lệ, ví dụ: ["ăn", "ngủ", "nhảy"]
-    `;
+  Hãy tạo 3 lựa chọn sai bằng tiếng Việt, cùng loại từ và cùng chủ đề, 
+  nhưng không trùng nghĩa đúng. 
+  Trả về mảng JSON hợp lệ, ví dụ: ["ăn", "ngủ", "nhảy"]
+  `;
 
     try {
       const result = await this.model.generateContent(prompt);
       const text = result.response.text().trim();
 
       const jsonText = text.match(/\[.*\]/s)?.[0] ?? '[]';
-      return JSON.parse(jsonText);
-    } catch (err) {
-      console.error('Gemini distractor generation failed:', err.message);
-      return [];
+      let arr = JSON.parse(jsonText);
+
+      if (
+        arr.length === 1 &&
+        typeof arr[0] === 'string' &&
+        arr[0].includes(',')
+      ) {
+        arr = arr[0]
+          .split(',')
+          .map((s: string) => s.trim())
+          .filter(Boolean);
+      }
+
+      return arr;
+    } catch (err: any) {
+      const msg = err.message || '';
+      console.error('Error generating distractors:', msg);
     }
+
+    return [];
   }
 
   async createMCQ(vocab: Vocabulary) {
     const distractors = await this.generateDistractors(vocab);
-    const choices = [...distractors, vocab.meaning].sort(
+
+    if (!distractors || distractors.length < 3) return null;
+
+    const rawChoices = [...distractors.slice(0, 3), vocab.meaning].sort(
       () => Math.random() - 0.5,
     );
+
+    const letterKeys = ['A', 'B', 'C', 'D'];
+    const choices = rawChoices.map((value, idx) => ({
+      key: letterKeys[idx],
+      value,
+    }));
+
+    const correctKey =
+      choices.find((c) => c.value === vocab.meaning)?.key ?? 'A';
 
     return {
       type: 'mcq',
       vocabId: vocab.id,
       content: {
         question: `What is the meaning of "${vocab.word}"?`,
-        choices,
-        correctKey: vocab.meaning,
+        choices, 
+        correctKey, 
         audioUrl: vocab.audioUrl,
       },
     };
   }
 
   createCloze(vocab: Vocabulary) {
-    const text = vocab.exampleEn?.replace(
+    const text_base = vocab.exampleEn?.split('b.')[0].trim();
+    const text = text_base.replace(
       new RegExp(vocab.word, 'gi'),
       '_____',
     );
