@@ -12,6 +12,8 @@ export function useVocabularyReview(
   vocabularies: WeakVocabulary[],
   setVocabularies: React.Dispatch<React.SetStateAction<WeakVocabulary[]>>
 ) {
+  console.log("vocabularies", vocabularies);
+
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
   const [isReviewMode, setIsReviewMode] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
@@ -126,6 +128,8 @@ export function useVocabularyReview(
     if (currentQuizType === "multiple-choice") {
       isQuizCorrect = selectedOption === currentWord.meaning;
     } else if (currentQuizType === "fill-blank") {
+      console.log("quizAnswer", quizAnswer);
+
       isQuizCorrect =
         quizAnswer.toLowerCase().trim() === currentWord.word.toLowerCase();
     } else if (currentQuizType === "audio") {

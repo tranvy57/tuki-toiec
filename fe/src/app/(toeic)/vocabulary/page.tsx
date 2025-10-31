@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen } from "lucide-react";
 import { WeakVocabulary } from "@/types/implements/vocabulary";
@@ -16,11 +16,16 @@ import { useGetVocabularies } from "@/api/useVocabulary";
 
 export default function VocabularyPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [vocabularies, setVocabularies] =
-    useState<WeakVocabulary[]>(mockWeakVocabularies);
-  const [filterLevel, setFilterLevel] = useState<string>("all");
 
-  const { data, isLoading, isError } = useGetVocabularies();
+  const [filterLevel, setFilterLevel] = useState<string>("all");
+  const data = useGetVocabularies();
+  const [vocabularies, setVocabularies] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (data?.data?.data) {
+      setVocabularies(data?.data?.data);
+    }
+  }, [data.data]);
 
   const {
     currentReviewIndex,
@@ -48,13 +53,16 @@ export default function VocabularyPage() {
   } = useVocabularyReview(vocabularies, setVocabularies);
 
   const filteredVocabularies = vocabularies.filter((vocab) => {
+    console.log("vocab", vocab);
     const matchesSearch =
-      vocab.word.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      vocab.meaning.toLowerCase().includes(searchQuery.toLowerCase());
+      vocab?.word?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      vocab?.meaning?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesFilter =
-      filterLevel === "all" || vocab.weaknessLevel === filterLevel;
+      filterLevel === "all" || vocab?.weaknessLevel === filterLevel;
     return matchesSearch && matchesFilter;
   });
+
+  console.log("filteredVocabularies", filteredVocabularies);
 
   const markedForReview = vocabularies.filter(
     (v) => v.isMarkedForReview
@@ -101,13 +109,15 @@ export default function VocabularyPage() {
       />
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
-        {filteredVocabularies.map((vocab) => (
-          <VocabularyCard
-            key={vocab.id}
-            vocabulary={vocab}
-            onToggleMarkForReview={toggleMarkForReview}
-          />
-        ))}
+        {filteredVocabularies.map((vocab) => {
+          return (
+            <VocabularyCard
+              key={vocab.id}
+              vocabulary={vocab}
+              onToggleMarkForReview={toggleMarkForReview}
+            />
+          );
+        })}
       </div>
 
       {filteredVocabularies.length === 0 && (

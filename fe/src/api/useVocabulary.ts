@@ -23,17 +23,15 @@ export interface VocabularySearchParams {
 // API Functions
 
 // Lấy danh sách vocabularies với phân trang và filter
-export const getUserVocabularies =
-  async (): Promise<UserVocabularyResponse> => {
-    try {
-      const response = await api.get("/users/vocabularies");
-      const parsed = UserVocabularyResponseSchema.parse(response.data.data);
-      return parsed;
-    } catch (error) {
-      console.error("Error fetching vocabularies:", error);
-      throw error;
-    }
-  };
+export const getUserVocabularies = async () => {
+  try {
+    const response = await api.get("/users/vocabularies");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching vocabularies:", error);
+    throw error;
+  }
+};
 
 export const useGetVocabularies = () => {
   return useQuery({
