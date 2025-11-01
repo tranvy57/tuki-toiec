@@ -1,7 +1,7 @@
 import { WeakVocabulary } from "@/types/implements/vocabulary";
 
 interface MultipleChoiceQuizProps {
-  word: WeakVocabulary;
+  word: any;
   options: string[];
   selectedOption: string;
   onSelectOption: (option: string) => void;
@@ -15,11 +15,11 @@ export default function MultipleChoiceQuiz({
   onSelectOption,
   isCompleted,
 }: MultipleChoiceQuizProps) {
+  console.log("word", word);
+
   return (
     <div className="space-y-4">
-      <p className="text-center text-gray-600">
-        Nghĩa của từ "<strong>{word.word}</strong>" là gì?
-      </p>
+      <p className="text-center text-gray-600">{word?.content?.question}</p>
       <div className="space-y-2">
         {options.map((option, index) => (
           <button
@@ -48,4 +48,3 @@ export default function MultipleChoiceQuiz({
     </div>
   );
 }
-

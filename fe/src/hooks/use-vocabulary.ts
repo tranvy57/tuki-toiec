@@ -9,11 +9,10 @@ import {
 import { generateQuizOptions } from "@/utils/vocabularyUtils";
 
 export function useVocabularyReview(
-  vocabularies: WeakVocabulary[],
-  setVocabularies: React.Dispatch<React.SetStateAction<WeakVocabulary[]>>
+  vocabularies: any[],
+  setVocabularies: React.Dispatch<React.SetStateAction<any[]>>,
+  vocabularyReviews?: any
 ) {
-  console.log("vocabularies", vocabularies);
-
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
   const [isReviewMode, setIsReviewMode] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
@@ -37,7 +36,7 @@ export function useVocabularyReview(
   ];
 
   const reviewWords = vocabularies.filter((v) => v.isMarkedForReview);
-  const currentReviewWord = reviewWords[currentReviewIndex];
+  const currentReviewWord = vocabularyReviews?.items?.[currentReviewIndex];
 
   const startFlashcardSession = useCallback(() => {
     const reviewWords = vocabularies.filter((v) => v.isMarkedForReview);
@@ -61,11 +60,16 @@ export function useVocabularyReview(
   }, [vocabularies]);
 
   const startQuizSession = useCallback(() => {
-    const reviewWords = vocabularies.filter((v) => v.isMarkedForReview);
-    if (reviewWords.length === 0) {
-      toast.error("Không có từ nào được đánh dấu để ôn tập!");
-      return;
-    }
+    console.log("vocabularyReviews", vocabularyReviews?.items[0]);
+
+    // const reviewWords = vocabularies.filter((v) => v.isMarkedForReview);
+
+    console.log("reviewWords", reviewWords);
+
+    // if (reviewWords.length === 0) {
+    //   toast.error("Không có từ nào được đánh dấu để ôn tập!");
+    //   return;
+    // }
 
     setIsReviewMode(true);
     setReviewMode("quiz");
@@ -74,29 +78,28 @@ export function useVocabularyReview(
     setShowQuiz(false);
     setReviewSession({
       correct: 0,
-      total: reviewWords.length,
+      total: vocabularyReviews?.totalItems,
       sessionActive: true,
     });
 
     // Start first quiz immediately
-    const firstWord = reviewWords[0];
+    const firstWord = vocabularyReviews?.items[0];
     setTimeout(() => startQuiz(firstWord), 500);
 
-    toast.success(`Bắt đầu Quiz với ${reviewWords.length} từ vựng!`);
-  }, [vocabularies]);
+    toast.success(`Bắt đầu Quiz với ${vocabularyReviews?.totalItems} từ vựng!`);
+  }, [vocabularies, vocabularyReviews]);
 
   const startQuiz = useCallback(
-    (word: WeakVocabulary) => {
-      const randomType =
-        quizTypes[Math.floor(Math.random() * quizTypes.length)];
+    (word: any) => {
+      console.log("word", word?.type);
 
-      setCurrentQuizType(randomType);
+      setCurrentQuizType(word?.type);
       setShowQuiz(true);
       setQuizCompleted(false);
       setSelectedOption("");
       setQuizAnswer("");
 
-      if (randomType === "multiple-choice") {
+      if (word?.type === "mcq") {
         const options = generateQuizOptions(word.meaning, vocabularies);
         setQuizOptions(options);
       }
@@ -122,17 +125,21 @@ export function useVocabularyReview(
   }, [reviewMode, reviewSession]);
 
   const handleQuizSubmit = useCallback(() => {
-    const currentWord = reviewWords[currentReviewIndex];
+    const currentReviewWord = vocabularyReviews?.items?.[currentReviewIndex];
+
+    const currentWord = currentReviewWord[currentReviewIndex];
+
     let isQuizCorrect = false;
 
-    if (currentQuizType === "multiple-choice") {
+    if (currentQuizType === "mcq") {
       isQuizCorrect = selectedOption === currentWord.meaning;
-    } else if (currentQuizType === "fill-blank") {
+    } else if (currentQuizType === "cloze") {
       console.log("quizAnswer", quizAnswer);
 
       isQuizCorrect =
-        quizAnswer.toLowerCase().trim() === currentWord.word.toLowerCase();
-    } else if (currentQuizType === "audio") {
+        quizAnswer.toLowerCase().trim() ===
+        currentWord?.content.answer.toLowerCase().trim();
+    } else if (currentQuizType === "pronunciation") {
       isQuizCorrect = selectedOption === currentWord.word;
     }
 
@@ -156,24 +163,22 @@ export function useVocabularyReview(
   ]);
 
   const proceedToNextWord = useCallback(() => {
-    const reviewWords = vocabularies.filter((v) => v.isMarkedForReview);
+    const currentWord = reviewWords[currentReviewIndex];
     if (currentReviewIndex < reviewWords.length - 1) {
-      const randomType =
-        quizTypes[Math.floor(Math.random() * quizTypes.length)];
       setCurrentReviewIndex(currentReviewIndex + 1);
       setShowAnswer(false);
       setShowQuiz(true);
-      setCurrentQuizType(randomType);
+      setCurrentQuizType(currentWord?.type);
 
-      if (randomType === "multiple-choice") {
+      if (currentWord?.type === "mcq") {
         const options = generateQuizOptions(
           reviewWords[currentReviewIndex + 1].meaning,
           vocabularies
         );
         setQuizOptions(options);
-      } else if (randomType === "fill-blank") {
+      } else if (currentWord?.type === "cloze") {
         setQuizAnswer("");
-      } else if (randomType === "audio") {
+      } else if (currentWord?.type === "pronunciation") {
         setSelectedOption("");
       }
       setQuizCompleted(false);

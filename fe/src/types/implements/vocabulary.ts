@@ -20,7 +20,7 @@ export interface ReviewSession {
 }
 
 export type ReviewMode = "flashcard" | "quiz" | null;
-export type QuizType = "multiple-choice" | "fill-blank" | "audio" | null;
+export type QuizType = "mcq" | "cloze" | "pronunciation" | null;
 
 import { BaseResponseSchema } from "../api-response";
 import * as z from "zod";
