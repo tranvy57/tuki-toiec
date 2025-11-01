@@ -130,7 +130,7 @@ export default function SpeakingPracticePage() {
               slug={exercise.slug}
               name={exercise.name}
               description={exercise.description}
-              imageUrl={exercise.imageUrl}
+              imageUrl={exercise.imageUrl || "https://img.freepik.com/free-vector/customer-support-flat-design-illustration_23-2148889374.jpg"}
               icon={exercise.icon}
               href={`/practice/speaking/${exercise.slug}`}
             />
