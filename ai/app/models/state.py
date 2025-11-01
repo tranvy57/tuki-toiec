@@ -17,3 +17,4 @@ class State(BaseModel):
     user_id: str = ""
     last_keywords: List[str] = []  
     search_params: SearchParams = Field(default_factory=SearchParams)
+    meta: dict = Field(default_factory=dict)

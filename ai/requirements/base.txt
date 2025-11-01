@@ -11,3 +11,4 @@ psycopg2-binary~=2.9
 uv
 cloudinary
 spacy
+langgraph-checkpoint-redis==0.0.8
