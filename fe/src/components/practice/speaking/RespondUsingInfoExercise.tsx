@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import { LessonItem } from "@/api/useLessons";
 import { useEvaluateSpeakingAttempt } from "@/api/useSpeakingAttempt";
-import { EvaluateSpeakingResponse } from "@/types/implements/attempt-speaking";
+// Note: response shape may vary across evaluators; we render defensively.
 
 interface RespondUsingInfoExerciseProps {
     exerciseData: {
@@ -54,7 +54,8 @@ export default function RespondUsingInfoExercise({
     const [isSamplePlaying, setIsSamplePlaying] = useState(false);
     const [submittedAnswers, setSubmittedAnswers] = useState<Set<string>>(new Set());
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [evaluationResults, setEvaluationResults] = useState<{ [key: number]: EvaluateSpeakingResponse }>({});
+    // Store evaluation results per item. Use `any` to be resilient to API shape changes.
+    const [evaluationResults, setEvaluationResults] = useState<{ [key: number]: any }>({});
     const [showEvaluation, setShowEvaluation] = useState<{ [key: number]: boolean }>({});
 
     // Recording states for each question individually
@@ -70,6 +71,12 @@ export default function RespondUsingInfoExercise({
 
     const { items } = exerciseData;
     const currentItem = items[currentItemIndex];
+
+    // Current evaluation (normalized to handle both {data: {...}} and direct {...})
+    const currentEvalRaw = evaluationResults[currentItemIndex];
+    const currentEval = (currentEvalRaw && currentEvalRaw.data) ? currentEvalRaw.data : currentEvalRaw;
+    const overallValue = typeof currentEval?.overall === 'number' ? currentEval.overall : undefined;
+    const overallMax = overallValue !== undefined && overallValue <= 10 ? 10 : 100;
 
     // API hook for evaluation
     const evaluateSpeakingMutation = useEvaluateSpeakingAttempt();
@@ -643,53 +650,78 @@ export default function RespondUsingInfoExercise({
                                             <div className="flex items-center justify-center gap-2 mb-2">
                                                 <Star className="w-6 h-6 text-yellow-500" />
                                                 <span className="text-2xl font-bold text-gray-800">
-                                                    {evaluationResults[currentItemIndex].data.totalScore}/100
+                                                    {overallValue !== undefined ? (
+                                                        <>
+                                                            {overallValue}
+                                                            {overallMax ? `/` + overallMax : null}
+                                                        </>
+                                                    ) : (
+                                                        "-"
+                                                    )}
                                                 </span>
                                             </div>
                                             <p className="text-sm text-gray-600">Điểm tổng thể</p>
                                         </div>
 
+                                        {/* Audio playback (server-stored) */}
+                                        {currentEval?.audioUrl && (
+                                            <div className="bg-white p-4 rounded-lg border">
+                                                <div className="text-sm font-medium text-gray-700 mb-2">Bản ghi đã lưu</div>
+                                                <audio controls src={currentEval.audioUrl} className="w-full" />
+                                            </div>
+                                        )}
+
+                                        {/* Transcript */}
+                                        {currentEval?.transcript && (
+                                            <div className="bg-white p-4 rounded-lg border">
+                                                <div className="text-sm font-medium text-gray-700 mb-1">Transcript</div>
+                                                <p className="text-sm text-gray-800 leading-relaxed">{currentEval.transcript}</p>
+                                            </div>
+                                        )}
+
                                         {/* Detailed Scores */}
                                         <div className="grid grid-cols-2 gap-3">
                                             <div className="bg-white p-3 rounded-lg border text-center">
                                                 <div className="text-lg font-semibold text-blue-600">
-                                                    {evaluationResults[currentItemIndex].data.pronunciationScore}
+                                                    {currentEval?.pronunciation ?? "-"}
                                                 </div>
                                                 <div className="text-xs text-gray-600">Phát âm</div>
                                             </div>
                                             <div className="bg-white p-3 rounded-lg border text-center">
                                                 <div className="text-lg font-semibold text-green-600">
-                                                    {evaluationResults[currentItemIndex].data.fluencyScore}
+                                                    {currentEval?.fluency ?? "-"}
                                                 </div>
                                                 <div className="text-xs text-gray-600">Trôi chảy</div>
                                             </div>
-                                            {evaluationResults[currentItemIndex].data.grammarScore && (
-                                                <div className="bg-white p-3 rounded-lg border text-center">
-                                                    <div className="text-lg font-semibold text-purple-600">
-                                                        {evaluationResults[currentItemIndex].data.grammarScore}
-                                                    </div>
-                                                    <div className="text-xs text-gray-600">Ngữ pháp</div>
+                                            <div className="bg-white p-3 rounded-lg border text-center">
+                                                <div className="text-lg font-semibold text-purple-600">
+                                                    {currentEval?.grammar ?? "-"}
                                                 </div>
-                                            )}
-                                            {evaluationResults[currentItemIndex].data.contentScore && (
-                                                <div className="bg-white p-3 rounded-lg border text-center">
-                                                    <div className="text-lg font-semibold text-orange-600">
-                                                        {evaluationResults[currentItemIndex].data.contentScore}
-                                                    </div>
-                                                    <div className="text-xs text-gray-600">Nội dung</div>
+                                                <div className="text-xs text-gray-600">Ngữ pháp</div>
+                                            </div>
+                                            <div className="bg-white p-3 rounded-lg border text-center">
+                                                <div className="text-lg font-semibold text-orange-600">
+                                                    {currentEval?.vocabulary ?? "-"}
                                                 </div>
-                                            )}
+                                                <div className="text-xs text-gray-600">Từ vựng</div>
+                                            </div>
+                                            <div className="bg-white p-3 rounded-lg border text-center col-span-2">
+                                                <div className="text-lg font-semibold text-rose-600">
+                                                    {currentEval?.task ?? "-"}
+                                                </div>
+                                                <div className="text-xs text-gray-600">Hoàn thành nhiệm vụ</div>
+                                            </div>
                                         </div>
 
                                         {/* Detailed Feedback */}
-                                        {evaluationResults[currentItemIndex].data.feedback && (
+                                        {currentEval?.feedback && (
                                             <div className="bg-white p-4 rounded-lg border">
                                                 <div className="flex items-start gap-2 mb-2">
                                                     <AlertCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
                                                     <h4 className="font-medium text-gray-800">Phản hồi chi tiết:</h4>
                                                 </div>
                                                 <p className="text-sm text-gray-700 leading-relaxed">
-                                                    {evaluationResults[currentItemIndex].data.feedback}
+                                                    {currentEval.feedback}
                                                 </p>
                                             </div>
                                         )}
@@ -760,7 +792,7 @@ export default function RespondUsingInfoExercise({
                                                         <CheckCircle className="w-4 h-4 text-green-600" />
                                                         {evaluationResults[idx] && (
                                                             <span className="text-xs font-bold text-blue-600">
-                                                                {evaluationResults[idx].data.totalScore}
+                                                                {(evaluationResults[idx]?.data?.overall ?? evaluationResults[idx]?.overall) ?? "-"}
                                                             </span>
                                                         )}
                                                     </div>

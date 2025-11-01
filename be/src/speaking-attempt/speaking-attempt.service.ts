@@ -13,6 +13,7 @@ import {
 } from 'src/common/utils/speaking';
 import { GcsService } from 'src/gcs/gcs.service';
 import path from 'path';
+import { computeOverall, normalizeFluency, normalizePronunciation } from './utils/scoring';
 
 @Injectable()
 export class SpeakingAttemptService {
@@ -80,60 +81,106 @@ export class SpeakingAttemptService {
   async evaluateSpeaking(
     type: string,
     context: string,
-    question: string,
+    prompt: string, // ✅ đổi tên cho rõ
     transcript: string,
     avgConfidence: number,
     fluency: number,
   ) {
     const model = this.gemini.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-    const prompt = `
-You are a certified TOEIC Speaking evaluator.
+    const promptReadAloud = `
+You are a certified TOEIC Speaking evaluator for the "Read Aloud" task.
 
 You will receive:
-- type: the TOEIC Speaking task type (e.g., "Read Aloud", "Describe a Picture", "Respond to Questions", "Express an Opinion")
-- context: the situational or background information provided to the test taker (if any)
-- prompt: if type = 'read_aloud' the sentence the student was asked to read or respond to if type = other, the question being asked
+- context: the sentence or text the student was asked to read aloud
 - response: the student's transcribed speech
 - pronunciation_confidence: 0–1
 - fluency_score: 0–5
 
-Evaluate the student's TOEIC Speaking performance using ETS official criteria.
+Evaluate how accurately and clearly the student read the given text aloud.
+When comparing context and response, ignore case and punctuation. Penalize omissions, insertions, or substitutions.
+Do NOT score pronunciation or fluency as categories; they are provided only for feedback phrasing.
 
-Score each category from 0–5:
+Score each category from 0–5 (integers only):
+- grammar: grammatical accuracy and whether any words or structures were changed
+- vocabulary: accuracy and completeness of words (misread/missing words lower the score)
+- task: how closely the student's speech matches the reference text
+
+Give concise feedback (2–3 sentences) focusing on pronunciation clarity, fluency, and overall accuracy.
+
+Output rules:
+- Return ONLY valid minified JSON (no code fences, no comments)
+- Use integers from 0 to 5 for all scores
+- Keys: "type", "context", "grammar", "vocabulary", "task", "feedback"
+
+{
+  "type": "read_aloud",
+  "context": "${context.replaceAll('"', '\\"')}",
+  "grammar": 0,
+  "vocabulary": 0,
+  "task": 0,
+  "feedback": ""
+}
+
+context: """${context}"""
+response: """${transcript}"""
+pronunciation_confidence: ${avgConfidence.toFixed(2)}
+fluency_score: ${fluency.toFixed(2)}
+`.trim();
+
+    const promptGeneral = `
+You are a certified TOEIC Speaking evaluator.
+
+You will receive:
+- type: the task type (e.g., "Describe a Picture", "Respond to Questions", "Express an Opinion")
+- context: background information (if any)
+- prompt: the question or instruction to answer
+- response: the student's transcribed speech
+- pronunciation_confidence: 0–1
+- fluency_score: 0–5
+
+Evaluate using ETS criteria. Base "task" on relevance, completeness, and alignment with the prompt and context.
+Do NOT score pronunciation or fluency as categories; they are provided only for feedback phrasing.
+
+Score each category from 0–5 (integers only):
 - grammar: grammatical accuracy and sentence structure
 - vocabulary: lexical range and appropriacy
-- task: task fulfillment (relevance, completeness, and alignment with the prompt)
+- task: task fulfillment (relevance, completeness, alignment)
 
-Give concise feedback (2–3 sentences) addressing pronunciation, fluency, and overall communicative clarity.
+Give concise feedback (2–3 sentences) addressing pronunciation, fluency, and communicative clarity.
 
-Scoring guideline:
-5 = clear, accurate, and fluent with only minor errors  
-3 = understandable but with noticeable errors or hesitation  
-1 = limited, unclear, or incomplete response  
-0 = no relevant or intelligible speech
+Output rules:
+- Return ONLY valid minified JSON (no code fences, no comments)
+- Use integers from 0 to 5 for all scores
+- Keys: "type", "context", "grammar", "vocabulary", "task", "feedback"
 
-Return **only valid JSON** in this exact format:
 {
-  "type": string,
-  "context": string,
-  "grammar": number,
-  "vocabulary": number,
-  "task": number,
-  "feedback": string
+  "type": "${type}",
+  "context": "${context.replaceAll('"', '\\"')}",
+  "grammar": 0,
+  "vocabulary": 0,
+  "task": 0,
+  "feedback": ""
 }
 
 type: "${type}"
 context: """${context}"""
-prompt: """${question}"""
+prompt: """${prompt}"""
 response: """${transcript}"""
 pronunciation_confidence: ${avgConfidence.toFixed(2)}
 fluency_score: ${fluency.toFixed(2)}
-`;
+`.trim();
 
-    const result = await model.generateContent(prompt);
+    const fullPrompt =
+      type?.toLowerCase() === 'read_aloud' ||
+      type?.toLowerCase() === 'read-aloud'
+        ? promptReadAloud
+        : promptGeneral;
+
+    const result = await model.generateContent(fullPrompt);
     let text = result.response.text().trim();
 
+    // Robust JSON extraction
     const jsonStart = text.indexOf('{');
     const jsonEnd = text.lastIndexOf('}');
     if (jsonStart !== -1 && jsonEnd !== -1) {
@@ -142,11 +189,16 @@ fluency_score: ${fluency.toFixed(2)}
 
     try {
       const parsed = JSON.parse(text);
+      // Ép kiểu + cắt ngưỡng 0–5 (integer)
+      const toInt05 = (x: any) => {
+        const n = Math.round(Number(x) || 0);
+        return Math.max(0, Math.min(5, n));
+      };
       return {
-        grammar: Number(parsed.grammar) || 0,
-        vocabulary: Number(parsed.vocabulary) || 0,
-        task: Number(parsed.task) || 0,
-        feedback: parsed.feedback || '',
+        grammar: toInt05(parsed.grammar),
+        vocabulary: toInt05(parsed.vocabulary),
+        task: toInt05(parsed.task),
+        feedback: typeof parsed.feedback === 'string' ? parsed.feedback : '',
       };
     } catch (err) {
       console.error('❌ Gemini returned invalid JSON:', text);
@@ -154,7 +206,7 @@ fluency_score: ${fluency.toFixed(2)}
         grammar: 0,
         vocabulary: 0,
         task: 0,
-        feedback: 'Error parsing Gemini response.',
+        feedback: 'Error parsing evaluation output.',
       };
     }
   }
@@ -183,7 +235,7 @@ fluency_score: ${fluency.toFixed(2)}
 
   async handleEvaluate(
     base64Audio: string,
-    type: string, 
+    type: string,
     context: string,
     prompt: string,
     user: User,
@@ -202,36 +254,40 @@ fluency_score: ${fluency.toFixed(2)}
       fluency,
     );
 
-    const pronunciation = avgConfidence * 5;
-    const overall =
-      (pronunciation +
-        fluency +
-        geminiData.grammar +
-        geminiData.vocabulary +
-        geminiData.task) /
-      5;
+    const pronunciation = normalizePronunciation(avgConfidence);
+    const fluencyScore = normalizeFluency(fluency);
+
+    // ✅ Overall theo trọng số type
+    const overall = computeOverall(
+      type,
+      pronunciation,
+      fluencyScore,
+      geminiData.grammar,
+      geminiData.vocabulary,
+      geminiData.task,
+    );
 
     const saved = await this.saveAttempt(user, {
       type,
       context,
       transcript,
-      pronunciation,
-      fluency,
+      pronunciation, // 0–5
+      fluency: fluencyScore, // 0–5
       grammar: geminiData.grammar,
       vocabulary: geminiData.vocabulary,
       task: geminiData.task,
-      overall,
+      overall, // 0–5
       audioUrl: publicUrl,
       feedback: geminiData.feedback,
     });
 
     return {
       id: saved.id,
-      type: type,
-      context: context,
+      type,
+      context,
       transcript,
-      pronunciation,
-      fluency,
+      pronunciation: saved.pronunciation,
+      fluency: saved.fluency,
       grammar: saved.grammar,
       vocabulary: saved.vocabulary,
       task: saved.task,
