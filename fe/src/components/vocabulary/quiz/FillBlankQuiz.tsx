@@ -17,7 +17,7 @@ export default function FillBlankQuiz({
   return (
     <div className="space-y-4">
       <p className="text-center text-gray-600">
-        Điền từ còn thiếu vào câu sau:
+        Điền từ còn thiếu vào câu sau: D
       </p>
       <div className="p-4 bg-gray-50 rounded-lg border">
         <p className="text-center text-lg">{word?.content?.text}</p>
