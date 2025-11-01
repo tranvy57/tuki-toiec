@@ -193,7 +193,9 @@ export default function RespondUsingInfoExercise({
             // Call evaluation API
             const evaluationResult = await evaluateSpeakingMutation.mutateAsync({
                 audio: currentRecording,
-                question: questionText
+                question: questionText,
+                type: "respond using info",
+                context: currentItem.promptJsonb?.content ? stripHtmlTags(currentItem.promptJsonb.content) : '',
             });
 
             // Store evaluation result

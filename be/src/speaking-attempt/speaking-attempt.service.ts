@@ -78,6 +78,8 @@ export class SpeakingAttemptService {
   }
 
   async evaluateSpeaking(
+    type: string,
+    context: string,
     question: string,
     transcript: string,
     avgConfidence: number,
@@ -86,33 +88,47 @@ export class SpeakingAttemptService {
     const model = this.gemini.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const prompt = `
-You are a TOEIC Speaking evaluator.
+You are a certified TOEIC Speaking evaluator.
 
 You will receive:
-- The original reference sentence that the student was asked to read aloud.
-- The student's transcribed speech (what the student actually said).
-- Pronunciation confidence (0–1).
-- Fluency score (0–5).
+- type: the TOEIC Speaking task type (e.g., "Read Aloud", "Describe a Picture", "Respond to Questions", "Express an Opinion")
+- context: the situational or background information provided to the test taker (if any)
+- prompt: if type = 'read_aloud' the sentence the student was asked to read or respond to if type = other, the question being asked
+- response: the student's transcribed speech
+- pronunciation_confidence: 0–1
+- fluency_score: 0–5
 
-Evaluate the student's speaking performance on a 0–5 scale for:
-- Grammar accuracy (does the student change or miss any grammatical structures)
-- Vocabulary accuracy (are all words pronounced correctly and included)
-- Task completion (how closely the student's speech matches the reference sentence)
+Evaluate the student's TOEIC Speaking performance using ETS official criteria.
 
-Provide a short, specific feedback (2–3 sentences) that comments on pronunciation, fluency, and overall accuracy.
+Score each category from 0–5:
+- grammar: grammatical accuracy and sentence structure
+- vocabulary: lexical range and appropriacy
+- task: task fulfillment (relevance, completeness, and alignment with the prompt)
 
-Return *only JSON* in this format:
+Give concise feedback (2–3 sentences) addressing pronunciation, fluency, and overall communicative clarity.
+
+Scoring guideline:
+5 = clear, accurate, and fluent with only minor errors  
+3 = understandable but with noticeable errors or hesitation  
+1 = limited, unclear, or incomplete response  
+0 = no relevant or intelligible speech
+
+Return **only valid JSON** in this exact format:
 {
+  "type": string,
+  "context": string,
   "grammar": number,
   "vocabulary": number,
   "task": number,
   "feedback": string
 }
 
-Reference sentence (what the student should have read): """${question}"""
-Student response (what the student actually said): """${transcript}"""
-Pronunciation confidence: ${avgConfidence.toFixed(2)}
-Fluency score: ${fluency.toFixed(2)}
+type: "${type}"
+context: """${context}"""
+prompt: """${question}"""
+response: """${transcript}"""
+pronunciation_confidence: ${avgConfidence.toFixed(2)}
+fluency_score: ${fluency.toFixed(2)}
 `;
 
     const result = await model.generateContent(prompt);
@@ -165,32 +181,57 @@ Fluency score: ${fluency.toFixed(2)}
     return await this.speakingAttemptRepository.save(attempt);
   }
 
-  async handleEvaluate(base64Audio: string, question: string, user: User) {
+  async handleEvaluate(
+    base64Audio: string,
+    type: string, 
+    context: string,
+    prompt: string,
+    user: User,
+  ) {
     const { gsUri, publicUrl } = await this.uploadToGCS(base64Audio);
 
     const { transcript, avgConfidence, fluency } =
       await this.transcribeAudio(gsUri);
 
     const geminiData = await this.evaluateSpeaking(
-      question,
+      type,
+      context,
+      prompt,
       transcript,
       avgConfidence,
       fluency,
     );
 
+    const pronunciation = avgConfidence * 5;
+    const overall =
+      (pronunciation +
+        fluency +
+        geminiData.grammar +
+        geminiData.vocabulary +
+        geminiData.task) /
+      5;
+
     const saved = await this.saveAttempt(user, {
+      type,
+      context,
       transcript,
-      pronunciation: avgConfidence * 5,
+      pronunciation,
       fluency,
-      ...geminiData,
+      grammar: geminiData.grammar,
+      vocabulary: geminiData.vocabulary,
+      task: geminiData.task,
+      overall,
       audioUrl: publicUrl,
+      feedback: geminiData.feedback,
     });
 
     return {
       id: saved.id,
+      type: type,
+      context: context,
       transcript,
-      pronunciation: saved.pronunciation,
-      fluency: saved.fluency,
+      pronunciation,
+      fluency,
       grammar: saved.grammar,
       vocabulary: saved.vocabulary,
       task: saved.task,

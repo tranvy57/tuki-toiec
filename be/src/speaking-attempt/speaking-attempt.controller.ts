@@ -23,6 +23,8 @@ export class SpeakingAttemptController {
   async evaluate(
     @CurrentUser() user: User,
     @Body('question') question: string,
+    @Body('context') context: string,
+    @Body('type') type: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
     const base64Audio = file.buffer.toString('base64');
@@ -30,6 +32,8 @@ export class SpeakingAttemptController {
     return this.speakingAttemptService.handleEvaluate(
       base64Audio,
       question,
+      context,
+      type,
       user,
     );
   }

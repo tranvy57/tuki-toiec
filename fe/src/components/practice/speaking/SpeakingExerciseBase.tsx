@@ -319,7 +319,7 @@ export default function SpeakingExerciseBase({
             "Speaking exercise";
 
         // Submit using the hook
-        mutate({ audio: audioBlob, question: question });
+        mutate({ audio: audioBlob, question: question, type: exerciseData.type, context: expectedText});
     };
 
     const handleReset = () => {
