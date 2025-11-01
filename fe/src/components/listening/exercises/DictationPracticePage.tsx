@@ -38,6 +38,7 @@ interface DictationPracticePageProps {
   onNext?: () => void;
   onPrevious?: () => void;
   onBack?: () => void;
+  onAnswerSubmit?: (questionId: string, answer: string) => void;
 }
 
 interface WordComparison {
@@ -55,6 +56,7 @@ export default function DictationPracticePage({
   onNext,
   onPrevious,
   onBack,
+  onAnswerSubmit,
 }: DictationPracticePageProps) {
 
   console.log(item?.solutionJsonb?.sentences);

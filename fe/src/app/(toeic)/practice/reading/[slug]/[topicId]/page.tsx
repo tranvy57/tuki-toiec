@@ -1,713 +1,477 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useParams, useRouter } from "next/navigation";
+import { useLessonsByModality } from "@/api/useLessons";
+import { PracticeBreadcrumb, getExerciseName } from "@/components/practice/PracticeBreadcrumb";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  ArrowLeft,
-  Mic,
-  MicOff,
-  Play,
-  Pause,
-  RotateCcw,
-  Volume2,
-  VolumeX,
-  Loader2,
-  CheckCircle,
-  AlertTriangle,
-  Sparkles,
-  Clock,
-  FileText,
-  Target,
-  Headphones,
-} from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
-import Image from "next/image";
-import { useEvaluateSpeakingAttempt } from "@/api/useSpeakingAttempt";
-import { AudioPlayer } from "@/components/toeic/test/Audio";
-import { PracticeBreadcrumb } from "@/components/practice/PracticeBreadcrumb";
+import { Loader2, AlertCircle, RotateCcw, ChevronLeft, ChevronRight, Check, X, Lightbulb, BookOpen, Clock, FileText } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
-// Mock data cho từng loại bài tập nói
-const mockExerciseData = {
-  "read-aloud": {
-    id: "1",
-    name: "Read Aloud",
-    vietnameseName: "Đọc đoạn văn",
-    title: "Đọc to đoạn văn sau",
-    prompt:
-      "The company will introduce a new training program for employees next month. This program aims to enhance their professional skills and improve workplace efficiency.",
-    difficulty: "Easy",
-    difficultyColor: "bg-green-100 text-green-800",
-    duration: 20,
-    timeLimit: "20 giây",
-    instructions: [
-      "Đọc to và rõ ràng đoạn văn hiển thị",
-      "Chú ý phát âm từng từ chính xác",
-      "Giữ nhịp độ đọc tự nhiên và mạch lạc",
-      "Dừng nghỉ phù hợp tại dấu câu",
-    ],
-    sample_result: {
-      user_transcript:
-        "The company introduce a new training program for employees next month. This program aims to enhance their professional skills and improve workplace efficiency.",
-      target_transcript:
-        "The company will introduce a new training program for employees next month. This program aims to enhance their professional skills and improve workplace efficiency.",
-      accuracy_score: 85,
-      pronunciation_score: 78,
-      fluency_score: 82,
-      feedback:
-        "You missed 'will'. Focus on verb forms and linking sounds between words.",
-    },
-  },
-  "repeat-sentence": {
-    id: "2",
-    name: "Repeat Sentence",
-    vietnameseName: "Nhắc lại câu",
-    title: "Nghe và nhắc lại câu sau",
-    prompt:
-      "Bạn sẽ nghe một câu. Hãy nhắc lại chính xác những gì bạn vừa nghe.",
-    difficulty: "Easy",
-    difficultyColor: "bg-green-100 text-green-800",
-    duration: 15,
-    timeLimit: "15 giây",
-    audio_url: "",
-    target_transcript:
-      "The project has been completed ahead of schedule and under budget.",
-    instructions: [
-      "Nghe kỹ câu được phát",
-      "Nhắc lại chính xác từng từ",
-      "Giữ nguyên ngữ điệu và nhấn âm",
-      "Không thêm bớt từ nào",
-    ],
-    sample_result: {
-      user_transcript:
-        "The project been completed ahead schedule and under budget.",
-      target_transcript:
-        "The project has been completed ahead of schedule and under budget.",
-      accuracy_score: 83,
-      pronunciation_score: 85,
-      fluency_score: 79,
-      feedback:
-        "You missed 'has' and 'of'. Try slowing down a little to catch all words.",
-    },
-  },
-  "describe-picture": {
-    id: "3",
-    name: "Describe a Picture",
-    vietnameseName: "Mô tả hình ảnh",
-    title: "Mô tả hình ảnh trong 30 giây",
-    prompt: "Nhìn vào hình ảnh và mô tả chi tiết những gì bạn nhìn thấy.",
-    difficulty: "Medium",
-    difficultyColor: "bg-yellow-100 text-yellow-800",
-    duration: 30,
-    timeLimit: "30 giây",
-    image_url: "/images/airport_waiting.jpg",
-    instructions: [
-      "Quan sát kỹ tất cả chi tiết trong hình",
-      "Mô tả người, vật, hành động rõ ràng",
-      "Sử dụng từ vựng phong phú và chính xác",
-      "Tổ chức ý tưởng logic và mạch lạc",
-    ],
-    sample_feedback: {
-      grammar_score: 89,
-      vocabulary_score: 76,
-      fluency_score: 84,
-      pronunciation_score: 82,
-      feedback:
-        "Good pronunciation and fluency. Try adding more descriptive vocabulary like 'busy', 'crowded', or specific clothing details.",
-    },
-  },
-};
+interface MCQOption {
+    content: string;
+    answer_key: string;
+}
 
-export default function SpeakingExercisePage() {
-  const params = useParams();
-  const router = useRouter();
-  const [isRecording, setIsRecording] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [recordingTime, setRecordingTime] = useState(0);
-  const [timeElapsed, setTimeElapsed] = useState(0);
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [userTranscript, setUserTranscript] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
-  const mediaRecorder = useRef<MediaRecorder | null>(null);
-  const mediaStream = useRef<MediaStream | null>(null);
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [apiResult, setApiResult] = useState<any | null>(null);
-  const [audioLevel, setAudioLevel] = useState(0);
-  const [hasRecorded, setHasRecorded] = useState(false);
-  const [currentExercise, setCurrentExercise] = useState(1);
-  const [progress, setProgress] = useState(0);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+interface ReadingMCQItem {
+    id: string;
+    title: string;
+    modality: string;
+    difficulty: string;
+    bandHint: number;
+    promptJsonb: {
+        text?: string;
+        choices?: MCQOption[];
+        passage?: string;
+        question_type?: string;
+        instructions?: string;
+    };
+    solutionJsonb: {
+        correct_answer?: string;
+        explanation?: string;
+        translation?: string;
+    };
+}
 
-  const recordingIntervalRef = useRef<NodeJS.Timeout>(undefined);
-  const timerIntervalRef = useRef<NodeJS.Timeout>(undefined);
-  const audioLevelIntervalRef = useRef<NodeJS.Timeout>(undefined);
+export default function ReadingTestPage() {
+    const { slug, topicId } = useParams<{ slug: string; topicId: string }>();
+    const router = useRouter();
 
-  const slug = params.slug as string;
-  const exerciseData = mockExerciseData[slug as keyof typeof mockExerciseData];
-  const { mutate, data, isPending, isError } = useEvaluateSpeakingAttempt();
+    const [showResults, setShowResults] = useState(false);
+    const [testResults, setTestResults] = useState<{ correct: number; total: number; userAnswers: Record<string, string> } | null>(null);
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
+    const [timeElapsed, setTimeElapsed] = useState(0);
 
-  // Handle successful data from the hook
-  useEffect(() => {
-    if (data && !apiResult) {
-      setApiResult(data.data);
-      setUserTranscript((data as any)?.transcript || "");
-      // Auto scroll to result after a short delay
-      setTimeout(() => {
-        const resultSection = document.querySelector("[data-result-section]");
-        if (resultSection) {
-          resultSection.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-      }, 300);
-    }
-  }, [data, apiResult]);
+    const {
+        data: lessons,
+        isLoading,
+        isError,
+        error
+    } = useLessonsByModality({
+        modality: slug,
+        skillType: "reading"
+    });
 
-  // useEffect(() => {
-  //   // Start general timer
-  //   timerIntervalRef.current = setInterval(() => {
-  //     setTimeElapsed((prev) => prev + 1);
-  //   }, 1000);
-
-  //   return () => {
-  //     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-  //     if (recordingIntervalRef.current)
-  //       clearInterval(recordingIntervalRef.current);
-  //     if (audioLevelIntervalRef.current)
-  //       clearInterval(audioLevelIntervalRef.current);
-  //   };
-  // }, []);
-
-  useEffect(() => {
-    // Calculate progress based on current exercise
-    setProgress((currentExercise / 10) * 100);
-  }, [currentExercise]);
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  const startRecording = async () => {
-    console.log("check 1");
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mr = new MediaRecorder(stream);
-      mediaStream.current = stream;
-      mediaRecorder.current = mr;
-
-      const chunks: BlobPart[] = [];
-      mr.ondataavailable = (e) => {
-        if (e.data && e.data.size > 0) chunks.push(e.data);
-      };
-
-      mr.onstop = () => {
-        const blob = new Blob(chunks, { type: "audio/webm" });
-        setAudioBlob(blob);
-        setAudioUrl(URL.createObjectURL(blob));
-        setIsProcessing(false);
-        setHasRecorded(true);
-      };
-
-      mr.start();
-      setIsRecording(true);
-      setRecordingTime(0);
-      setAudioLevel(0);
-
-      // timers
-      recordingIntervalRef.current = setInterval(() => {
-        setRecordingTime((prev) => {
-          if (prev >= exerciseData.duration) {
-            stopRecording();
-            return prev;
-          }
-          return prev + 1;
-        });
-      }, 1000);
-
-      audioLevelIntervalRef.current = setInterval(() => {
-        setAudioLevel(Math.random() * 100);
-      }, 100);
-      console.log("chec 2");
-    } catch (error) {
-      console.error("Error accessing microphone:", error);
-    }
-  };
-
-  console.log(isRecording);
-  console.log(isProcessing);
-
-  const stopRecording = () => {
-    setIsRecording(false);
-    setAudioLevel(0);
-
-    clearInterval(recordingIntervalRef.current);
-    clearInterval(audioLevelIntervalRef.current);
-
-    const recorder = mediaRecorder.current;
-    const stream = mediaStream.current;
-    console.log("check");
-
-    if (recorder && recorder.state !== "inactive") {
-      try {
-        recorder.stop();
-      } catch (err) {
-        console.warn("MediaRecorder stop error:", err);
-      }
-    }
-
-    try {
-      stream?.getTracks().forEach((t) => t.stop());
-    } catch (e) {
-      console.warn("Error stopping tracks:", e);
-    }
-
-    mediaRecorder.current = null;
-    mediaStream.current = null;
-  };
-
-  const handlePlayRecorded = () => {
-    if (!audioUrl || !audioBlob) return;
-    const audio = new Audio(audioUrl);
-    audio.play();
-  };
-  console.log(audioBlob);
-
-  const submitRecording = () => {
-    if (!audioBlob) {
-      alert("Bạn chưa ghi âm.");
-      return;
-    }
-
-    // Clear previous results
-    setApiResult(null);
-
-    // Submit using the hook
-    mutate({ audio: audioBlob, question: exerciseData.prompt });
-  };
-
-  const handlePlayAudio = () => {
-    if (slug === "repeat-sentence") {
-      setIsPlaying(true);
-      // Mock audio playback
-      setTimeout(() => {
-        setIsPlaying(false);
-      }, 3000);
-    }
-  };
-
-  const handleViewFeedback = () => {
-    // Scroll to the result section smoothly
-    const resultSection = document.querySelector("[data-result-section]");
-    if (resultSection) {
-      resultSection.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  };
-
-  const handleReset = () => {
-    setIsRecording(false);
-    setRecordingTime(0);
-    setUserTranscript("");
-    setHasRecorded(false);
-    setIsProcessing(false);
-    setShowFeedback(false);
-    if (recordingIntervalRef.current)
-      clearInterval(recordingIntervalRef.current);
-    if (audioLevelIntervalRef.current)
-      clearInterval(audioLevelIntervalRef.current);
-  };
-
-  const handleNextExercise = () => {
-    setCurrentExercise((prev) => prev + 1);
-    handleReset();
-  };
-
-  if (!exerciseData) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white flex items-center justify-center">
-        <Card className="p-6 text-center">
-          <p className="text-gray-600">Không tìm thấy bài tập này.</p>
-          <Button onClick={() => router.back()} className="mt-4">
-            Quay lại
-          </Button>
-        </Card>
-      </div>
+    // Find the current lesson and its items
+    const currentLesson = lessons?.find(lesson =>
+        lesson.items.some(item => item.id === topicId)
     );
-  }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
-      <div className="container mx-auto px-4 py-6">
-        {/* Breadcrumb */}
-        <PracticeBreadcrumb
-          items={[
-            { label: "Reading", href: "/practice/reading" },
-            { label: "Bài tập", href: `/practice/reading/${slug}` },
-            { label: exerciseData?.vietnameseName || 'Chi tiết' }
-          ]}
-        />
+    const questions = currentLesson?.items || [];
 
-        {/* Header */}
-        {/* <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-8"
-        >
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => router.back()}
-              className="flex items-center gap-2 hover:bg-gray-50"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Quay lại
-            </Button>
+    // Timer effect
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setTimeElapsed(prev => prev + 1);
+        }, 1000);
 
-          </div>
+        return () => clearInterval(interval);
+    }, []);
 
-          <div className="text-right hidden md:block">
-            <div className="text-sm text-gray-600 mb-1">
-              Tiến độ: {Math.round(progress)}%
-            </div>
-            <Progress value={progress} className="w-32" />
-          </div>
-        </motion.div> */}
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, "0")}`;
+    };
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Side - Instructions & Content */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-            className="space-y-4 lg:col-span-2"
-          >
-            {/* Prompt Card */}
-            <Card className="border-2 border-blue-100">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-blue-500" />
-                  {exerciseData.title}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Image for picture description */}
-                {slug === "describe-picture" && (
-                  <div className="relative aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden border-2 border-dashed border-gray-300">
-                    <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                      <FileText className="w-16 h-16 mb-4" />
-                      <span className="text-lg font-medium">Hình ảnh mẫu</span>
-                      <span className="text-sm">Airport Waiting Area</span>
+    const handleAnswer = (questionId: string, answer: string) => {
+        setUserAnswers(prev => ({
+            ...prev,
+            [questionId]: answer
+        }));
+    };
+
+    const handleNext = () => {
+        if (currentQuestionIndex < questions.length - 1) {
+            setCurrentQuestionIndex(prev => prev + 1);
+        }
+    };
+
+    const handlePrevious = () => {
+        if (currentQuestionIndex > 0) {
+            setCurrentQuestionIndex(prev => prev - 1);
+        }
+    };
+
+    const handleFinishTest = () => {
+        let correct = 0;
+        questions.forEach(question => {
+            const mcqQuestion = question as ReadingMCQItem;
+            if (userAnswers[question.id] === mcqQuestion.solutionJsonb?.correct_answer) {
+                correct++;
+            }
+        });
+
+        const results = {
+            correct,
+            total: questions.length,
+            userAnswers
+        };
+
+        setTestResults(results);
+        setShowResults(true);
+    };
+
+    const resetTest = () => {
+        setShowResults(false);
+        setTestResults(null);
+        setCurrentQuestionIndex(0);
+        setUserAnswers({});
+        setTimeElapsed(0);
+    };
+
+    if (isLoading) {
+        return (
+            <div className="container mx-auto px-6 py-4">
+                <PracticeBreadcrumb
+                    items={[
+                        { label: "Reading", href: "/practice/reading" },
+                        { label: getExerciseName(slug) }
+                    ]}
+                />
+                <div className="flex items-center justify-center min-h-[400px]">
+                    <div className="flex items-center gap-3">
+                        <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                        <span className="text-lg text-gray-600">Loading Reading test...</span>
                     </div>
-                  </div>
-                )}
-
-                {/* Audio player for repeat sentence */}
-                {slug === "repeat-sentence" && (
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <Headphones className="w-6 h-6 text-green-600" />
-                        <span className="font-medium text-green-800">
-                          Âm thanh mẫu
-                        </span>
-                      </div>
-                      {/* <AudioPlayer audioUrl={exerciseData} />fe/src/app/(toeic)/practice/writing */}
-                    </div>
-
-                    {/* Mock waveform */}
-                    <div className="flex items-center justify-center space-x-1 h-12 bg-white/60 rounded-lg p-2">
-                      {Array.from({ length: 40 }).map((_, i) => (
-                        <div
-                          key={i}
-                          className={`w-1 bg-green-400 rounded-full transition-all duration-300 ${isPlaying ? "animate-pulse" : ""
-                            }`}
-                          style={{
-                            height: `${Math.random() * 80 + 20}%`,
-                            animationDelay: `${i * 50}ms`,
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Text content for read aloud */}
-                {slug === "read-aloud" && (
-                  <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-xl p-6">
-                    <p className="text-lg leading-relaxed text-gray-800 font-medium">
-                      {exerciseData.prompt}
-                    </p>
-                  </div>
-                )}
-
-                {/* General instruction */}
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-gray-700 leading-relaxed">
-                    {exerciseData.prompt}
-                  </p>
                 </div>
-              </CardContent>
-            </Card>
+            </div>
+        );
+    }
 
-            {/* Recorded audio player (visible after recording) */}
+    if (isError || !currentLesson || questions.length === 0) {
+        return (
+            <div className="container mx-auto px-6 py-4">
+                <PracticeBreadcrumb
+                    items={[
+                        { label: "Reading", href: "/practice/reading" },
+                        { label: getExerciseName(slug) }
+                    ]}
+                />
+                <div className="flex items-center justify-center min-h-[400px]">
+                    <div className="text-center">
+                        <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Test not found</h3>
+                        <p className="text-gray-600 mb-4">
+                            The requested reading test could not be found.
+                        </p>
+                        <Button
+                            onClick={() => router.push(`/practice/reading/${slug}`)}
+                            variant="outline"
+                        >
+                            <ChevronLeft className="w-4 h-4 mr-2" />
+                            Back to lessons
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
-            {/* Instructions */}
-            {/* Right Side - Recording Interface (compact) */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
-              className="space-y-6"
-            >
-              <Card className="border-2 border-pink-100 sticky top-6">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                    <Mic className="w-5 h-5 text-pink-500" />
-                    Ghi âm & Nộp bài
-                  </CardTitle>
-                </CardHeader>
+    if (showResults && testResults) {
+        const { correct, total, userAnswers } = testResults;
+        const percentage = Math.round((correct / total) * 100);
 
-                <CardContent className="space-y-5">
-                  {/* Record / Stop button */}
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="relative">
-                      {isRecording && (
-                        <div className="absolute -inset-2 pointer-events-none">
-                          <motion.div
-                            className="w-full h-full rounded-full border-2 border-pink-300"
-                            animate={{ scale: [1, 1.2, 1] }}
-                            transition={{
-                              duration: 0.5,
-                              repeat: Number.POSITIVE_INFINITY,
-                            }}
-                            style={{ opacity: Math.min(1, audioLevel / 80) }}
-                          />
+        return (
+            <div className="container mx-auto px-6 py-4">
+                <PracticeBreadcrumb
+                    items={[
+                        { label: "Reading", href: "/practice/reading" },
+                        { label: getExerciseName(slug), href: `/practice/reading/${slug}` },
+                        { label: "Results" }
+                    ]}
+                />
+
+                <div className="">
+                    {/* Results Header */}
+                    <div className="bg-gradient-to-br from-indigo-50 to-purple-100 rounded-3xl p-8 mb-8 shadow-xl border border-indigo-200">
+                        <div className="text-center space-y-6">
+                            <h2 className="text-3xl font-bold text-gray-900">Test Results</h2>
+                            <div className="text-8xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                {percentage}%
+                            </div>
+                            <div className="text-xl text-gray-700">
+                                You got <span className="font-semibold text-indigo-600">{correct}</span> out of{' '}
+                                <span className="font-semibold text-indigo-600">{total}</span> questions correct
+                            </div>
+                            <Progress value={percentage} className="w-full max-w-md mx-auto h-3 bg-gray-200" />
+
+                            <div className="flex gap-4 justify-center mt-8">
+                                <Button
+                                    onClick={resetTest}
+                                    variant="outline"
+                                    className="px-6 py-3 rounded-xl border-2 border-gray-400 hover:border-indigo-400 hover:bg-indigo-50 transition-all duration-200"
+                                >
+                                    <RotateCcw className="w-4 h-4 mr-2" />
+                                    Retake Test
+                                </Button>
+                                <Button
+                                    onClick={() => router.push(`/practice/reading/${slug}`)}
+                                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 transition-all duration-200"
+                                >
+                                    <ChevronLeft className="w-4 h-4 mr-2" />
+                                    Back to Lessons
+                                </Button>
+                            </div>
                         </div>
-                      )}
-
-                      <motion.button
-                        onClick={isRecording ? stopRecording : startRecording}
-                        className={`w-16 h-16 rounded-full border-4 flex items-center justify-center transition-all duration-300
-              ${isRecording
-                            ? "bg-red-500 border-red-300 hover:bg-red-600"
-                            : "bg-pink-500 border-pink-300 hover:bg-pink-600"
-                          }
-              ${isProcessing
-                            ? "opacity-50 cursor-not-allowed"
-                            : "hover:scale-105"
-                          }`}
-                        animate={isRecording ? { scale: [1, 1.08, 1] } : {}}
-                        transition={{
-                          duration: 1,
-                          repeat: isRecording ? Number.POSITIVE_INFINITY : 0,
-                        }}
-                        disabled={isProcessing}
-                      >
-                        {isProcessing ? (
-                          <Loader2 className="w-8 h-8 text-white animate-spin" />
-                        ) : isRecording ? (
-                          <MicOff className="w-8 h-8 text-white" />
-                        ) : (
-                          <Mic className="w-8 h-8 text-white" />
-                        )}
-                      </motion.button>
                     </div>
 
-                    {/* Compact state line */}
-                    <div className="text-center text-sm">
-                      {isProcessing ? (
-                        <p className="text-blue-600 font-medium">
-                          Đang xử lý âm thanh…
-                        </p>
-                      ) : isRecording ? (
-                        <p className="text-red-600 font-medium">
-                          Đang ghi âm… {recordingTime}/{exerciseData.duration}s
-                        </p>
-                      ) : hasRecorded ? (
-                        <p className="text-green-700">Đã ghi âm xong</p>
-                      ) : (
-                        <p className="text-gray-600">Nhấn để bắt đầu ghi âm</p>
-                      )}
-                    </div>
-                  </div>
+                    <div className="space-y-6">
+                        <h3 className="text-2xl font-bold text-gray-900 mb-6">Review Answers</h3>
+                        {questions.map((question, index) => {
+                            const mcqQuestion = question as ReadingMCQItem;
+                            const userAnswer = testResults.userAnswers[question.id];
+                            const correctAnswer = mcqQuestion.solutionJsonb?.correct_answer;
+                            const isCorrect = userAnswer === correctAnswer;
 
-                  {/* Action row: Nộp bài + Ghi lại (chỉ 2 nút) */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      onClick={submitRecording}
-                      className="bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600"
-                      disabled={!audioBlob || isPending}
+                            return (
+                                <div
+                                    key={question.id}
+                                    className={`rounded-2xl p-6 shadow-lg border-l-4 ${isCorrect ? 'border-l-green-500 bg-green-50/50' : 'border-l-red-500 bg-red-50/50'
+                                        } backdrop-blur-sm`}
+                                >
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h4 className="text-xl font-semibold text-gray-900">Question {index + 1}</h4>
+                                        {isCorrect ? (
+                                            <div className="flex items-center gap-2 text-green-600">
+                                                <Check className="w-6 h-6" />
+                                                <span className="font-medium">Correct</span>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-2 text-red-600">
+                                                <X className="w-6 h-6" />
+                                                <span className="font-medium">Incorrect</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        {/* Reading passage if exists */}
+                                        {mcqQuestion.promptJsonb?.passage && (
+                                            <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-blue-400">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <BookOpen className="w-4 h-4 text-blue-600" />
+                                                    <span className="font-medium text-blue-900">Reading Passage</span>
+                                                </div>
+                                                <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed">
+                                                    {mcqQuestion.promptJsonb.passage}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <p className="text-lg text-gray-800 leading-relaxed font-medium">{mcqQuestion.promptJsonb?.text}</p>
+
+                                        <div className="grid gap-3">
+                                            {mcqQuestion.promptJsonb?.choices?.map((choice, choiceIndex) => {
+                                                const isUserChoice = userAnswer === choice.answer_key;
+                                                const isCorrectChoice = correctAnswer === choice.answer_key;
+
+                                                return (
+                                                    <div
+                                                        key={choiceIndex}
+                                                        className={`p-4 rounded-xl border-2 ${isCorrectChoice
+                                                            ? 'bg-green-100 border-green-300 shadow-md'
+                                                            : isUserChoice
+                                                                ? 'bg-red-100 border-red-300 shadow-md'
+                                                                : 'bg-white border-gray-200'
+                                                            }`}
+                                                    >
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-3">
+                                                                <span className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold ${isCorrectChoice
+                                                                    ? 'bg-green-500 text-white'
+                                                                    : isUserChoice
+                                                                        ? 'bg-red-500 text-white'
+                                                                        : 'bg-gray-300 text-gray-700'
+                                                                    }`}>
+                                                                    {choice.answer_key}
+                                                                </span>
+                                                                <span className="font-medium text-gray-800">{choice.content}</span>
+                                                            </div>
+                                                            {isCorrectChoice && <Check className="w-5 h-5 text-green-500" />}
+                                                            {isUserChoice && !isCorrectChoice && <X className="w-5 h-5 text-red-500" />}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {mcqQuestion.solutionJsonb?.explanation && (
+                                            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 mt-4">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <Lightbulb className="w-4 h-4 text-blue-600" />
+                                                    <span className="font-semibold text-blue-900">Explanation</span>
+                                                </div>
+                                                <p className="text-blue-800 leading-relaxed">
+                                                    {mcqQuestion.solutionJsonb.explanation}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {mcqQuestion.solutionJsonb?.translation && (
+                                            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 mt-4">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <BookOpen className="w-4 h-4 text-green-600" />
+                                                    <span className="font-semibold text-green-900">Translation</span>
+                                                </div>
+                                                <p className="text-green-800 leading-relaxed">
+                                                    {mcqQuestion.solutionJsonb.translation}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    const currentQuestion = questions[currentQuestionIndex] as ReadingMCQItem;
+    const progress = questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0;
+
+    return (
+        <div className="container mx-auto px-6 py-4">
+            <PracticeBreadcrumb
+                items={[
+                    { label: "Reading", href: "/practice/reading" },
+                    { label: getExerciseName(slug), href: `/practice/reading/${slug}` },
+                    { label: "Reading Test" }
+                ]}
+            />
+
+            <div className="max-w-6xl mx-auto">
+                {/* Header with progress and timer */}
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 mb-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-4">
+                            <h1 className="text-2xl font-bold text-gray-900">
+                                {getExerciseName(slug)} Test
+                            </h1>
+                            <Badge className="bg-blue-100 text-blue-800">
+                                Question {currentQuestionIndex + 1} of {questions.length}
+                            </Badge>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                                <Clock className="w-4 h-4" />
+                                <span>{formatTime(timeElapsed)}</span>
+                            </div>
+
+                            <Badge variant={currentQuestion?.difficulty === 'easy' ? 'default' :
+                                currentQuestion?.difficulty === 'medium' ? 'secondary' : 'destructive'}>
+                                {currentQuestion?.difficulty || 'Unknown'}
+                            </Badge>
+                        </div>
+                    </div>
+
+                    <Progress value={progress} className="h-2" />
+                </div>
+
+                {/* Question content */}
+                {currentQuestion && (
+                    <motion.div
+                        key={currentQuestion.id}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        className="grid lg:grid-cols-2 gap-6"
                     >
-                      {isPending ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Đang
-                          gửi
-                        </>
-                      ) : (
-                        "AI đánh giá"
-                      )}
-                    </Button>
+                        {/* Left: Passage */}
+                        {currentQuestion.promptJsonb?.passage && (
+                            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <BookOpen className="w-5 h-5 text-blue-600" />
+                                    <h2 className="text-lg font-semibold text-gray-900">Reading Passage</h2>
+                                </div>
 
-                    <Button onClick={handleReset} variant="outline">
-                      <RotateCcw className="w-4 h-4 mr-2" />
-                      Ghi lại
-                    </Button>
-                  </div>
-                  {audioUrl && (
-                    <>
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm text-gray-700 font-medium">
-                          Nghe lại bản ghi
+                                <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed">
+                                    {currentQuestion.promptJsonb.passage}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Right: Question and choices */}
+                        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+                            <div className="mb-6">
+                                <h2 className="text-lg font-semibold text-gray-900 mb-3">
+                                    {currentQuestion.promptJsonb?.text}
+                                </h2>
+
+                                <div className="space-y-3">
+                                    {currentQuestion.promptJsonb?.choices?.map((choice, index) => (
+                                        <motion.div
+                                            key={choice.answer_key}
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                        >
+                                            <button
+                                                onClick={() => handleAnswer(currentQuestion.id, choice.answer_key)}
+                                                className={`w-full p-4 text-left rounded-xl border-2 transition-all duration-200 ${userAnswers[currentQuestion.id] === choice.answer_key
+                                                        ? 'bg-blue-50 border-blue-300 shadow-md'
+                                                        : 'bg-white border-gray-200 hover:border-blue-200 hover:bg-blue-50/50'
+                                                    }`}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <span className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold ${userAnswers[currentQuestion.id] === choice.answer_key
+                                                            ? 'bg-blue-500 text-white'
+                                                            : 'bg-gray-300 text-gray-700'
+                                                        }`}>
+                                                        {choice.answer_key}
+                                                    </span>
+                                                    <span className="font-medium text-gray-800">{choice.content}</span>
+                                                </div>
+                                            </button>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Navigation */}
+                            <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                                <Button
+                                    onClick={handlePrevious}
+                                    disabled={currentQuestionIndex === 0}
+                                    variant="outline"
+                                    className="flex items-center gap-2"
+                                >
+                                    <ChevronLeft className="w-4 h-4" />
+                                    Previous
+                                </Button>
+
+                                <div className="text-sm text-gray-600">
+                                    {Object.keys(userAnswers).length} / {questions.length} answered
+                                </div>
+
+                                {currentQuestionIndex === questions.length - 1 ? (
+                                    <Button
+                                        onClick={handleFinishTest}
+                                        className="bg-green-600 hover:bg-green-700 text-white"
+                                        disabled={Object.keys(userAnswers).length === 0}
+                                    >
+                                        <FileText className="w-4 h-4 mr-2" />
+                                        Finish Test
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        onClick={handleNext}
+                                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                                    >
+                                        Next
+                                        <ChevronRight className="w-4 h-4 ml-2" />
+                                    </Button>
+                                )}
+                            </div>
                         </div>
-                        <div className="text-xs text-gray-500">
-                          {audioBlob
-                            ? `${(audioBlob.size / 1024).toFixed(1)} KB`
-                            : ""}
-                        </div>
-                      </div>
-
-                      <div className="mt-3">
-                        <audio controls src={audioUrl} className="w-full" />
-                      </div>
-                    </>
-                  )}
-
-                  {/* Link mở modal kết quả nếu có (nhỏ gọn) */}
-                </CardContent>
-              </Card>
-
-              {/* Error (nhỏ gọn) */}
-              <AnimatePresence>
-                {isError && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                  >
-                    <Card className="border-red-200 bg-red-50">
-                      <CardContent className="py-3">
-                        <div className="text-sm text-red-700 flex items-center gap-2">
-                          <AlertTriangle className="w-4 h-4" />
-                          Gửi bài không thành công. Vui lòng thử lại.
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
+                    </motion.div>
                 )}
-              </AnimatePresence>
-            </motion.div>
-          </motion.div>
-
-          {/* Right Side - Recording Interface */}
-
-          <AnimatePresence>
-            {apiResult && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                data-result-section
-              >
-                <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-                  <CardHeader>
-                    <CardTitle className="text-lg font-semibold flex items-center gap-2 text-blue-900">
-                      <Sparkles className="w-5 h-5" />
-                      Kết quả đánh giá AI
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {/* Scores Grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {Object.entries(apiResult).map(([key, value]) => {
-                        if (
-                          key === "feedback" ||
-                          key === "transcript" ||
-                          key === "audioUrl" ||
-                          key === "id"
-                        )
-                          return null;
-                        const scoreLabels: { [key: string]: string } = {
-                          accuracy: "Chính xác",
-                          pronunciation: "Phát âm",
-                          fluency: "Lưu loát",
-                          grammar: "Ngữ pháp",
-                          vocabulary: "Từ vựng",
-                          overall: "Tổng thể",
-                          task: "Nhiệm vụ",
-                        };
-                        const label = scoreLabels[key] || key;
-                        const colors = [
-                          "text-blue-600",
-                          "text-green-600",
-                          "text-purple-600",
-                          "text-pink-600",
-                          "text-orange-600",
-                        ];
-                        return (
-                          <div
-                            key={key}
-                            className="text-center p-4 bg-white rounded-lg shadow-sm border"
-                          >
-                            <div
-                              className={`text-2xl font-bold ${colors[
-                                Math.floor(Math.random() * colors.length)
-                              ]
-                                }`}
-                            >
-                              {String(value)}
-                            </div>
-                            <div className="text-xs text-gray-600 mt-1">
-                              {label}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Feedback */}
-                    {apiResult?.feedback && (
-                      <div className="bg-white rounded-lg p-4 border shadow-sm">
-                        <h4 className="font-semibold mb-2 text-gray-900 flex items-center gap-2">
-                          <AlertTriangle className="w-4 h-4 text-blue-500" />
-                          Nhận xét chi tiết:
-                        </h4>
-                        <p className="text-gray-700 leading-relaxed text-sm">
-                          {apiResult.feedback}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Transcript */}
-                    {apiResult?.transcript && (
-                      <div className="bg-white rounded-lg p-4 border shadow-sm">
-                        <h4 className="font-semibold mb-2 text-gray-900 flex items-center gap-2">
-                          <CheckCircle className="w-4 h-4 text-green-500" />
-                          Bản ghi (AI):
-                        </h4>
-                        <p className="text-gray-800 italic text-sm">
-                          "{apiResult.transcript}"
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-          </AnimatePresence>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 }

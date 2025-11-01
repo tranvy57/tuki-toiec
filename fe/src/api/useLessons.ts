@@ -33,6 +33,7 @@ export interface LessonItem {
     }>;
     audio_url?: string;
     transcript?: string;
+    translation?: string;
     explanation?: string;
   };
   solutionJsonb: {
@@ -41,11 +42,15 @@ export interface LessonItem {
     // Speaking fields
     audio_url?: string;
     sample_text?: string;
+    // Listening MCQ fields
+    correct_answer?: string;
+    explanation?: string;
   };
 }
 
 export interface LessonByModality {
   lessonId: string;
+  name: string;
   items: LessonItem[];
 }
 

@@ -31,7 +31,6 @@ export default function WritingExercisePage() {
   const router = useRouter();
   const [userInput, setUserInput] = useState("");
   const [wordCount, setWordCount] = useState(0);
-  const [timeElapsed, setTimeElapsed] = useState(0);
   const [isGrammarChecked, setIsGrammarChecked] = useState(false);
   const [showAIFeedback, setShowAIFeedback] = useState(false);
   const [grammarErrors, setGrammarErrors] = useState<any[]>([]);
@@ -138,7 +137,7 @@ export default function WritingExercisePage() {
         title: currentItem.title.trim(),
         topic: currentItem.promptJsonb.directions || "",
         content: null,
-        wordLimit: 25, // Default word limit for sentence description
+        wordLimit: 25, 
         level: currentItem.difficulty,
         context: currentItem.promptJsonb.writing_type,
         tips: currentItem.solutionJsonb.tips,
@@ -179,13 +178,6 @@ export default function WritingExercisePage() {
   const exerciseInfo = getCurrentExerciseData();
 
 
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-
   // AI Evaluation Functions
   const handleAIEvaluation = async () => {
     if (!userInput.trim()) return;
@@ -196,23 +188,26 @@ export default function WritingExercisePage() {
 
     try {
       let result;
+      console.log(exerciseInfo)
 
       switch (slug) {
         case "describe-picture":
           result = await evaluateImageDescription.evaluateImageDescription({
             description: userInput,
             expectedElements: exerciseInfo?.keywords || [],
-            descriptionType: "basic",
+            descriptionType: "sentence",
+            imageUrl: exerciseInfo?.imageUrl || undefined,
+            sampleAnswer: exerciseInfo?.sampleAnswer || undefined,
           });
           break;
 
         case "email-response":
           result = await evaluateWriting.evaluateWriting({
-            type: "email",
+            type: "email-response",
             title: exerciseInfo?.title || "",
             content: userInput,
             topic: exerciseInfo?.topic || "",
-            context: exerciseInfo?.context || "Colleague/Manager",
+            context: exerciseInfo?.content || "Colleague/Manager",
           });
           break;
 
@@ -226,16 +221,16 @@ export default function WritingExercisePage() {
           });
           break;
 
-        case "grammar-fix":
-          // For grammar fix, we can use the writing evaluation as a general text evaluator
-          result = await evaluateWriting.evaluateWriting({
-            type: "email",
-            content: userInput,
-            title: "Grammar Check",
-            topic: exerciseInfo?.topic || "",
-            context: "Grammar practice",
-          });
-          break;
+        // case "grammar-fix":
+        //   // For grammar fix, we can use the writing evaluation as a general text evaluator
+        //   result = await evaluateWriting.evaluateWriting({
+        //     type: "email",
+        //     content: userInput,
+        //     title: "Grammar Check",
+        //     topic: exerciseInfo?.topic || "",
+        //     context: "Grammar practice",
+        //   });
+        //   break;
 
         default:
           throw new Error("Unknown exercise type");
@@ -254,7 +249,6 @@ export default function WritingExercisePage() {
   };
 
   const handleGenerateExample = async () => {
-    console.log("runThis", generatedSample);
 
     if (topicId !== "email-response") return;
 
@@ -331,18 +325,6 @@ export default function WritingExercisePage() {
     setGeneratedSample("");
   };
 
-  // Show loading for API-backed exercises
-  useEffect(() => {
-    // Timer
-    intervalRef.current = setInterval(() => {
-      setTimeElapsed((prev) => prev + 1);
-    }, 1000);
-
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, []);
-
   useEffect(() => {
     // Count words
     const words = userInput
@@ -416,39 +398,7 @@ export default function WritingExercisePage() {
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center justify-between mb-6"
         >
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => router.back()}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Quay lại
-            </Button>
-            <div className="flex gap-6">
-              <h1 className="text-2xl font-bold text-[#23085A]">
-                {exerciseData?.name || "Writing Practice"}
-              </h1>
-              <div className="flex items-center gap-4 mt-1">
-                <Badge
-                  className={
-                    exerciseInfo?.level === "easy" || exerciseInfo?.level === "Easy"
-                      ? "bg-green-100 text-green-800"
-                      : exerciseInfo?.level === "medium" || exerciseInfo?.level === "Medium"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-red-100 text-red-800"
-                  }
-                >
-                  {exerciseInfo?.level}
-                </Badge>
-                <div className="flex items-center gap-1 text-sm text-gray-500">
-                  <Clock className="w-4 h-4" />
-                  <span>{formatTime(timeElapsed)}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          
 
           {/* Progress */}
           <div className="text-right">

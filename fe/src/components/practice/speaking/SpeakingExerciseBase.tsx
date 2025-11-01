@@ -32,11 +32,7 @@ export default function SpeakingExerciseBase({
     exerciseData,
     children
 }: SpeakingExerciseBaseProps) {
-    const router = useRouter();
     const [isRecording, setIsRecording] = useState(false);
-    const [recordingTime, setRecordingTime] = useState(0);
-    const [timeElapsed, setTimeElapsed] = useState(0);
-    const [userTranscript, setUserTranscript] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
     const mediaRecorder = useRef<MediaRecorder | null>(null);
     const mediaStream = useRef<MediaStream | null>(null);
@@ -44,9 +40,7 @@ export default function SpeakingExerciseBase({
     const [audioUrl, setAudioUrl] = useState<string | null>(null);
     const [apiResult, setApiResult] = useState<any | null>(null);
     const [audioLevel, setAudioLevel] = useState(0);
-    const [hasRecorded, setHasRecorded] = useState(false);
     const [currentExercise, setCurrentExercise] = useState(1);
-    const [progress, setProgress] = useState(0);
     const [showTranscript, setShowTranscript] = useState(false);
 
     // Speech recognition states
@@ -54,8 +48,6 @@ export default function SpeakingExerciseBase({
     const [isReadAloudExercise, setIsReadAloudExercise] = useState(false);
     const [isExpressOpinionExercise, setIsExpressOpinionExercise] = useState(false);
     const [finalTranscript, setFinalTranscript] = useState(""); // Lưu transcript cuối cùng
-    const [lastErrorCount, setLastErrorCount] = useState(0);
-    const [currentWordPosition, setCurrentWordPosition] = useState(0);
     const [processedWords, setProcessedWords] = useState<Set<number>>(new Set());
 
     const recordingIntervalRef = useRef<NodeJS.Timeout>(undefined);
@@ -74,9 +66,7 @@ export default function SpeakingExerciseBase({
         enableVibration: true,
         volume: 0.2
     });
-    console.log(isReadAloudExercise)
 
-    // Speech recognition hook - active for both read_aloud and express_opinion
     const {
         transcript: realtimeTranscript,
         listening: speechListening,
@@ -88,24 +78,17 @@ export default function SpeakingExerciseBase({
         reset: resetSpeechRecognition,
         getFinalAnalysis
     } = useSpeechRecognition({
-        expectedText: isReadAloudExercise ? expectedText : "", // Chỉ so sánh với expected text cho read_aloud
+        expectedText: isReadAloudExercise ? expectedText : "",
         language: 'en-US',
         continuous: true,
         interimResults: true,
         onRealTimeAnalysis: (analysis) => {
-            console.log('Real-time analysis during recording:', analysis);
 
-            // Chỉ phát âm thanh feedback cho read_aloud exercises
             if (analysis && isRecording && isReadAloudExercise) {
-                // Tìm vị trí từ hiện tại dựa trên số từ đã nói
                 const wordsSpoken = analysis.error_segments.filter(seg =>
                     seg.status === 'correct' || seg.status === 'mispronounced'
                 ).length;
 
-                // Cập nhật vị trí hiện tại
-                setCurrentWordPosition(wordsSpoken);
-
-                // Kiểm tra từ mới được xử lý
                 const newlyProcessedWords = new Set<number>();
                 analysis.error_segments.forEach((segment, index) => {
                     if ((segment.status === 'correct' || segment.status === 'mispronounced') &&
@@ -121,10 +104,8 @@ export default function SpeakingExerciseBase({
                     }
                 });
 
-                // Cập nhật danh sách từ đã xử lý
                 setProcessedWords(prev => new Set([...prev, ...newlyProcessedWords]));
 
-                // Kiểm tra từ thiếu tại vị trí hiện tại
                 const expectedWords = expectedText.toLowerCase()
                     .replace(/[^\w\s]/g, '')
                     .split(' ')
@@ -142,10 +123,10 @@ export default function SpeakingExerciseBase({
                 }
 
                 const currentErrorCount = analysis.error_segments.filter(seg => seg.status !== 'correct').length;
-                setLastErrorCount(currentErrorCount);
             }
         }
     });
+
 
     const { mutate, data, isPending, isError, reset } = useEvaluateSpeakingAttempt();
 
@@ -154,6 +135,7 @@ export default function SpeakingExerciseBase({
         // Check exercise types
         const isReadAloud = exerciseData.type === 'read_aloud';
         const isExpressOpinion = exerciseData.type === 'express_opinion';
+        console.log(isReadAloud)
 
         setIsReadAloudExercise(isReadAloud);
         setIsExpressOpinionExercise(isExpressOpinion);
@@ -167,8 +149,7 @@ export default function SpeakingExerciseBase({
     useEffect(() => {
         if (data && !apiResult) {
             setApiResult(data.data);
-            setUserTranscript((data as any)?.transcript || "");
-            // Auto scroll to result after a short delay
+            
             setTimeout(() => {
                 const resultSection = document.querySelector("[data-result-section]");
                 if (resultSection) {
@@ -178,12 +159,7 @@ export default function SpeakingExerciseBase({
         }
     }, [data, apiResult]);
 
-    useEffect(() => {
-        // Calculate progress based on current exercise
-        setProgress((currentExercise / 10) * 100);
-    }, [currentExercise]);
 
-    // Cleanup useEffect - Ensure everything is stopped when component unmounts
     useEffect(() => {
         return () => {
             console.log("Component unmounting - cleaning up...");
@@ -220,14 +196,13 @@ export default function SpeakingExerciseBase({
         };
     }, [isReadAloudExercise, isExpressOpinionExercise, stopSpeechRecognition, resetSpeechRecognition]);
 
-    const formatTime = (seconds: number) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, "0")}`;
-    };
+    // const formatTime = (seconds: number) => {
+    //     const mins = Math.floor(seconds / 60);
+    //     const secs = seconds % 60;
+    //     return `${mins}:${secs.toString().padStart(2, "0")}`;
+    // };
 
     const startRecording = async () => {
-        console.log("check 1");
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             const mr = new MediaRecorder(stream);
@@ -244,15 +219,12 @@ export default function SpeakingExerciseBase({
                 setAudioBlob(blob);
                 setAudioUrl(URL.createObjectURL(blob));
                 setIsProcessing(false);
-                setHasRecorded(true);
             };
 
             mr.start();
             setIsRecording(true);
-            setRecordingTime(0);
             setAudioLevel(0);
 
-            // Start speech recognition for both read_aloud and express_opinion exercises
             if ((isReadAloudExercise || isExpressOpinionExercise) && speechRecognitionSupported) {
                 resetSpeechRecognition();
                 setFinalTranscript(""); // Reset final transcript
@@ -260,15 +232,7 @@ export default function SpeakingExerciseBase({
             }
 
             // timers
-            recordingIntervalRef.current = setInterval(() => {
-                setRecordingTime((prev) => {
-                    if (prev >= exerciseData.duration) {
-                        stopRecording();
-                        return prev;
-                    }
-                    return prev + 1;
-                });
-            }, 1000);
+            
 
             audioLevelIntervalRef.current = setInterval(() => {
                 setAudioLevel(Math.random() * 100);
@@ -288,26 +252,30 @@ export default function SpeakingExerciseBase({
 
         // Stop speech recognition and save final transcript
         if (isReadAloudExercise || isExpressOpinionExercise) {
-            console.log("🛑 Stopping speech recognition...", {
-                speechListening,
-                isReadAloudExercise,
-                isExpressOpinionExercise
-            });
             try {
-                // Lưu transcript cuối cùng trước khi stop
                 if (realtimeTranscript) {
                     setFinalTranscript(realtimeTranscript);
                 }
 
-                stopSpeechRecognition();
-                console.log("✅ Speech recognition stop command sent");
+                if (isReadAloudExercise) {
+                    const finalAnalysis = getFinalAnalysis();
 
-                // Chỉ reset cho read_aloud, giữ transcript cho express_opinion
+                    if (finalAnalysis && finalAnalysis.score !== undefined) {
+                        setApiResult({
+                            ...finalAnalysis,
+                            type: 'speech_recognition_result',
+                            transcript: realtimeTranscript || finalTranscript,
+                            feedback: `Kết quả phân tích phát âm: Độ chính xác ${Math.round(finalAnalysis.accuracy * 100)}%. ${finalAnalysis.words_correct}/${finalAnalysis.words_total} từ được phát âm đúng.`
+                        });
+                    }
+                }
+
+                stopSpeechRecognition();
+
                 if (isReadAloudExercise) {
                     setTimeout(() => {
                         resetSpeechRecognition();
-                        console.log("🔄 Speech recognition reset completed");
-                    }, 100);
+                    }, 500); 
                 }
             } catch (error) {
                 console.error("❌ Error stopping speech recognition:", error);
@@ -316,7 +284,6 @@ export default function SpeakingExerciseBase({
 
         const recorder = mediaRecorder.current;
         const stream = mediaStream.current;
-        console.log("check - Recording stopped");
 
         if (recorder && recorder.state !== "inactive") {
             try {
@@ -357,9 +324,6 @@ export default function SpeakingExerciseBase({
 
     const handleReset = () => {
         setIsRecording(false);
-        setRecordingTime(0);
-        setUserTranscript("");
-        setHasRecorded(false);
         setIsProcessing(false);
         setShowTranscript(false);
         setApiResult(null);
@@ -381,8 +345,6 @@ export default function SpeakingExerciseBase({
 
                 // Reset states
                 if (isReadAloudExercise) {
-                    setLastErrorCount(0);
-                    setCurrentWordPosition(0);
                     setProcessedWords(new Set());
                 }
 
@@ -650,10 +612,6 @@ export default function SpeakingExerciseBase({
                                                 </div>
                                             )}
 
-                                            {/* Instant error alerts during speaking */}
-
-
-                                            {/* Real-time analysis - chỉ hiển thị cho read_aloud */}
                                             {(currentAnalysis && expectedText && isReadAloudExercise) && (
                                                 <div className="space-y-3">
                                                     <div className="grid grid-cols-3 gap-3">
@@ -825,57 +783,167 @@ export default function SpeakingExerciseBase({
                                         <div>
                                             <div className="text-lg font-semibold flex items-center gap-2 text-blue-900 mb-2">
                                                 <Sparkles className="w-5 h-5 " />
-                                                Kết quả đánh giá từ AI
+                                                {apiResult.type === 'speech_recognition_result'
+                                                    ? "Kết quả phân tích phát âm (Real-time)"
+                                                    : "Kết quả đánh giá từ AI"
+                                                }
                                             </div>
                                         </div>
                                         <div className="space-y-4">
-                                            {/* Scores Grid */}
-                                            <div className="grid grid-cols-2 gap-4">
-                                                {Object.entries(apiResult).map(([key, value]) => {
-                                                    if (
-                                                        key === "feedback" ||
-                                                        key === "transcript" ||
-                                                        key === "audioUrl" ||
-                                                        key === "id"
-                                                    )
-                                                        return null;
-                                                    const scoreLabels: { [key: string]: string } = {
-                                                        accuracy: "Chính xác",
-                                                        pronunciation: "Phát âm",
-                                                        fluency: "Lưu loát",
-                                                        grammar: "Ngữ pháp",
-                                                        vocabulary: "Từ vựng",
-                                                        overall: "Tổng thể",
-                                                        task: "Nhiệm vụ",
-                                                    };
-                                                    const label = scoreLabels[key] || key;
-                                                    const colors = [
-                                                        "text-blue-600",
-                                                        "text-green-600",
-                                                        "text-purple-600",
-                                                        "text-pink-600",
-                                                        "text-orange-600",
-                                                    ];
-                                                    return (
-                                                        <div
-                                                            key={key}
-                                                            className="text-center p-3 bg-white rounded-lg shadow-sm border"
-                                                        >
-                                                            <div
-                                                                className={`text-xl font-bold ${colors[
-                                                                    Math.floor(Math.random() * colors.length)
-                                                                ]
-                                                                    }`}
-                                                            >
-                                                                {String(value)}
-                                                            </div>
-                                                            <div className="text-xs text-gray-600 mt-1">
-                                                                {label}
-                                                            </div>
+                                            {/* Scores Grid for speech recognition results */}
+                                            {apiResult.type === 'speech_recognition_result' ? (
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="text-center p-3 bg-white rounded-lg shadow-sm border">
+                                                        <div className="text-xl font-bold text-blue-600">
+                                                            {apiResult.score || 0}
                                                         </div>
-                                                    );
-                                                })}
-                                            </div>
+                                                        <div className="text-xs text-gray-600 mt-1">Điểm số</div>
+                                                    </div>
+                                                    <div className="text-center p-3 bg-white rounded-lg shadow-sm border">
+                                                        <div className="text-xl font-bold text-green-600">
+                                                            {Math.round((apiResult.accuracy || 0) * 100)}%
+                                                        </div>
+                                                        <div className="text-xs text-gray-600 mt-1">Độ chính xác</div>
+                                                    </div>
+                                                    <div className="text-center p-3 bg-white rounded-lg shadow-sm border">
+                                                        <div className="text-xl font-bold text-purple-600">
+                                                            {apiResult.words_correct || 0}/{apiResult.words_total || 0}
+                                                        </div>
+                                                        <div className="text-xs text-gray-600 mt-1">Từ đúng</div>
+                                                    </div>
+                                                    <div className="text-center p-3 bg-white rounded-lg shadow-sm border">
+                                                        <div className="text-xl font-bold text-orange-600">
+                                                            {apiResult.words_missing || 0}
+                                                        </div>
+                                                        <div className="text-xs text-gray-600 mt-1">Từ thiếu</div>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                /* Regular API scores grid */
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    {Object.entries(apiResult).map(([key, value]) => {
+                                                        if (
+                                                            key === "feedback" ||
+                                                            key === "transcript" ||
+                                                            key === "audioUrl" ||
+                                                            key === "id" ||
+                                                            key === "type"
+                                                        )
+                                                            return null;
+                                                        const scoreLabels: { [key: string]: string } = {
+                                                            accuracy: "Chính xác",
+                                                            pronunciation: "Phát âm",
+                                                            fluency: "Lưu loát",
+                                                            grammar: "Ngữ pháp",
+                                                            vocabulary: "Từ vựng",
+                                                            overall: "Tổng thể",
+                                                            task: "Nhiệm vụ",
+                                                        };
+                                                        const label = scoreLabels[key] || key;
+                                                        const colors = [
+                                                            "text-blue-600",
+                                                            "text-green-600",
+                                                            "text-purple-600",
+                                                            "text-pink-600",
+                                                            "text-orange-600",
+                                                        ];
+                                                        return (
+                                                            <div
+                                                                key={key}
+                                                                className="text-center p-3 bg-white rounded-lg shadow-sm border"
+                                                            >
+                                                                <div
+                                                                    className={`text-xl font-bold ${colors[
+                                                                        Math.floor(Math.random() * colors.length)
+                                                                    ]
+                                                                        }`}
+                                                                >
+                                                                    {String(value)}
+                                                                </div>
+                                                                <div className="text-xs text-gray-600 mt-1">
+                                                                    {label}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+
+                                            {/* Detailed word analysis for speech recognition results */}
+                                            {apiResult.type === 'speech_recognition_result' && apiResult.error_segments && (
+                                                <div className="bg-white rounded-lg p-4 border shadow-sm">
+                                                    <h4 className="font-semibold mb-3 text-gray-900 flex items-center gap-2">
+                                                        <CheckCircle className="w-4 h-4 text-blue-500" />
+                                                        Phân tích chi tiết từng từ:
+                                                    </h4>
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {apiResult.error_segments.map((segment, index) => {
+                                                            const getWordStyle = () => {
+                                                                switch (segment.status) {
+                                                                    case 'correct':
+                                                                        return 'bg-green-100 text-green-800 border-green-200';
+                                                                    case 'mispronounced':
+                                                                        return 'bg-orange-100 text-orange-800 border-orange-200';
+                                                                    case 'missing':
+                                                                        return 'bg-red-100 text-red-800 border-red-200 line-through';
+                                                                    case 'extra':
+                                                                        return 'bg-blue-100 text-blue-800 border-blue-200';
+                                                                    default:
+                                                                        return 'bg-gray-100 text-gray-600 border-gray-200';
+                                                                }
+                                                            };
+
+                                                            const getIcon = () => {
+                                                                switch (segment.status) {
+                                                                    case 'correct':
+                                                                        return '✅';
+                                                                    case 'mispronounced':
+                                                                        return '⚠️';
+                                                                    case 'missing':
+                                                                        return '❌';
+                                                                    case 'extra':
+                                                                        return '➕';
+                                                                    default:
+                                                                        return '❓';
+                                                                }
+                                                            };
+
+                                                            return (
+                                                                <span
+                                                                    key={`final-${segment.word}-${index}`}
+                                                                    className={`inline-flex items-center gap-1 px-2 py-1 rounded-md border text-xs font-medium ${getWordStyle()}`}
+                                                                    title={segment.suggestion || `${segment.status} - Similarity: ${(segment.similarity || 0).toFixed(2)}`}
+                                                                >
+                                                                    <span className="text-xs">{getIcon()}</span>
+                                                                    {segment.word}
+                                                                    {segment.similarity && segment.similarity < 1 && segment.status !== 'missing' && (
+                                                                        <span className="text-xs opacity-70">
+                                                                            ({Math.round(segment.similarity * 100)}%)
+                                                                        </span>
+                                                                    )}
+                                                                </span>
+                                                            );
+                                                        })}
+                                                    </div>
+
+                                                    {/* Summary statistics */}
+                                                    <div className="mt-3 flex gap-2 text-sm">
+                                                        {apiResult.words_missing > 0 && (
+                                                            <span className="px-2 py-1 bg-red-100 text-red-700 rounded">
+                                                                ❌ {apiResult.words_missing} từ thiếu
+                                                            </span>
+                                                        )}
+                                                        {apiResult.words_extra > 0 && (
+                                                            <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded">
+                                                                ➕ {apiResult.words_extra} từ thừa
+                                                            </span>
+                                                        )}
+                                                        <span className="px-2 py-1 bg-green-100 text-green-700 rounded">
+                                                            ✅ {apiResult.words_correct} từ đúng
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            )}
 
                                             {/* Feedback */}
                                             {apiResult?.feedback && (

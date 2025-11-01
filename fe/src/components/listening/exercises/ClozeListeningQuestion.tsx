@@ -18,17 +18,31 @@ import {
   Eye,
   EyeOff,
   Headphones,
+  ChevronLeft,
 } from "lucide-react";
 import { useItems } from "@/api/useItems";
 import { AudioPlayer } from "@/components/toeic/test/Audio";
 import { TTSPlayer } from "@/components/ui/voice-controller";
 
+interface ClozeItem {
+  id: string;
+  title: string;
+  promptJsonb: {
+    text?: string;
+    audio_url?: string;
+    blank_ratio?: number;
+  };
+  solutionJsonb: {
+    answers?: string[];
+    transcript?: string;
+  };
+}
+
 interface ClozeListeningProps {
-  audioUrl: string;
-  text: string;
-  answers: string[];
-  transcript: string;
-  onComplete?: (userAnswers: string[], isCorrect: boolean) => void;
+  lessonId: string;
+  questions: ClozeItem[];
+  onFinish: (results: { correct: number; total: number; userAnswers: Record<string, string> }) => void;
+  onBack: () => void;
 }
 
 interface BlankInfo {
@@ -40,12 +54,16 @@ interface BlankInfo {
 }
 
 export default function ClozeListeningQuestion({
-  audioUrl,
-  text,
-  answers,
-  transcript,
-  onComplete,
+  lessonId,
+  questions,
+  onFinish,
+  onBack,
 }: ClozeListeningProps) {
+  // Question navigation state
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [userAnswers, setUserAnswers] = useState<Record<string, Record<number, string>>>({});
+  const [showAnswerForQuestion, setShowAnswerForQuestion] = useState<Record<string, boolean>>({});
+
   // Audio player state
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -54,12 +72,31 @@ export default function ClozeListeningQuestion({
   const [volume, setVolume] = useState(1);
   const [replayCount, setReplayCount] = useState(0);
   const maxReplays = 3;
-  console.log(audioUrl === "");
 
   const [blanks, setBlanks] = useState<BlankInfo[]>([]);
   const [isChecked, setIsChecked] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
   const [accuracy, setAccuracy] = useState(0);
+
+  // Current question data
+  const currentQuestion = questions[currentQuestionIndex];
+  const audioUrl = currentQuestion?.promptJsonb?.audio_url || "";
+  const text = currentQuestion?.promptJsonb?.text || "";
+  const answers = currentQuestion?.solutionJsonb?.answers || [];
+  const transcript = currentQuestion?.solutionJsonb?.transcript || "";
+
+  // Early return if no questions available
+  if (!questions.length || !currentQuestion) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-600">No questions available</p>
+        <Button onClick={onBack} variant="outline" className="mt-4">
+          <ChevronLeft className="w-4 h-4 mr-2" />
+          Back
+        </Button>
+      </div>
+    );
+  }
 
   // Reset all state when question content changes
   useEffect(() => {
@@ -78,8 +115,12 @@ export default function ClozeListeningQuestion({
   }, [text, answers, audioUrl]);
 
   useEffect(() => {
+    if (!currentQuestion) return;
+
     const blankPattern = /_+/g;
     const blankMatches = Array.from(text.matchAll(blankPattern));
+
+    const questionAnswers = userAnswers[currentQuestion.id] || {};
 
     const initialBlanks: BlankInfo[] = blankMatches.map((match, index) => {
       const correctAnswer = answers[index] || "";
@@ -89,14 +130,14 @@ export default function ClozeListeningQuestion({
       return {
         id: index,
         correctAnswer,
-        userAnswer: "",
+        userAnswer: questionAnswers[index] || "",
         isCorrect: false,
         width,
       };
     });
 
     setBlanks(initialBlanks);
-  }, [text, answers]);
+  }, [currentQuestion, text, answers, userAnswers]);
 
   const formatTime = (seconds: number) => {
     if (!seconds || isNaN(seconds)) return "0:00";
@@ -151,6 +192,15 @@ export default function ClozeListeningQuestion({
   const handleBlankChange = (blankId: number, value: string) => {
     if (isChecked) return;
 
+    const questionId = currentQuestion.id;
+    setUserAnswers(prev => ({
+      ...prev,
+      [questionId]: {
+        ...prev[questionId],
+        [blankId]: value
+      }
+    }));
+
     setBlanks((prev) =>
       prev.map((blank) => {
         if (blank.id === blankId) {
@@ -182,11 +232,48 @@ export default function ClozeListeningQuestion({
     const accuracyPercent =
       blanks.length > 0 ? (correctCount / blanks.length) * 100 : 0;
     setAccuracy(accuracyPercent);
+  };
 
-    // Call completion callback
-    const userAnswers = blanks.map((blank) => blank.userAnswer);
-    const isAllCorrect = correctCount === blanks.length;
-    onComplete?.(userAnswers, isAllCorrect);
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+      // Reset question-specific state
+      setIsChecked(false);
+      setShowTranscript(false);
+      setAccuracy(0);
+      setReplayCount(0);
+    }
+  };
+
+  const handleFinishTest = () => {
+    const calculateScore = () => {
+      let correct = 0;
+      questions.forEach(question => {
+        const questionAnswers = userAnswers[question.id] || {};
+        const correctAnswers = question.solutionJsonb?.answers || [];
+
+        let questionCorrect = true;
+        correctAnswers.forEach((correctAnswer, index) => {
+          if (questionAnswers[index]?.toLowerCase().trim() !== correctAnswer.toLowerCase().trim()) {
+            questionCorrect = false;
+          }
+        });
+
+        if (questionCorrect && Object.keys(questionAnswers).length === correctAnswers.length) {
+          correct++;
+        }
+      });
+      return { correct, total: questions.length };
+    };
+
+    const results = calculateScore();
+    // Convert answers format for compatibility
+    const formattedAnswers: Record<string, string> = {};
+    Object.keys(userAnswers).forEach(questionId => {
+      formattedAnswers[questionId] = JSON.stringify(userAnswers[questionId]);
+    });
+
+    onFinish({ ...results, userAnswers: formattedAnswers });
   };
 
   const handleReset = () => {
@@ -303,7 +390,7 @@ export default function ClozeListeningQuestion({
             className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1.5 rounded-full text-xs font-medium mb-3"
           >
             <Headphones className="h-3 w-3" />
-            TOEIC Listening Cloze Practice
+            TOEIC Listening Cloze Practice - Question {currentQuestionIndex + 1} of {questions.length}
           </motion.div>
           {/* 
           <motion.h1
@@ -392,7 +479,7 @@ export default function ClozeListeningQuestion({
         >
           <Button
             onClick={handleCheckAnswer}
-            disabled={isChecked}
+            disabled={isChecked }
             size="default"
             className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium shadow-lg"
           >
@@ -423,6 +510,32 @@ export default function ClozeListeningQuestion({
             <RotateCcw className="h-4 w-4 mr-2" />
             Reset
           </Button>
+        </motion.div>
+
+        {/* Navigation Buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="flex justify-center gap-3 mb-6"
+        >
+          {currentQuestionIndex === questions.length - 1 ? (
+            <Button
+              onClick={handleFinishTest}
+              disabled={!isChecked}
+              className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Finish Test
+            </Button>
+          ) : (
+            <Button
+              onClick={handleNextQuestion}
+              disabled={!isChecked}
+              className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next Question
+            </Button>
+          )}
         </motion.div>
 
         {/* Results and Transcript Grid */}

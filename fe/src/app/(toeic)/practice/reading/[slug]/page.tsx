@@ -4,11 +4,28 @@ import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { Progress } from "@/components/ui/progress";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Check, Edit3 } from "lucide-react";
-import { speakingExerciseTypes } from "@/data/mockMenuSpeaking";
+import { Check, Clock, Edit3, Icon, Target, Loader2, Mail, Image as ImageIcon, BookOpen } from "lucide-react";
+import { writingExerciseTypes } from "@/data/mockDataWritting";
+import { CustomCard } from "@/components/CustomCard";
 import { PracticeBreadcrumb } from "@/components/practice/PracticeBreadcrumb";
+import { useLessonsByModality } from "@/api/useLessons";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { mockReadingExercises } from "@/data/mockMenuReading";
+
+// Mock data tương tự phần bạn có
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -20,14 +37,30 @@ const itemVariants = {
     },
   },
 };
+const data = mockReadingExercises;
 
-export default function SpeakingTopicsPage() {
+export default function WritingTopicsPage() {
   const params = useParams();
   const router = useRouter();
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
-  const exercise = speakingExerciseTypes.find((ex) => ex.slug === params.slug);
-  console.log(exercise)
+  const slug = params.slug as string;
+  const exercise = data.find((ex) => ex.slug === slug);
+
+  // Fetch API data
+  const { data: mcqLessons, isLoading: mcqLoading, error: mcqError } = useLessonsByModality({
+    modality: "mcq",
+    enabled: slug === "mcq",
+    skillType: "reading"
+  });
+
+  // const { data: opinionLessons, isLoading: opinionLoading, error: opinionError } = useLessonsByModality({
+  //   modality: "opinion_paragraph",
+  //   enabled: slug === "opinion-essay"
+  // });
+
+  // console.log("exercise", exercise);
+  // console.log("emailLessons", emailLessons);
 
   if (!exercise)
     return (
@@ -48,6 +81,7 @@ export default function SpeakingTopicsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50  px-6">
+      {/* Breadcrumb */}
       <div className="container mx-auto pt-6">
         <PracticeBreadcrumb
           items={[
@@ -90,26 +124,24 @@ export default function SpeakingTopicsPage() {
           transition={{ duration: 0.6 }}
           className=""
         >
-          <div className="flex mx-auto items-center justify-start gap-3 mb-4">
-            <div className="p-3  rounded-xl ">
-              <Edit3 className="w-4 h-4 " />
-            </div>
-            <h1 className="text-4xl md:text-3xl font-bold text-[#23085A]">
-              Speaking
+          {/* <div className="flex mx-auto items-center justify-start gap-3 mb-4 rounded-md">
+            {exercise.icon && <exercise.icon className="w-5 h-5 text-primary" />}
+            <h1 className="text-2xl md:text-3xl font-bold text-[#23085A]">
+              {exercise.name}
             </h1>
-          </div>
+          </div> */}
 
-          <div className="flex item-start gap-6">
+          <div className="flex item-start gap-6 bg-white p-4 rounded-md">
             <Image
-              src={exercise.imageUrl}
-              width={500}
-              height={500}
+              src={exercise?.imageUrl}
+              width={300}
+              height={300}
               alt="hehe"
             />
 
-            {exercise && (
-              <div className="  ">
-                <h3 className="text-lg font-semibold text-[#23085A] mb-2">
+            {exercise.instruction && (
+              <div className="">
+                <h3 className="text-lg font-semibold text-[#23085A] mb-2 ">
                   Hướng dẫn làm bài dạng {exercise.name.toLowerCase()}
                 </h3>
                 <ul className="list-disc pl-5 space-y-1 text-gray-700">
@@ -126,120 +158,97 @@ export default function SpeakingTopicsPage() {
           Danh sách chủ đề:
         </h1>
 
-        <motion.div
-          variants={container}
-          initial="hidden"
-          animate="visible"
-          className=" flex  gap-6 w-full mx-auto "
-        >
-          <div className="flex gap-6 flex-col w-[75%]">
-            {exercise.subTopics.map((topic) => (
-              <motion.div
-                key={topic.id}
-                variants={itemVariants}
-                onMouseEnter={() => setHoveredCard(topic.id)}
-                onMouseLeave={() => setHoveredCard(null)}
-              >
-                <Link
-                  href={`/practice/speaking/${exercise.slug}/${topic.slug}`}
-                  className="block"
-                >
-                  <motion.div
-                    whileHover={{ scale: 1.02, y: -5 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <div className="flex items-stretch   transition-all duration-300 rounded-lg overflow-hidden group bg-white">
-                      <div className=" flex flex-col justify-between border-l bg-white">
-                        <Image
-                          src={
-                            topic.imageUrl ||
-                            "https://working.vn/vnt_upload/news/hinh_ky_nang/H24-min.gif"
-                          }
-                          width={600}
-                          height={600}
-                          alt={exercise.name}
-                          className="object-cover w-full h-40"
-                        />
-
-                        {/* <div className="p-4">
-                      <Link href={`/practice/writing/${exercise.slug}/topics`}>
-                        <Button
-                          className="w-full bg-white hover:bg-gray-100 text-gray-800 font-semibold border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300"
-                          size="lg"
-                        >
-                          <span>Chọn chủ đề</span>
-                          <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-                        </Button>
-                      </Link>
-                    </div> */}
-                      </div>
-                      <div className="flex-1 p-5 flex flex-col justify-between">
-                        {/* Header */}
-                        <div>
-                          <div className="flex items-center gap-3 mb-3">
-                            {/* <div className="p-3 bg-gray-50 rounded-lg border shadow-sm group-hover:scale-110 transition-transform duration-300">
-                          <exercise.icon className="w-6 h-6 text-gray-700" />
-                        </div> */}
-                            <h3 className="text-xl font-semibold text-[#23085A]  group-hover:text-gray-800 transition-colors">
-                              {topic.title}
-                            </h3>
-                          </div>
-
-                          {/* Description */}
-                          <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                            {topic.description}
-                          </p>
-
-                          {/* Info */}
-                          {/* <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                        <div className="flex items-center gap-1.5">
-                          <Target className="w-4 h-4" />
-                          <span>{exercise.exerciseCount} bài tập</span>
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Loading states */}
+          {((slug === "mcq" && mcqLoading)) && (
+              <>
+                {[1, 2, 3].map((skeleton) => (
+                  <div key={skeleton} className="relative group">
+                    <Card className="h-full bg-white border-gray-200 shadow-md">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-center h-40">
+                          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
                         </div>
-                        <div className="flex items-center gap-1.5">
-                          <Clock className="w-4 h-4" />
-                          <span>{exercise.estimatedTime}</span>
+                        <div className="text-center">
+                          <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                          <div className="h-3 bg-gray-100 rounded animate-pulse"></div>
                         </div>
-                      </div> */}
-                        </div>
-                        {/* Progress */}
-                        {/* <div className="mt-4">
-                      <div className="flex justify-between text-xs text-gray-600 mb-1">
-                        <span>Tiến độ</span>
-                        <span>0/{exercise.exerciseCount}</span>
-                      </div>
-                      <div className="w-full bg-gray-100 rounded-full h-2">
-                        <div className="bg-gradient-to-r from-pink-400 to-blue-500 h-2 rounded-full w-0 transition-all duration-300" />
-                      </div>
-                    </div> */}
-                      </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ))}
+              </>
+            )}
 
-                      {/* RIGHT IMAGE + BUTTON */}
-                    </div>
-                  </motion.div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
+          {/* Error states */}
+          {((slug === "mcq" && mcqError)) && (
+              <div className="col-span-4 text-center py-8">
+                <div className="text-red-500 mb-4">
+                  {slug === "mcq" ? (
+                    <Mail className="w-12 h-12 mx-auto mb-2" />
+                  ) : slug === "describe-picture" ? (
+                    <ImageIcon className="w-12 h-12 mx-auto mb-2" />
+                  ) : (
+                    <BookOpen className="w-12 h-12 mx-auto mb-2" />
+                  )}
+                  <h3 className="text-lg font-semibold">Không thể tải dữ liệu</h3>
+                  <p className="text-sm">Vui lòng thử lại sau</p>
+                </div>
+              </div>
+            )}
 
-          <div className="p-4 round-sm bg-white  w-80">
-            <h3 className="text-lg font-semibold text-[#23085A] mb-3">
-              🎯 Các dạng khác
-            </h3>
-            <ul className="space-y-4 text-gray-800">
-              {speakingExerciseTypes.map((item) => {
-                return (
-                  <Link href={"abc"} key={item.slug}>
-                    <li className="flex items-start gap-2 hover:underline">
-                      <Check className="w-5 h-5 text-[#23085A] mt-0.5" />
-                      <span>{item?.name}</span>
-                    </li>
-                  </Link>
-                );
-              })}
-            </ul>
-          </div>
-        </motion.div>
+          {/* Render API data for mcq */}
+          {slug === "mcq" && mcqLessons && !mcqLoading && (
+            <>
+              {mcqLessons.map((lesson, lessonIndex) =>
+                <CustomCard
+                  key={`${lesson.lessonId}`}
+                  slug={lesson.lessonId}
+                  name={lesson.name}
+                  description={`Difficulty: easy | Band: 550`}
+                  imageUrl="https://media-blog.jobsgo.vn/blog/wp-content/uploads/2022/06/cach-viet-email-dung-chuan.jpg"
+                  icon={Mail}
+                  href={`/practice/reading/${exercise.slug}/${lesson.lessonId}`}
+                />
+              )}
+            </>
+          )}
+
+          {/* {slug === "opinion-essay" && opinionLessons && !opinionLoading && (
+            <>
+              {opinionLessons.map((lesson, lessonIndex) =>
+                lesson.items.map((item, itemIndex) => (
+                  <CustomCard
+                    key={`${lesson.lessonId}-${item.id}`}
+                    slug={item.id}
+                    name={item.title.trim()}
+                    description={`Difficulty: ${item.difficulty} | Band: ${item.bandHint} | Essay Topic`}
+                    imageUrl="https://dotb.vn/wp-content/uploads/2024/08/Ket-qua-hoc-tap-cua-hoc-sinh-thong-bao-ket-qua-hoc-tap-dotb.jpg"
+                    icon={BookOpen}
+                    href={`/practice/writing/${exercise.slug}/${item.id}`}
+                  />
+                ))
+              )}
+            </>
+          )} */}
+
+          {/* Render mock data for other types */}
+          {/* {slug !== "email-response" && slug !== "describe-picture" && slug !== "opinion-essay" && exercise.subTopics.map((topic, i) => {
+            console.log("topic", topic);
+
+            return (
+              <CustomCard
+                key={i}
+                slug={topic.slug}
+                name={topic.title}
+                description={topic.description}
+                imageUrl={topic.imageUrl}
+                icon={topic.icon || Mail}
+                href={`/practice/writing/${exercise.slug}/${topic.id}`}
+              />
+            );
+          })} */}
+        </div>
       </div>
       {/* Topics list */}
     </div>
