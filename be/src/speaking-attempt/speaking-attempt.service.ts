@@ -81,7 +81,7 @@ export class SpeakingAttemptService {
   async evaluateSpeaking(
     type: string,
     context: string,
-    prompt: string, // ✅ đổi tên cho rõ
+    prompt: string, 
     transcript: string,
     avgConfidence: number,
     fluency: number,
@@ -172,8 +172,7 @@ fluency_score: ${fluency.toFixed(2)}
 `.trim();
 
     const fullPrompt =
-      type?.toLowerCase() === 'read_aloud' ||
-      type?.toLowerCase() === 'read-aloud'
+      type?.toLowerCase() === 'read_aloud' 
         ? promptReadAloud
         : promptGeneral;
 

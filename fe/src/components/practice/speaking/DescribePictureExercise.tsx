@@ -192,32 +192,7 @@ export default function DescribePictureExercise({ exerciseData }: DescribePictur
             )}
 
             {/* Instructions for Recording */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
-                <div className="flex items-center gap-2 mb-3">
-                    <Volume2 className="w-5 h-5 text-blue-600" />
-                    <h3 className="text-lg font-semibold text-blue-900">Sẵn sàng ghi âm?</h3>
-                </div>
-                <div className="text-blue-800 space-y-2">
-                    <p className="font-medium">Quy trình thực hiện:</p>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
-                        <div className="bg-white bg-opacity-60 rounded-lg p-3 text-center">
-                            <div className="text-2xl mb-2">1️⃣</div>
-                            <div className="font-medium text-blue-900">Chuẩn bị</div>
-                            <div className="text-sm text-blue-700">{preparationTime} giây</div>
-                        </div>
-                        <div className="bg-white bg-opacity-60 rounded-lg p-3 text-center">
-                            <div className="text-2xl mb-2">2️⃣</div>
-                            <div className="font-medium text-blue-900">Ghi âm</div>
-                            <div className="text-sm text-blue-700">{speakingTime} giây</div>
-                        </div>
-                        <div className="bg-white bg-opacity-60 rounded-lg p-3 text-center">
-                            <div className="text-2xl mb-2">3️⃣</div>
-                            <div className="font-medium text-blue-900">Nộp bài</div>
-                            <div className="text-sm text-blue-700">Đánh giá AI</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+           
         </div>
     );
 }

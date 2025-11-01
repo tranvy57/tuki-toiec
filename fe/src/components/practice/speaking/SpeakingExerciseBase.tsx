@@ -826,12 +826,12 @@ export default function SpeakingExerciseBase({
                                                             key === "feedback" ||
                                                             key === "transcript" ||
                                                             key === "audioUrl" ||
+                                                            key === "context" ||
                                                             key === "id" ||
                                                             key === "type"
                                                         )
                                                             return null;
                                                         const scoreLabels: { [key: string]: string } = {
-                                                            accuracy: "Chính xác",
                                                             pronunciation: "Phát âm",
                                                             fluency: "Lưu loát",
                                                             grammar: "Ngữ pháp",
