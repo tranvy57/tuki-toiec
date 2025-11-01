@@ -37,7 +37,7 @@ export const useGetVocabularies = () => {
   return useQuery({
     queryKey: ["user-vocabularies"],
     queryFn: () => getUserVocabularies(),
-    staleTime: 1000 * 60 * 60,
+    staleTime: 0,
   });
 };
 
@@ -107,5 +107,24 @@ export const useMarkUserVocab = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user-vocabs"] });
     },
+  });
+};
+("");
+
+export const getReviewVocabularies = async () => {
+  try {
+    const response = await api.get("/user-vocabularies/review-vocab");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching vocabularies:", error);
+    throw error;
+  }
+};
+
+export const useGetReviewVocabularies = () => {
+  return useQuery({
+    queryKey: ["user-vocabularies-review"],
+    queryFn: () => getReviewVocabularies(),
+    staleTime: 0,
   });
 };
