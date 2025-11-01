@@ -10,7 +10,6 @@ WORKDIR /app
 # Copy file requirements và cài đặt
 COPY requirements ./requirements
 RUN pip install --no-cache-dir -r requirements/base.txt
-RUN pip install --no-cache-dir -r requirements/dev.txt
 
 # Copy toàn bộ source code
 COPY app ./app
