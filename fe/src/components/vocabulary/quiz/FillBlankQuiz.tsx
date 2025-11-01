@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { WeakVocabulary } from "@/types/implements/vocabulary";
 
 interface FillBlankQuizProps {
-  word: WeakVocabulary;
+  word: any;
   answer: string;
   onAnswerChange: (answer: string) => void;
   isCompleted: boolean;
@@ -20,12 +20,7 @@ export default function FillBlankQuiz({
         Điền từ còn thiếu vào câu sau:
       </p>
       <div className="p-4 bg-gray-50 rounded-lg border">
-        <p className="text-center text-lg">
-          {word.exampleEn.replace(
-            new RegExp(word.word, "gi"),
-            "______"
-          )}
-        </p>
+        <p className="text-center text-lg">{word?.content?.text}</p>
       </div>
       <Input
         value={answer}
@@ -44,4 +39,3 @@ export default function FillBlankQuiz({
     </div>
   );
 }
-
