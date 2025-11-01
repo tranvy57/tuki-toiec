@@ -413,7 +413,7 @@ export default function SpeakingTopicsPage() {
                   slug={lesson.lessonId}
                   name={`Lesson ${index + 1}`}
                   description={`${lesson.items.length} câu hỏi - Questions ${lesson.items.map(item => item.promptJsonb?.question_number).join(', ')}`}
-                  imageUrl="/images/respond-info-placeholder.jpg"
+                  imageUrl="https://img.freepik.com/free-vector/customer-support-flat-design-illustration_23-2148889374.jpg"
                   icon={Mic}
                   href={`/practice/speaking/${exercise.slug}/${lesson.lessonId}`}
                 />
