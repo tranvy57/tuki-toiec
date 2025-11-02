@@ -130,6 +130,8 @@ export function useVocabularyReview(
   const handleQuizSubmit = useCallback(() => {
     const currentWord = vocabularyReviews?.items?.[currentReviewIndex];
 
+    console.log("runThis");
+
     // Cập nhật số lần làm bài
     patchVocabulary(currentWord.vocabId);
 
@@ -182,7 +184,7 @@ export function useVocabularyReview(
       } else if (currentWord?.type === "cloze") {
         setQuizAnswer("");
       } else if (currentWord?.type === "pronunciation") {
-        setSelectedOption("");
+        setQuizAnswer("");
       }
       setQuizCompleted(false);
     } else {

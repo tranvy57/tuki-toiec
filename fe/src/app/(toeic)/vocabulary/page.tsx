@@ -90,7 +90,6 @@ export default function VocabularyPage() {
   console.log("reviewSession", reviewSession);
 
   if (isReviewMode && currentReviewWord) {
-    console.log("currentReviewWord", currentReviewWord);
     return (
       <ReviewSession
         reviewMode={reviewMode}
