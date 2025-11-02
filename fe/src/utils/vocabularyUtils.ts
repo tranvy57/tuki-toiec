@@ -14,17 +14,20 @@ export const getWeaknessColor = (level: string) => {
   }
 };
 
-export const getWeaknessLabel = (level: string) => {
-  switch (level) {
-    case "critical":
-      return "Rất yếu";
-    case "moderate":
-      return "Trung bình";
-    case "mild":
-      return "Hơi yếu";
-    default:
-      return "";
+export const getWeaknessLabel = (strength: number) => {
+  if (strength < 0.25) {
+    return "Rất yếu";
   }
+  if (strength < 0.5) {
+    return "Trung bình";
+  }
+  if (strength < 0.75) {
+    return "Hơi yếu";
+  }
+  if (strength < 0.9) {
+    return "Tốt";
+  }
+  return "";
 };
 
 export const generateQuizOptions = (

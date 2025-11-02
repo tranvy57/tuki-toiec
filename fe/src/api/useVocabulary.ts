@@ -23,23 +23,21 @@ export interface VocabularySearchParams {
 // API Functions
 
 // Lấy danh sách vocabularies với phân trang và filter
-export const getUserVocabularies =
-  async (): Promise<UserVocabularyResponse> => {
-    try {
-      const response = await api.get("/users/vocabularies");
-      const parsed = UserVocabularyResponseSchema.parse(response.data.data);
-      return parsed;
-    } catch (error) {
-      console.error("Error fetching vocabularies:", error);
-      throw error;
-    }
-  };
+export const getUserVocabularies = async () => {
+  try {
+    const response = await api.get("/users/vocabularies");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching vocabularies:", error);
+    throw error;
+  }
+};
 
 export const useGetVocabularies = () => {
   return useQuery({
     queryKey: ["user-vocabularies"],
     queryFn: () => getUserVocabularies(),
-    staleTime: 1000 * 60 * 60,
+    staleTime: 0,
   });
 };
 
@@ -108,6 +106,50 @@ export const useMarkUserVocab = () => {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user-vocabs"] });
+    },
+  });
+};
+("");
+
+export const getReviewVocabularies = async () => {
+  try {
+    const response = await api.get("/user-vocabularies/review-vocab");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching vocabularies:", error);
+    throw error;
+  }
+};
+
+export const useGetReviewVocabularies = () => {
+  return useQuery({
+    queryKey: ["user-vocabularies-review"],
+    queryFn: () => getReviewVocabularies(),
+    staleTime: 0,
+  });
+};
+
+// api update
+
+export const patchVocabulary = async (id: string) => {
+  try {
+    const res = await api.patch(`/vocabularies/${id}`);
+    return res.data;
+  } catch (error) {
+    console.error("Error patching vocabulary:", error);
+    throw error;
+  }
+};
+
+export const usePatchVocabulary = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["patch-vocabulary"],
+    mutationFn: (id: string) => patchVocabulary(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-vocabularies"] });
+      queryClient.invalidateQueries({ queryKey: ["user-vocabularies-review"] });
     },
   });
 };

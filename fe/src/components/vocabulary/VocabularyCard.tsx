@@ -10,7 +10,7 @@ import {
 } from "@/utils/vocabularyUtils";
 
 interface VocabularyCardProps {
-  vocabulary: WeakVocabulary;
+  vocabulary: any;
   onToggleMarkForReview: (id: string) => void;
 }
 
@@ -31,11 +31,13 @@ export default function VocabularyCard({
                 {vocabulary.pronunciation}
               </span>
               <Badge className={getWeaknessColor(vocabulary.weaknessLevel)}>
-                {getWeaknessLabel(vocabulary.weaknessLevel)}
+                {getWeaknessLabel(vocabulary?.strength)}
               </Badge>
-              <Badge variant="outline" className="text-xs">
-                {vocabulary.mistakeCount} lỗi
-              </Badge>
+              {vocabulary.timesReviewed > 0 && (
+                <Badge className="bg-green-50 text-green-600 border-green-200">
+                  Đã ôn tập {vocabulary.timesReviewed} lần
+                </Badge>
+              )}
             </div>
 
             <div className="space-y-2">

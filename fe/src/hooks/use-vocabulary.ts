@@ -7,10 +7,12 @@ import {
   QuizType,
 } from "@/types/implements/vocabulary";
 import { generateQuizOptions } from "@/utils/vocabularyUtils";
+import { patchVocabulary } from "@/api/useVocabulary";
 
 export function useVocabularyReview(
-  vocabularies: WeakVocabulary[],
-  setVocabularies: React.Dispatch<React.SetStateAction<WeakVocabulary[]>>
+  vocabularies: any[],
+  setVocabularies: React.Dispatch<React.SetStateAction<any[]>>,
+  vocabularyReviews?: any
 ) {
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
   const [isReviewMode, setIsReviewMode] = useState(false);
@@ -24,7 +26,9 @@ export function useVocabularyReview(
   const [currentQuizType, setCurrentQuizType] = useState<QuizType>(null);
   const [showQuiz, setShowQuiz] = useState(false);
   const [quizAnswer, setQuizAnswer] = useState("");
-  const [quizOptions, setQuizOptions] = useState<string[]>([]);
+  const [quizOptions, setQuizOptions] = useState<
+    { key: string; value: string }[]
+  >([]);
   const [selectedOption, setSelectedOption] = useState("");
   const [quizCompleted, setQuizCompleted] = useState(false);
 
@@ -35,7 +39,7 @@ export function useVocabularyReview(
   ];
 
   const reviewWords = vocabularies.filter((v) => v.isMarkedForReview);
-  const currentReviewWord = reviewWords[currentReviewIndex];
+  const currentReviewWord = vocabularyReviews?.items?.[currentReviewIndex];
 
   const startFlashcardSession = useCallback(() => {
     const reviewWords = vocabularies.filter((v) => v.isMarkedForReview);
@@ -59,11 +63,14 @@ export function useVocabularyReview(
   }, [vocabularies]);
 
   const startQuizSession = useCallback(() => {
-    const reviewWords = vocabularies.filter((v) => v.isMarkedForReview);
-    if (reviewWords.length === 0) {
-      toast.error("Không có từ nào được đánh dấu để ôn tập!");
-      return;
-    }
+    // const reviewWords = vocabularies.filter((v) => v.isMarkedForReview);
+
+    console.log("reviewWords", reviewWords);
+
+    // if (reviewWords.length === 0) {
+    //   toast.error("Không có từ nào được đánh dấu để ôn tập!");
+    //   return;
+    // }
 
     setIsReviewMode(true);
     setReviewMode("quiz");
@@ -72,30 +79,31 @@ export function useVocabularyReview(
     setShowQuiz(false);
     setReviewSession({
       correct: 0,
-      total: reviewWords.length,
+      total: vocabularyReviews?.totalItems,
       sessionActive: true,
     });
 
     // Start first quiz immediately
-    const firstWord = reviewWords[0];
-    setTimeout(() => startQuiz(firstWord), 500);
+    const firstWord = vocabularyReviews?.items[0];
+    startQuiz(firstWord);
 
-    toast.success(`Bắt đầu Quiz với ${reviewWords.length} từ vựng!`);
-  }, [vocabularies]);
+    toast.success(`Bắt đầu Quiz với ${vocabularyReviews?.totalItems} từ vựng!`);
+  }, [vocabularies, vocabularyReviews]);
 
   const startQuiz = useCallback(
-    (word: WeakVocabulary) => {
-      const randomType =
-        quizTypes[Math.floor(Math.random() * quizTypes.length)];
+    (word: any) => {
+      console.log("word", word?.type);
 
-      setCurrentQuizType(randomType);
+      setCurrentQuizType(word?.type);
       setShowQuiz(true);
       setQuizCompleted(false);
       setSelectedOption("");
       setQuizAnswer("");
 
-      if (randomType === "multiple-choice") {
-        const options = generateQuizOptions(word.meaning, vocabularies);
+      if (word?.type === "mcq") {
+        const currentWord = vocabularyReviews?.items?.[currentReviewIndex];
+        const options = currentWord.content.choices;
+
         setQuizOptions(options);
       }
     },
@@ -120,16 +128,25 @@ export function useVocabularyReview(
   }, [reviewMode, reviewSession]);
 
   const handleQuizSubmit = useCallback(() => {
-    const currentWord = reviewWords[currentReviewIndex];
+    const currentWord = vocabularyReviews?.items?.[currentReviewIndex];
+
+    console.log("runThis");
+
+    // Cập nhật số lần làm bài
+    patchVocabulary(currentWord.vocabId);
+
     let isQuizCorrect = false;
 
-    if (currentQuizType === "multiple-choice") {
-      isQuizCorrect = selectedOption === currentWord.meaning;
-    } else if (currentQuizType === "fill-blank") {
+    if (currentQuizType === "mcq") {
+      isQuizCorrect = selectedOption === currentWord.content.correctKey;
+    } else if (currentQuizType === "cloze") {
       isQuizCorrect =
-        quizAnswer.toLowerCase().trim() === currentWord.word.toLowerCase();
-    } else if (currentQuizType === "audio") {
-      isQuizCorrect = selectedOption === currentWord.word;
+        quizAnswer.toLowerCase().trim() ===
+        currentWord?.content.answer.toLowerCase().trim();
+    } else if (currentQuizType === "pronunciation") {
+      isQuizCorrect =
+        quizAnswer.toLowerCase().trim() ===
+        currentWord?.content.answer.toLowerCase().trim();
     }
 
     setQuizCompleted(true);
@@ -152,25 +169,22 @@ export function useVocabularyReview(
   ]);
 
   const proceedToNextWord = useCallback(() => {
-    const reviewWords = vocabularies.filter((v) => v.isMarkedForReview);
-    if (currentReviewIndex < reviewWords.length - 1) {
-      const randomType =
-        quizTypes[Math.floor(Math.random() * quizTypes.length)];
+    const currentWord = vocabularyReviews?.items?.[currentReviewIndex + 1];
+
+    if (currentReviewIndex < vocabularyReviews?.totalItems - 1) {
       setCurrentReviewIndex(currentReviewIndex + 1);
       setShowAnswer(false);
       setShowQuiz(true);
-      setCurrentQuizType(randomType);
+      setCurrentQuizType(currentWord?.type);
 
-      if (randomType === "multiple-choice") {
-        const options = generateQuizOptions(
-          reviewWords[currentReviewIndex + 1].meaning,
-          vocabularies
-        );
+      if (currentWord?.type === "mcq") {
+        const currentWord = vocabularyReviews?.items?.[currentReviewIndex];
+        const options = currentWord.content.choices;
         setQuizOptions(options);
-      } else if (randomType === "fill-blank") {
+      } else if (currentWord?.type === "cloze") {
         setQuizAnswer("");
-      } else if (randomType === "audio") {
-        setSelectedOption("");
+      } else if (currentWord?.type === "pronunciation") {
+        setQuizAnswer("");
       }
       setQuizCompleted(false);
     } else {

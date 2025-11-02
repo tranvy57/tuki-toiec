@@ -5,13 +5,15 @@ import { WeakVocabulary, QuizType } from "@/types/implements/vocabulary";
 import MultipleChoiceQuiz from "./MultipleChoiceQuiz";
 import FillBlankQuiz from "./FillBlankQuiz";
 import AudioQuiz from "./AudioQuiz";
+import { useGetReviewVocabularies } from "@/api/useVocabulary";
+import { useEffect, useState } from "react";
 
 interface QuizSessionProps {
-  currentWord: WeakVocabulary;
+  currentWord: any;
   currentQuizType: QuizType;
-  allVocabularies: WeakVocabulary[];
+  allVocabularies: any[];
   // Multiple choice props
-  quizOptions: string[];
+  quizOptions: { key: string; value: string }[];
   selectedOption: string;
   onSelectOption: (option: string) => void;
   // Fill blank props
@@ -36,13 +38,15 @@ export default function QuizSession({
   onSubmit,
   onSkip,
 }: QuizSessionProps) {
+  console.log("currentWord", currentWord);
+
   const getQuizTypeLabel = (type: QuizType) => {
     switch (type) {
-      case "multiple-choice":
+      case "mcq":
         return "📝 Trắc nghiệm";
-      case "fill-blank":
+      case "cloze":
         return "✏️ Điền từ";
-      case "audio":
+      case "pronunciation":
         return "🎧 Nghe âm thanh";
       default:
         return "";
@@ -51,12 +55,12 @@ export default function QuizSession({
 
   const isAnswerProvided = () => {
     switch (currentQuizType) {
-      case "multiple-choice":
+      case "mcq":
         return !!selectedOption;
-      case "fill-blank":
+      case "cloze":
         return !!quizAnswer.trim();
-      case "audio":
-        return !!selectedOption;
+      case "pronunciation":
+        return !!quizAnswer.trim();
       default:
         return false;
     }
@@ -64,7 +68,7 @@ export default function QuizSession({
 
   const renderQuiz = () => {
     switch (currentQuizType) {
-      case "multiple-choice":
+      case "mcq":
         return (
           <MultipleChoiceQuiz
             word={currentWord}
@@ -74,7 +78,7 @@ export default function QuizSession({
             isCompleted={isCompleted}
           />
         );
-      case "fill-blank":
+      case "cloze":
         return (
           <FillBlankQuiz
             word={currentWord}
@@ -83,13 +87,12 @@ export default function QuizSession({
             isCompleted={isCompleted}
           />
         );
-      case "audio":
+      case "pronunciation":
         return (
           <AudioQuiz
             word={currentWord}
-            allVocabularies={allVocabularies}
-            selectedOption={selectedOption}
-            onSelectOption={onSelectOption}
+            answer={quizAnswer}
+            onAnswerChange={onAnswerChange}
             isCompleted={isCompleted}
           />
         );
@@ -141,18 +144,19 @@ export default function QuizSession({
         <div className="space-y-4 text-left ">
           <div className="  rounded-lg  ">
             <h4 className="font-medium text-green-800 mb-2">
-              Đáp án đúng: {currentWord.word}
+              Đáp án đúng: {currentWord?.content?.answer}
             </h4>
             <div className=" mb-2">
-              <strong>[{currentWord.partOfSpeech}]</strong>{" "}
-              {currentWord.meaning}
+              <strong>{currentWord?.content?.partOfSpeech}</strong>{" "}
+              {currentWord?.content?.meaning}
             </div>
+            <div>{currentWord?.content?.pronunciation}</div>
             <div className="text-sm ">
               <div>
-                <strong>Ví dụ:</strong> {currentWord.exampleEn}
+                <strong>Ví dụ:</strong> {currentWord?.content?.exampleEn}
               </div>
               <div>
-                <strong>Dịch:</strong> {currentWord.exampleVn}
+                <strong>Dịch:</strong> {currentWord?.content?.exampleVn}
               </div>
             </div>
           </div>
