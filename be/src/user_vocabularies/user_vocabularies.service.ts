@@ -155,12 +155,13 @@ export class UserVocabulariesService {
     for (const v of vocabularies) {
       const rand = Math.random();
 
-      if (rand < 0.3) {
-        const mcq = await this.createMCQ(v);
-        if (mcq) items.push(mcq)
-        else items.push(this.createCloze(v));
-      } else if (rand < 0.6) items.push(this.createPronunciation(v));
-      else items.push(this.createCloze(v));
+      // if (rand < 0.2) {
+      //   const mcq = await this.createMCQ(v);
+      //   if (mcq) items.push(mcq)
+      //   else items.push(this.createCloze(v));
+      // } else if (rand < 0.6) items.push(this.createPronunciation(v));
+      // else items.push(this.createCloze(v));
+      items.push(this.createCloze(v));
     }
 
     return items;
