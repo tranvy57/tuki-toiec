@@ -76,7 +76,7 @@ export class AttemptService {
   async createAttempt(dto: CreateAttemptDto, user: User) {
     let idTest = dto.testId;
     if (dto.mode === 'review') {
-      idTest = 'a1ebd8ec-3445-4334-9127-75c4ff3b12be';
+      idTest = 'd540bf86-3692-4f42-8286-8166572a6fd0';
     }
 
     console.log(idTest);
