@@ -16,11 +16,17 @@ import {
     RotateCcw,
     Loader2,
     AlertCircle,
-    Circle
+    Circle,
+    Volume2,
+    Eye,
+    EyeOff,
+    Play,
+    Pause
 } from "lucide-react";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
 import Spline from "@splinetool/react-spline";
+import { useTTS } from "@/hooks/use-tts";
 
 // Types
 interface Message {
@@ -29,6 +35,8 @@ interface Message {
     content: string;
     timestamp: Date;
     isVoice?: boolean;
+    isVisible?: boolean;
+    isPlaying?: boolean;
 }
 
 interface AudioVisualizerProps {
@@ -303,22 +311,36 @@ export default function VoiceChatPage() {
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const { volume, isListening, hasPermission, toggleMicrophone } = useAudio();
+    const { play: playTTS, stop: stopTTS } = useTTS();
 
-    // Auto scroll to bottom
+    // Auto scroll to bottom only when new messages are added
+    const prevMessagesLengthRef = useRef(messages.length);
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        // Only scroll if new messages were added, not when message properties change
+        if (messages.length > prevMessagesLengthRef.current) {
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }
+        prevMessagesLengthRef.current = messages.length;
     }, [messages]);
 
     // Initial greeting
     useEffect(() => {
+        const greetingText = "Hello! I'm Tuki AI, your voice chat assistant. Feel free to speak to me or type your message. How can I help you today?";
         const greeting: Message = {
             id: "greeting",
             type: "ai",
-            content: "Hello! I'm Tuki AI, your voice chat assistant. Feel free to speak to me or type your message. How can I help you today?",
-            timestamp: new Date()
+            content: greetingText,
+            timestamp: new Date(),
+            isVisible: false,
+            isPlaying: false
         };
         setMessages([greeting]);
-    }, []);
+
+        // Auto-play greeting after a short delay
+        setTimeout(() => {
+            playTTS(greetingText);
+        }, 1000);
+    }, [playTTS]);
 
     const sendMessage = (content: string, isVoice: boolean = false) => {
         if (!content.trim()) return;
@@ -328,7 +350,9 @@ export default function VoiceChatPage() {
             type: "user",
             content,
             timestamp: new Date(),
-            isVoice
+            isVoice,
+            isVisible: true,
+            isPlaying: false
         };
 
         setMessages(prev => [...prev, userMessage]);
@@ -337,15 +361,23 @@ export default function VoiceChatPage() {
         // Simulate AI response
         setIsTyping(true);
         setTimeout(() => {
+            const aiResponseContent = generateAIResponse(content);
             const aiResponse: Message = {
                 id: (Date.now() + 1).toString(),
                 type: "ai",
-                content: generateAIResponse(content),
-                timestamp: new Date()
+                content: aiResponseContent,
+                timestamp: new Date(),
+                isVisible: false,
+                isPlaying: false
             };
 
             setMessages(prev => [...prev, aiResponse]);
             setIsTyping(false);
+
+            // Auto-play AI message
+            setTimeout(() => {
+                playMessageVoice(aiResponse.id, aiResponseContent);
+            }, 500);
         }, 1000 + Math.random() * 1500);
     };
 
@@ -376,14 +408,60 @@ export default function VoiceChatPage() {
             id: "greeting",
             type: "ai",
             content: "Hello! I'm Tuki AI, your voice chat assistant. Feel free to speak to me or type your message. How can I help you today?",
-            timestamp: new Date()
+            timestamp: new Date(),
+            isVisible: false,
+            isPlaying: false
         }]);
         toast.success("Conversation reset");
     };
 
-    return (
+    const toggleMessageVisibility = (messageId: string) => {
+        setMessages(prev => {
+            const newMessages = prev.map(msg =>
+                msg.id === messageId ? { ...msg, isVisible: !msg.isVisible } : msg
+            );
+            // Don't trigger scroll on visibility toggle
+            prevMessagesLengthRef.current = newMessages.length;
+            return newMessages;
+        });
+    };
+
+    const playMessageVoice = (messageId: string, content: string) => {
+        setMessages(prev => {
+            const newMessages = prev.map(msg =>
+                msg.id === messageId ? { ...msg, isPlaying: true } : { ...msg, isPlaying: false }
+            );
+            // Don't trigger scroll on play state change
+            prevMessagesLengthRef.current = newMessages.length;
+            return newMessages;
+        });
+
+        playTTS(content);
+
+        // Reset playing state after some time (approximate TTS duration)
+        setTimeout(() => {
+            setMessages(prev => {
+                const newMessages = prev.map(msg =>
+                    msg.id === messageId ? { ...msg, isPlaying: false } : msg
+                );
+                // Don't trigger scroll on play state change
+                prevMessagesLengthRef.current = newMessages.length;
+                return newMessages;
+            });
+        }, content.length * 100); // Rough estimate: 100ms per character
+    };
+
+    const stopMessageVoice = () => {
+        stopTTS();
+        setMessages(prev => {
+            const newMessages = prev.map(msg => ({ ...msg, isPlaying: false }));
+            // Don't trigger scroll on stop
+            prevMessagesLengthRef.current = newMessages.length;
+            return newMessages;
+        });
+    }; return (
         <div className=" bg-white max-h-[calc(100vh-72px)]">
-            <div className="container mx-auto p-4 h-screen flex flex-col lg:flex-row gap-4 max-w-7xl">
+            <div className="container mx-auto p-4 h-[calc(100vh-72px)] flex flex-col lg:flex-row gap-4 w-7xl">
                 {/* Left Panel - Spline Avatar */}
                 <motion.div
                     className="w-full lg:w-[400px] h-[300px]"
@@ -391,19 +469,19 @@ export default function VoiceChatPage() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.6 }}
                 >
-                        <SplineAvatarCanvas
-                            sceneUrl="https://prod.spline.design/MoDM2xB63NkbPFXg/scene.splinecode"
-                            sensitivity={sensitivity}
-                            smoothing={smoothing}
-                            blinkMode={blinkMode}
-                            volume={volume}
-                            isListening={isListening}
-                        />
+                    <SplineAvatarCanvas
+                        sceneUrl="https://prod.spline.design/MoDM2xB63NkbPFXg/scene.splinecode"
+                        sensitivity={sensitivity}
+                        smoothing={smoothing}
+                        blinkMode={blinkMode}
+                        volume={volume}
+                        isListening={isListening}
+                    />
                 </motion.div>
 
                 {/* Right Panel - Chat */}
                 <motion.div
-                    className="flex flex-col"
+                    className="flex flex-col w-7xl"
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.6, delay: 0.2 }}
@@ -513,15 +591,77 @@ export default function VoiceChatPage() {
                                                 )}
                                             </div>
 
-                                            <div className={`rounded-2xl p-3 ${message.type === "user"
-                                                ? "bg-blue-600 text-white"
-                                                : "bg-gray-100 text-gray-900 border border-neutral-200"
-                                                }`}>
-                                                <p className="text-sm leading-relaxed">{message.content}</p>
-                                                <div className={`flex items-center gap-2 mt-2 text-xs ${message.type === "user" ? "text-white/70" : "text-gray-500"
+                                            <div className="space-y-2">
+                                                {/* Message bubble with controls */}
+                                                <div className={`rounded-2xl p-3 ${message.type === "user"
+                                                    ? "bg-blue-600 text-white"
+                                                    : "bg-gray-100 text-gray-900 border border-neutral-200"
                                                     }`}>
-                                                    {message.isVoice && <Mic className="w-3 h-3" />}
-                                                    <span>{message.timestamp.toLocaleTimeString()}</span>
+
+                                                    {/* Message content - conditional visibility */}
+                                                    <AnimatePresence>
+                                                        {message.isVisible && (
+                                                            <motion.div
+                                                                initial={{ opacity: 0, height: 0 }}
+                                                                animate={{ opacity: 1, height: "auto" }}
+                                                                exit={{ opacity: 0, height: 0 }}
+                                                                transition={{ duration: 0.3 }}
+                                                            >
+                                                                <p className="text-sm leading-relaxed">{message.content}</p>
+                                                            </motion.div>
+                                                        )}
+                                                    </AnimatePresence>
+
+                                                    {/* Controls row */}
+                                                    <div className={`flex items-center justify-between gap-2 ${message.isVisible ? 'mt-2' : ''} text-xs ${message.type === "user" ? "text-white/70" : "text-gray-500"
+                                                        }`}>
+                                                        <div className="flex items-center gap-2">
+                                                            {message.isVoice && <Mic className="w-3 h-3" />}
+                                                            <span>{message.timestamp.toLocaleTimeString()}</span>
+                                                        </div>
+
+                                                        <div className="flex items-center gap-1">
+                                                            {/* Voice play/pause button */}
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    message.isPlaying ? stopMessageVoice() : playMessageVoice(message.id, message.content);
+                                                                }}
+                                                                className={`h-6 w-6 p-0 ${message.type === "user"
+                                                                    ? "hover:bg-white/20 text-white/70 hover:text-white"
+                                                                    : "hover:bg-gray-200 text-gray-500 hover:text-gray-700"
+                                                                    }`}
+                                                            >
+                                                                {message.isPlaying ? (
+                                                                    <Pause className="w-3 h-3" />
+                                                                ) : (
+                                                                    <Volume2 className="w-3 h-3" />
+                                                                )}
+                                                            </Button>
+
+                                                            {/* Show/hide message button */}
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    toggleMessageVisibility(message.id);
+                                                                }}
+                                                                className={`h-6 w-6 p-0 ${message.type === "user"
+                                                                    ? "hover:bg-white/20 text-white/70 hover:text-white"
+                                                                    : "hover:bg-gray-200 text-gray-500 hover:text-gray-700"
+                                                                    }`}
+                                                            >
+                                                                {message.isVisible ? (
+                                                                    <EyeOff className="w-3 h-3" />
+                                                                ) : (
+                                                                    <Eye className="w-3 h-3" />
+                                                                )}
+                                                            </Button>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>

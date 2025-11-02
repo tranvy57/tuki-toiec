@@ -2,39 +2,34 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
 import { NextResponse } from "next/server";
 
-// ==== Schema thống nhất ====
 const EvaluateWritingRequestSchema = z.object({
-  type: z.enum(["email", "opinion-essay"]), // loại bài viết
-  content: z.string(), // nội dung bài viết
+  type: z.enum(["email-response", "opinion-essay", "describe-picture"]),
+  content: z.string(),
 
-  // Metadata chung
-  title: z.string().optional(), // tiêu đề/subject
-  topic: z.string().optional(), // chủ đề/mục đích
-  context: z.string().optional(), // ngữ cảnh (đối tượng nhận, loại essay, etc.)
-  requiredLength: z.number().optional(), // số từ yêu cầu
-  timeLimit: z.number().optional(), // thời gian giới hạn (phút)
+  title: z.string().optional(), 
+  sampleAnswer: z.string().optional(),
+  topic: z.string().optional(), 
+  context: z.string().optional(), 
+  requiredLength: z.number().optional(), 
+  timeLimit: z.number().optional(), 
 });
 
-// Schema response thống nhất
 const EvaluateWritingResponseSchema = z.object({
-  type: z.enum(["email", "opinion-essay"]),
-  overallScore: z.number(), // điểm tổng (0-100)
+  type: z.enum(["email-response", "opinion-essay", "describe-picture"]),
+  overallScore: z.number(),
 
-  // Tiêu chí đánh giá chung (0-100)
   breakdown: z.object({
-    content: z.number(), // nội dung/task response
-    structure: z.number(), // cấu trúc/coherence
-    vocabulary: z.number(), // từ vựng
-    grammar: z.number(), // ngữ pháp
-    style: z.number(), // phong cách/tone
-    effectiveness: z.number(), // hiệu quả/professionalism
+    content: z.number(),
+    structure: z.number(),
+    vocabulary: z.number(),
+    grammar: z.number(),
+    style: z.number(),
+    effectiveness: z.number(),
   }),
 
-  // Phân tích chi tiết
   strengths: z.array(z.string()),
   weaknesses: z.array(z.string()),
 
-  // Lỗi ngữ pháp
   grammarErrors: z.array(
     z.object({
       type: z.string(),
@@ -44,11 +39,10 @@ const EvaluateWritingResponseSchema = z.object({
     })
   ),
 
-  // Phản hồi từ vựng
   vocabularyFeedback: z.object({
-    range: z.number(), // đa dạng (0-100)
-    accuracy: z.number(), // chính xác (0-100)
-    appropriateness: z.number(), // phù hợp (0-100)
+    range: z.number(),
+    accuracy: z.number(),
+    appropriateness: z.number(),
     improvements: z.array(
       z.object({
         original: z.string(),
@@ -58,21 +52,18 @@ const EvaluateWritingResponseSchema = z.object({
     ),
   }),
 
-  // Phân tích cấu trúc
   structureAnalysis: z.object({
-    organization: z.number(), // tổ chức (0-100)
-    flow: z.number(), // mạch lạc (0-100)
-    transitions: z.number(), // liên kết (0-100)
+    organization: z.number(),
+    flow: z.number(),
+    transitions: z.number(),
     feedback: z.string(),
   }),
 
-  // Gợi ý cải thiện
   improvementSuggestions: z.array(z.string()),
   rewrittenVersion: z.string().optional(),
-  estimatedTOEICScore: z.number(), // điểm ước tính TOEIC (0-200)
+  estimatedTOEICScore: z.number(),
 });
 
-// ==== API Route ====
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -83,7 +74,7 @@ export async function POST(req: Request) {
     );
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash-lite-preview-06-17",
+      model: "gemini-2.5-flash-lite",
       generationConfig: {
         temperature: 0.3,
         responseMimeType: "application/json",
@@ -92,7 +83,7 @@ export async function POST(req: Request) {
 
     let prompt = "";
 
-    if (parsed.type === "email") {
+    if (parsed.type === "email-response") {
       prompt = `
       Bạn là một **giáo viên tiếng Anh chuyên nghiệp** chuyên đánh giá kỹ năng viết email.
       
@@ -113,29 +104,60 @@ export async function POST(req: Request) {
       5. **Style**: Phong cách và tone phù hợp với ngữ cảnh
       6. **Effectiveness**: Hiệu quả truyền đạt và tính chuyên nghiệp
       `;
-    } else {
-      prompt = `
-      Bạn là một **giáo viên tiếng Anh chuyên nghiệp** có kinh nghiệm đánh giá TOEIC Writing và IELTS Writing.
-      
-      Nhiệm vụ: **Đánh giá chi tiết bài viết nêu quan điểm** theo tiêu chuẩn TOEIC Writing Task 2.
-      
-      **Bài viết cần đánh giá:**
+    } else if (parsed.type === "opinion-essay") {
+        prompt = `
+    Bạn là một **giáo viên tiếng Anh chuyên nghiệp** có kinh nghiệm đánh giá TOEIC Writing và IELTS Writing.
+
+    Nhiệm vụ: **Đánh giá chi tiết bài viết nêu quan điểm** theo tiêu chuẩn TOEIC Writing Task 2.
+
+    **Bài viết cần đánh giá:**
+    ${parsed.title ? `Tiêu đề: ${parsed.title}` : ""}
+    ${parsed.topic ? `Chủ đề: ${parsed.topic}` : ""}
+    ${parsed.context ? `Ngữ cảnh/Loại bài: ${parsed.context}` : ""}
+    ${parsed.requiredLength ? `Số từ yêu cầu: ${parsed.requiredLength}` : ""}
+
+    **Nội dung bài viết:**
+    ${parsed.content}
+
+    **Tiêu chí đánh giá chung (thang điểm 0–100):**
+    1. **Content**: Bài viết phản hồi đầy đủ và chính xác theo **ngữ cảnh được đưa ra**, thể hiện quan điểm rõ ràng, phát triển ý tưởng phù hợp với chủ đề và mục đích giao tiếp (ví dụ: tình huống nơi làm việc, bài luận nêu ý kiến,...)
+    2. **Structure**: Mạch lạc, có bố cục rõ ràng (mở bài – thân bài – kết luận), ý tưởng được kết nối logic và tự nhiên
+    3. **Vocabulary**: Từ vựng đa dạng, chính xác, dùng đúng sắc thái và phù hợp với ngữ cảnh giao tiếp
+    4. **Grammar**: Cấu trúc ngữ pháp chính xác, linh hoạt, ít lỗi, thể hiện khả năng sử dụng câu phức hoặc mệnh đề hợp lý
+    5. **Style**: Giọng văn và cách diễn đạt phù hợp với thể loại bài (trang trọng, chuyên nghiệp, hoặc tự nhiên tùy đề yêu cầu)
+    6. **Effectiveness**: Bài viết thể hiện lập luận hoặc quan điểm thuyết phục, có ví dụ hoặc lý do hợp lý, mang lại hiệu quả giao tiếp cao
+    `;
+;
+    }
+    else if (parsed.type === "describe-picture") {
+    prompt = `
+      Bạn là một **giáo viên tiếng Anh chuyên nghiệp** có kinh nghiệm đánh giá **TOEIC Writing Task 1 (mô tả tranh)** và IELTS Task 1 (miêu tả hình ảnh, biểu đồ).
+
+      Nhiệm vụ: **Đánh giá chi tiết bài viết mô tả tranh** theo tiêu chuẩn TOEIC Writing Task 1.
+
+      **Thông tin bài viết cần đánh giá:**
       ${parsed.title ? `Tiêu đề: ${parsed.title}` : ""}
       ${parsed.topic ? `Chủ đề: ${parsed.topic}` : ""}
       ${parsed.context ? `Loại bài: ${parsed.context}` : ""}
       ${parsed.requiredLength ? `Số từ yêu cầu: ${parsed.requiredLength}` : ""}
-      
-      Nội dung bài viết:
+      ${parsed.sampleAnswer ? `Đáp án mẫu: ${parsed.sampleAnswer}` : ""}
+
+      **Nội dung bài viết:**
       ${parsed.content}
-      
-      **Tiêu chí đánh giá chung (thang điểm 0-100):**
-      1. **Content**: Phản hồi đề bài đầy đủ, phát triển ý tưởng sâu sắc
-      2. **Structure**: Tính mạch lạc, liên kết và tổ chức ý tưởng
-      3. **Vocabulary**: Từ vựng đa dạng, chính xác và tinh tế
-      4. **Grammar**: Ngữ pháp chính xác và đa dạng cấu trúc
-      5. **Style**: Phong cách viết phù hợp với thể loại
-      6. **Effectiveness**: Tính thuyết phục và hiệu quả lập luận
-      `;
+
+      **Tiêu chí đánh giá chung (thang điểm 0–100):**
+      1. **Content**: Mô tả được các chi tiết chính của bức tranh (người, hành động, bối cảnh, vật thể, vị trí, v.v.)
+      2. **Organization**: Bài viết có bố cục rõ ràng, trình tự hợp lý (tổng thể → chi tiết → kết luận)
+      3. **Vocabulary**: Sử dụng từ vựng đa dạng, chính xác để miêu tả hình ảnh và hành động
+      4. **Grammar**: Dùng cấu trúc ngữ pháp chính xác, linh hoạt (đặc biệt là thì hiện tại tiếp diễn, giới từ vị trí, mệnh đề quan hệ)
+      5. **Style**: Ngôn ngữ tự nhiên, phù hợp với văn phong miêu tả trong TOEIC
+      6. **Clarity & Fluency**: Câu văn trôi chảy, dễ hiểu, không lặp ý hoặc gây mơ hồ
+
+      Hãy đưa ra:
+      - **Điểm tổng (0–100)**
+      - **Nhận xét chi tiết cho từng tiêu chí**
+      - **Đề xuất cải thiện ngắn gọn và thực tế cho người học**
+    `;
     }
 
     prompt += `

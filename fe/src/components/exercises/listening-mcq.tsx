@@ -1,142 +1,247 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { m } from "framer-motion";
-import { Volume2, CheckCircle2, XCircle } from "lucide-react";
-import { AnswerResult, ListeningMCQItem } from "@/types/type-exercise";
-import { useTTS } from "@/hooks/use-tts";
-import { cn } from "@/utils";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { ChevronRight, Check, X, Lightbulb, RotateCcw, ChevronLeft } from "lucide-react";
+import { AudioPlayer } from "@/components/toeic/test/Audio";
 
-
-interface ListeningMCQProps {
-  item: ListeningMCQItem;
-  onAnswer: (result: AnswerResult) => void;
+interface MCQOption {
+    content: string;
+    answer_key: string;
 }
 
-export function ListeningMCQ({ item, onAnswer }: ListeningMCQProps) {
-  const [selected, setSelected] = useState<number | null>(null);
-  const [submitted, setSubmitted] = useState(false);
-  const { play } = useTTS();
-
-  // Auto-play on mount
-//   useEffect(() => {
-//     play(item.audio_tts);
-//   }, [item.audio_tts, play]);
-
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (submitted) return;
-
-      if (e.code === "Space") {
-        e.preventDefault();
-        play(item.audio_tts);
-      } else if (["Digit1", "Digit2", "Digit3", "Digit4"].includes(e.code)) {
-        const index = Number.parseInt(e.code.slice(-1)) - 1;
-        if (index < item.options.length) {
-          setSelected(index);
-        }
-      } else if (e.code === "Enter" && selected !== null) {
-        handleSubmit();
-      }
+interface MCQItem {
+    id: string;
+    title: string;
+    promptJsonb: {
+        text?: string;
+        choices?: MCQOption[];
+        audio_url?: string;
+        transcript?: string;
+        translation?: string;
+        explanation?: string;
     };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [selected, submitted, item, play]);
+    solutionJsonb: {
+        correct_keys?: string[];
+        explanation?: string;
+    };
+}
 
-  const handleSubmit = () => {
-    if (selected === null) return;
-    setSubmitted(true);
-    const correct = selected === item.correct_index;
-    onAnswer({ correct, itemId: item.id, userAnswer: selected });
-  };
+interface ListeningMCQProps {
+    lessonId: string;
+    questions: MCQItem[];
+    onFinish: (results: { correct: number; total: number; userAnswers: Record<string, string> }) => void;
+    onBack: () => void;
+}
 
-  return (
-    <div className="space-y-6">
-      {/* Audio player */}
-      <div className="flex items-center justify-center">
-        <button
-          onClick={() => play(item.audio_tts)}
-          className="p-6 bg-indigo-100 rounded-full hover:bg-indigo-200 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-          aria-label="Play audio"
-        >
-          <Volume2 className="w-8 h-8 text-indigo-600" />
-        </button>
-      </div>
+export function ListeningMCQ({ lessonId, questions, onFinish, onBack }: ListeningMCQProps) {
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
+    const [showAnswerForQuestion, setShowAnswerForQuestion] = useState<Record<string, boolean>>({});
 
-      <p className="text-lg text-slate-900 text-center">{item.question}</p>
+    const currentQuestion = questions[currentQuestionIndex];
 
-      {/* Options */}
-      <div className="space-y-3">
-        {item.options.map((option, index) => {
-          const isSelected = selected === index;
-          const isCorrect = index === item.correct_index;
-          const showResult = submitted;
+    const handleAnswerSelect = (questionId: string, answer: string) => {
+        setUserAnswers(prev => ({
+            ...prev,
+            [questionId]: answer
+        }));
+    };
 
-          return (
-            <m.button
-              key={index}
-              onClick={() => !submitted && setSelected(index)}
-              disabled={submitted}
-              whileHover={!submitted ? { scale: 1.01 } : {}}
-              whileTap={!submitted ? { scale: 0.98 } : {}}
-              transition={{ duration: 0.15 }}
-              className={cn(
-                "w-full text-left p-4 rounded-xl ring-1 transition-all duration-150 flex items-center gap-3",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500",
-                !submitted &&
-                  !isSelected &&
-                  "bg-white ring-slate-200 hover:ring-indigo-300 hover:bg-indigo-50",
-                !submitted && isSelected && "bg-indigo-50 ring-indigo-300",
-                submitted && isCorrect && "bg-green-50 ring-green-300",
-                submitted &&
-                  !isCorrect &&
-                  isSelected &&
-                  "bg-red-50 ring-red-300",
-                submitted &&
-                  !isCorrect &&
-                  !isSelected &&
-                  "bg-white ring-slate-200 opacity-50"
-              )}
-              aria-pressed={isSelected}
-            >
-              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-sm font-medium">
-                {index + 1}
-              </span>
-              <span className="flex-1">{option}</span>
-              {showResult && isCorrect && (
-                <CheckCircle2 className="w-5 h-5 text-green-600" />
-              )}
-              {showResult && !isCorrect && isSelected && (
-                <XCircle className="w-5 h-5 text-red-600" />
-              )}
-            </m.button>
-          );
-        })}
-      </div>
+    const toggleShowAnswer = (questionId: string) => {
+        setShowAnswerForQuestion(prev => ({
+            ...prev,
+            [questionId]: !prev[questionId]
+        }));
+    };
 
-      {!submitted && (
-        <button
-          onClick={handleSubmit}
-          disabled={selected === null}
-          className="w-full py-3 px-4 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-        >
-          Submit Answer
-        </button>
-      )}
+    const handleNextQuestion = () => {
+        if (currentQuestionIndex < questions.length - 1) {
+            setCurrentQuestionIndex(prev => prev + 1);
+        }
+    };
 
-      {submitted && (
-        <m.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2 }}
-          className="p-4 bg-slate-50 rounded-xl"
-        >
-          <p className="font-medium text-slate-900 mb-2">Explanation:</p>
-          <p className="text-slate-700">{item.explanation}</p>
-          <p className="text-slate-600 text-sm mt-2">{item.vi_explanation}</p>
-        </m.div>
-      )}
-    </div>
-  );
+    const handleFinishTest = () => {
+        const calculateScore = () => {
+            let correct = 0;
+            questions.forEach(question => {
+                const userAnswer = userAnswers[question.id];
+                const correctAnswer = question.solutionJsonb?.correct_keys?.[0];
+                if (userAnswer === correctAnswer) {
+                    correct++;
+                }
+            });
+            return { correct, total: questions.length };
+        };
+
+        const results = calculateScore();
+        onFinish({ ...results, userAnswers });
+    };
+
+    if (!currentQuestion) {
+        return (
+            <div className="text-center py-8">
+                <p className="text-gray-600">No questions available</p>
+                <Button onClick={onBack} variant="outline" className="mt-4">
+                    <ChevronLeft className="w-4 h-4 mr-2" />
+                    Back
+                </Button>
+            </div>
+        );
+    }
+
+    return (
+        <div className="">
+            {/* Progress indicator */}
+            <div className="mb-6 text-right">
+                <span className="text-sm text-gray-500">
+                    {currentQuestionIndex + 1} / {questions.length}
+                </span>
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-2">
+                {/* Left Column - Audio Section */}
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div className="p-4 border-b border-gray-200">
+                        <h3 className="text-lg font-semibold text-gray-900">Câu hỏi {currentQuestionIndex + 1}.</h3>
+                    </div>
+
+                    <div className="p-4 space-y-4">
+                        {currentQuestion.promptJsonb?.audio_url && (
+                            <AudioPlayer audioUrl={currentQuestion.promptJsonb.audio_url} />
+                        )}
+
+                        {/* Answer Options */}
+                        <div className="space-y-2">
+                            {currentQuestion.promptJsonb?.choices?.map((choice, index) => {
+                                const isSelected = userAnswers[currentQuestion.id] === choice.answer_key;
+                                const isCorrect = currentQuestion.solutionJsonb?.correct_keys?.includes(choice.answer_key);
+                                const showAnswer = showAnswerForQuestion[currentQuestion.id];
+
+                                return (
+                                    <div
+                                        key={index}
+                                        className={`p-3 rounded-lg border transition-all ${showAnswer && isCorrect
+                                                ? 'bg-green-50 border-green-300'
+                                                : showAnswer && isSelected && !isCorrect
+                                                    ? 'bg-red-50 border-red-300'
+                                                    : isSelected
+                                                        ? 'bg-blue-50 border-blue-300'
+                                                        : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                                            }`}
+                                        onClick={() => handleAnswerSelect(currentQuestion.id, choice.answer_key)}
+                                        style={{ cursor: 'pointer' }}
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                {showAnswer && isCorrect ? (
+                                                    <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                                                        <Check className="w-4 h-4 text-white" />
+                                                    </div>
+                                                ) : showAnswer && isSelected && !isCorrect ? (
+                                                    <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
+                                                        <X className="w-4 h-4 text-white" />
+                                                    </div>
+                                                ) : (
+                                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium ${isSelected ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
+                                                        }`}>
+                                                        {choice.answer_key}
+                                                    </div>
+                                                )}
+                                                <span className="text-gray-800">{choice.content}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Show Answer Section */}
+                        <div className="border-t border-gray-200 pt-4">
+                            <div className="flex items-center justify-between">
+                                <Button
+                                    onClick={() => toggleShowAnswer(currentQuestion.id)}
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-blue-600 border-blue-300 hover:bg-blue-50"
+                                >
+                                    {showAnswerForQuestion[currentQuestion.id] ? 'Ẩn Giải thích' : 'Hiện Giải thích'}
+                                    <ChevronRight className={`w-4 h-4 ml-1 transition-transform ${showAnswerForQuestion[currentQuestion.id] ? 'rotate-90' : ''
+                                        }`} />
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Column - Transcript and Translation */}
+                <div className="space-y-4">
+                    {/* Explanation Section */}
+                    {showAnswerForQuestion[currentQuestion.id] && (currentQuestion.solutionJsonb?.explanation || currentQuestion.promptJsonb?.explanation) && (
+                        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                            <div className="flex items-center gap-2 mb-3">
+                                <div className="w-6 h-6 bg-orange-500 rounded flex items-center justify-center">
+                                    <Lightbulb className="w-4 h-4 text-white" />
+                                </div>
+                                <h4 className="font-semibold text-orange-900">Giải thích</h4>
+                            </div>
+                            <p
+                                className="text-sm text-orange-700"
+                                dangerouslySetInnerHTML={{
+                                    __html: `<strong>Explanation:</strong> ${currentQuestion.promptJsonb?.explanation || currentQuestion.solutionJsonb?.explanation}`,
+                                }}
+                            />
+                        </div>
+                    )}
+
+                    {/* Transcript and Translation */}
+                    {showAnswerForQuestion[currentQuestion.id] && (currentQuestion.promptJsonb?.transcript || currentQuestion.promptJsonb?.translation) && (
+                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                            <div className="grid md:grid-cols-2 divide-x divide-gray-200">
+                                {currentQuestion.promptJsonb?.transcript && (
+                                    <div className="p-4">
+                                        <h4 className="font-semibold text-gray-900 mb-3">Transcript:</h4>
+                                        <div className="space-y-2 text-sm text-gray-700">
+                                            <div dangerouslySetInnerHTML={{ __html: currentQuestion.promptJsonb.transcript }} />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {currentQuestion.promptJsonb?.translation && (
+                                    <div className="p-4">
+                                        <h4 className="font-semibold text-gray-900 mb-3">Bản dịch:</h4>
+                                        <div className="space-y-2 text-sm text-gray-700">
+                                            <div dangerouslySetInnerHTML={{ __html: currentQuestion.promptJsonb.translation }} />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Navigation */}
+            <div className="flex justify-end mt-6">
+                {currentQuestionIndex === questions.length - 1 ? (
+                    <Button
+                        onClick={handleFinishTest}
+                        disabled={Object.keys(userAnswers).length !== questions.length}
+                        className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        Finish Test
+                    </Button>
+                ) : (
+                    <Button
+                        onClick={handleNextQuestion}
+                        disabled={!userAnswers[currentQuestion?.id || '']}
+                        className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        Next question
+                    </Button>
+                )}
+            </div>
+        </div>
+    );
 }

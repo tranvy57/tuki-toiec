@@ -119,7 +119,7 @@ export class VocabularyService {
 
     try {
       const [meaningVi, exampleVi] = await Promise.all([
-        this.translateToVietnamese(parsed.meaning),
+        this.translateToVietnamese(word),
         parsed.exampleEn
           ? this.translateToVietnamese(parsed.exampleEn)
           : Promise.resolve(undefined),
@@ -146,7 +146,7 @@ export class VocabularyService {
       },
     );
 
-    return { ...vocabSaved, isMarked: userVocab.isBookmarked } ;
+    return { ...vocabSaved, isMarked: userVocab.isBookmarked };
   }
 
   /**

@@ -35,9 +35,6 @@ export class Item extends BaseEntity {
   @Column({ name: 'solution_jsonb', type: 'jsonb', default: {} })
   solutionJsonb: Record<string, any>;
 
-  @Column({ type: 'text', nullable: true })
-  explanation?: string;
-
   @Column({ name: 'skill_type', nullable: true })
   skillType?: string;
 

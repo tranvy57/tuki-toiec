@@ -6,10 +6,13 @@ import Image from "next/image";
 import { Progress } from "@/components/ui/progress";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Check, Clock, Edit3, Icon, Target } from "lucide-react";
+import { Check, Clock, Edit3, Icon, Target, Loader2, Mail, Image as ImageIcon, BookOpen } from "lucide-react";
 import { writingExerciseTypes } from "@/data/mockDataWritting";
 import { CustomCard } from "@/components/CustomCard";
 import { PracticeBreadcrumb } from "@/components/practice/PracticeBreadcrumb";
+import { useLessonsByModality } from "@/api/useLessons";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 // Mock data tương tự phần bạn có
 
@@ -40,8 +43,27 @@ export default function WritingTopicsPage() {
   const router = useRouter();
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
-  const exercise = data.find((ex) => ex.slug === params.slug);
+  const slug = params.slug as string;
+  const exercise = data.find((ex) => ex.slug === slug);
+
+  // Fetch API data
+  const { data: emailLessons, isLoading: emailLoading, error: emailError } = useLessonsByModality({
+    modality: "email_reply",
+    enabled: slug === "email-response"
+  });
+
+  const { data: pictureLessons, isLoading: pictureLoading, error: pictureError } = useLessonsByModality({
+    modality: "describe_picture",
+    enabled: slug === "describe-picture"
+  });
+
+  const { data: opinionLessons, isLoading: opinionLoading, error: opinionError } = useLessonsByModality({
+    modality: "opinion_paragraph",
+    enabled: slug === "opinion-essay"
+  });
+
   console.log("exercise", exercise);
+  console.log("emailLessons", emailLessons);
 
   if (!exercise)
     return (
@@ -59,8 +81,6 @@ export default function WritingTopicsPage() {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
   };
-
-  useEffect(() => { });
 
   return (
     <div className="min-h-screen bg-gray-50  px-6">
@@ -142,7 +162,107 @@ export default function WritingTopicsPage() {
         </h1>
 
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {exercise.subTopics.map((topic, i) => {
+          {/* Loading states */}
+          {((slug === "email-response" && emailLoading) ||
+            (slug === "describe-picture" && pictureLoading) ||
+            (slug === "opinion-essay" && opinionLoading)) && (
+              <>
+                {[1, 2, 3].map((skeleton) => (
+                  <div key={skeleton} className="relative group">
+                    <Card className="h-full bg-white border-gray-200 shadow-md">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-center h-40">
+                          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                        </div>
+                        <div className="text-center">
+                          <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                          <div className="h-3 bg-gray-100 rounded animate-pulse"></div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ))}
+              </>
+            )}
+
+          {/* Error states */}
+          {((slug === "email-response" && emailError) ||
+            (slug === "describe-picture" && pictureError) ||
+            (slug === "opinion-essay" && opinionError)) && (
+              <div className="col-span-4 text-center py-8">
+                <div className="text-red-500 mb-4">
+                  {slug === "email-response" ? (
+                    <Mail className="w-12 h-12 mx-auto mb-2" />
+                  ) : slug === "describe-picture" ? (
+                    <ImageIcon className="w-12 h-12 mx-auto mb-2" />
+                  ) : (
+                    <BookOpen className="w-12 h-12 mx-auto mb-2" />
+                  )}
+                  <h3 className="text-lg font-semibold">Không thể tải dữ liệu</h3>
+                  <p className="text-sm">Vui lòng thử lại sau</p>
+                </div>
+              </div>
+            )}
+
+          {/* Render API data for email-response */}
+          {slug === "email-response" && emailLessons && !emailLoading && (
+            <>
+              {emailLessons.map((lesson, lessonIndex) =>
+                lesson.items.map((item, itemIndex) => (
+                  <CustomCard
+                    key={`${lesson.lessonId}-${item.id}`}
+                    slug={item.id}
+                    name={item.title.trim()}
+                    description={`Difficulty: ${item.difficulty} | Band: ${item.bandHint}`}
+                    imageUrl="https://media-blog.jobsgo.vn/blog/wp-content/uploads/2022/06/cach-viet-email-dung-chuan.jpg"
+                    icon={Mail}
+                    href={`/practice/writing/${exercise.slug}/${item.id}`}
+                  />
+                ))
+              )}
+            </>
+          )}
+
+          {/* Render API data for describe-picture */}
+          {slug === "describe-picture" && pictureLessons && !pictureLoading && (
+            <>
+              {pictureLessons.map((lesson, lessonIndex) =>
+                lesson.items.map((item, itemIndex) => (
+                  <CustomCard
+                    key={`${lesson.lessonId}-${item.id}`}
+                    slug={item.id}
+                    name={item.title.trim()}
+                    description={`Keywords: ${item.promptJsonb.keywords?.join(', ') || ''} | Band: ${item.bandHint}`}
+                    imageUrl={item.promptJsonb.image_url || "https://static.athenaonline.vn//img.tmp/48%20edit.png"}
+                    icon={ImageIcon}
+                    href={`/practice/writing/${exercise.slug}/${item.id}`}
+                  />
+                ))
+              )}
+            </>
+          )}
+
+          {/* Render API data for opinion-essay */}
+          {slug === "opinion-essay" && opinionLessons && !opinionLoading && (
+            <>
+              {opinionLessons.map((lesson, lessonIndex) =>
+                lesson.items.map((item, itemIndex) => (
+                  <CustomCard
+                    key={`${lesson.lessonId}-${item.id}`}
+                    slug={item.id}
+                    name={item.title.trim()}
+                    description={`Difficulty: ${item.difficulty} | Band: ${item.bandHint} | Essay Topic`}
+                    imageUrl="https://dotb.vn/wp-content/uploads/2024/08/Ket-qua-hoc-tap-cua-hoc-sinh-thong-bao-ket-qua-hoc-tap-dotb.jpg"
+                    icon={BookOpen}
+                    href={`/practice/writing/${exercise.slug}/${item.id}`}
+                  />
+                ))
+              )}
+            </>
+          )}
+
+          {/* Render mock data for other types */}
+          {slug !== "email-response" && slug !== "describe-picture" && slug !== "opinion-essay" && exercise.subTopics.map((topic, i) => {
             console.log("topic", topic);
 
             return (

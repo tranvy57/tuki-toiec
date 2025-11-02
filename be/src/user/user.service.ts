@@ -110,17 +110,18 @@ export class UserService {
 
   async getListUserVocab(user: User) {
     const uVocabList = await this.userVocabRepository.find({
-      where: {
-        user: {
-          id: user.id,
-        },
-      },
-      relations: {
-        vocabulary: true,
-      },
+      where: { user: { id: user.id } },
+      relations: { vocabulary: true },
+      order: {
+        updatedAt: 'DESC',
+      }
     });
 
-    return this.toVocabDtoList(uVocabList);
+    return uVocabList.map(({ vocabulary, ...rest }) => ({
+      ...rest,
+      vocabularyId: vocabulary?.id,
+      ...vocabulary,
+    }));
   }
 
   async deleteUserVocab(user: User, id: string) {

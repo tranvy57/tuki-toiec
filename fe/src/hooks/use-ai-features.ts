@@ -8,17 +8,18 @@ import {
 } from "@/types/ai-features";
 
 export interface EvaluateWritingRequest {
-  type: "email" | "opinion-essay";
+  type: "email-response" | "opinion-essay" | "describe-picture";
   content: string;
   title?: string;
   topic?: string;
   context?: string;
   requiredLength?: number;
   timeLimit?: number;
+  sampleAnswer?: string;
 }
 
 export interface EvaluateWritingResponse {
-  type: "email" | "opinion-essay";
+  type: "email-response" | "opinion-essay" | "describe-picture";
   overallScore: number;
   breakdown: {
     content: number;
@@ -137,7 +138,6 @@ export const useEvaluateWriting = () => {
   return { evaluateWriting, isLoading, error };
 };
 
-// ==== Convenience hooks cho từng loại ====
 export const useEvaluateEmail = () => {
   const { evaluateWriting, isLoading, error } = useEvaluateWriting();
 
@@ -148,7 +148,7 @@ export const useEvaluateEmail = () => {
     targetRecipient?: string;
   }): Promise<EvaluateWritingResponse | null> => {
     return evaluateWriting({
-      type: "email",
+      type: "email-response",
       content: request.body,
       title: request.subject,
       topic: request.purpose,
@@ -186,43 +186,23 @@ export const useEvaluateOpinionEssay = () => {
   return { evaluateOpinionEssay, isLoading, error };
 };
 
-// ==== Evaluate Image Description Hook ====
 export const useEvaluateImageDescription = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { evaluateWriting, isLoading, error } = useEvaluateWriting();
 
-  const evaluateImageDescription = async (
-    request: EvaluateImageDescriptionRequest
-  ): Promise<EvaluateImageDescriptionResponse | null> => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch("/api/evaluate-image-description", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(request),
-      });
-
-      if (!response.ok) {
-        const errorData: AIApiErrorResponse = await response.json();
-        throw new Error(
-          errorData.error || "Failed to evaluate image description"
-        );
-      }
-
-      const data: EvaluateImageDescriptionResponse = await response.json();
-      return data;
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "An unexpected error occurred";
-      setError(errorMessage);
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
+  const evaluateImageDescription = async (request: {
+    description: string;
+    expectedElements?: string[];
+    descriptionType?: string;
+    imageUrl?: string;
+    sampleAnswer?: string;
+  }): Promise<EvaluateWritingResponse | null> => {
+    return evaluateWriting({
+      type: "describe-picture",
+      content: request.description,
+      topic: request.expectedElements?.join(", ") || "",
+      context: request.descriptionType || "basic",
+      sampleAnswer: request.sampleAnswer,
+    });
   };
 
   return { evaluateImageDescription, isLoading, error };

@@ -1,52 +1,36 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
+import { useLessonsByModality, type LessonItem } from "@/api/useLessons";
 import GrammarHighlightTextarea from "@/components/GrammarHighlightTextarea";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { writingExerciseTypes } from "@/data/mockDataWritting";
+import { useAIFeatures } from "@/hooks/use-ai-features";
+import { motion } from "framer-motion";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  ArrowLeft,
-  CheckCircle,
   AlertCircle,
-  Sparkles,
-  Save,
-  RotateCcw,
+  ArrowLeft,
+  Bot,
+  CheckCircle,
   Clock,
   FileText,
-  Zap,
-  Target,
-  Bot,
-  Star,
   Loader2,
+  RotateCcw,
+  Sparkles,
+  Star,
+  Target,
+  Zap
 } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { useAIFeatures } from "@/hooks/use-ai-features";
-import type {
-  EvaluateEmailRequest,
-  EvaluateImageDescriptionRequest,
-  EvaluateOpinionEssayRequest,
-  GenerateEmailRequest,
-} from "@/types/ai-features";
-import { writingExerciseTypes } from "@/data/mockDataWritting";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 export default function WritingExercisePage() {
   const params = useParams();
   const router = useRouter();
   const [userInput, setUserInput] = useState("");
   const [wordCount, setWordCount] = useState(0);
-  const [timeElapsed, setTimeElapsed] = useState(0);
   const [isGrammarChecked, setIsGrammarChecked] = useState(false);
   const [showAIFeedback, setShowAIFeedback] = useState(false);
   const [grammarErrors, setGrammarErrors] = useState<any[]>([]);
@@ -69,46 +53,130 @@ export default function WritingExercisePage() {
     (exercise) => exercise.slug === slug
   );
 
-  const subTopic = exerciseData?.subTopics.find((sub) => sub.id === topicId);
+  // Fetch API data
+  const { data: emailLessons, isLoading: emailLoading, error: emailError } = useLessonsByModality({
+    modality: "email_reply",
+    enabled: slug === "email-response"
+  });
 
-  // Nếu cần fallback an toàn
-  if (!subTopic) {
-    console.warn("Subtopic not found:", topicId);
-  }
-  useEffect(() => {
-    // Timer
-    intervalRef.current = setInterval(() => {
-      setTimeElapsed((prev) => prev + 1);
-    }, 1000);
+  const { data: pictureLessons, isLoading: pictureLoading, error: pictureError } = useLessonsByModality({
+    modality: "describe_picture",
+    enabled: slug === "describe-picture"
+  });
 
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, []);
+  const { data: opinionLessons, isLoading: opinionLoading, error: opinionError } = useLessonsByModality({
+    modality: "opinion_paragraph",
+    enabled: slug === "opinion-essay"
+  });
 
-  useEffect(() => {
-    // Count words
-    const words = userInput
-      .trim()
-      .split(/\s+/)
-      .filter((word) => word.length > 0);
-    setWordCount(words.length);
+  // Get current lesson item from API or mock data
+  let currentItem: LessonItem | null = null;
+  let subTopic: any = null;
 
-    // Calculate progress based on word count
-    if (subTopic?.wordLimit) {
-      const progressPercent = Math.min(
-        (words.length / subTopic.wordLimit) * 100,
-        100
-      );
-      setProgress(progressPercent);
+  if (slug === "email-response" && emailLessons) {
+    // Find item in email API data
+    for (const lesson of emailLessons) {
+      const found = lesson.items.find(item => item.id === topicId);
+      if (found) {
+        currentItem = found;
+        break;
+      }
     }
-  }, [userInput, subTopic?.wordLimit]);
+  } else if (slug === "describe-picture" && pictureLessons) {
+    // Find item in picture API data
+    for (const lesson of pictureLessons) {
+      const found = lesson.items.find(item => item.id === topicId);
+      if (found) {
+        currentItem = found;
+        break;
+      }
+    }
+  } else if (slug === "opinion-essay" && opinionLessons) {
+    // Find item in opinion API data
+    for (const lesson of opinionLessons) {
+      const found = lesson.items.find(item => item.id === topicId);
+      if (found) {
+        currentItem = found;
+        break;
+      }
+    }
+  } else {
+    // Use mock data for other types
+    subTopic = exerciseData?.subTopics.find((sub) => sub.id === topicId);
+  }
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  // Check loading states
+  const isLoading = (slug === "email-response" && emailLoading) ||
+    (slug === "describe-picture" && pictureLoading) ||
+    (slug === "opinion-essay" && opinionLoading);
+
+  // Check error states
+  const hasError = (slug === "email-response" && emailError) ||
+    (slug === "describe-picture" && pictureError) ||
+    (slug === "opinion-essay" && opinionError);
+
+  // Check if data not found
+  const isDataNotFound = (slug === "email-response" || slug === "describe-picture" || slug === "opinion-essay") && !currentItem;
+  const isSubTopicNotFound = slug !== "email-response" && slug !== "describe-picture" && slug !== "opinion-essay" && !subTopic;
+  const getCurrentExerciseData = () => {
+    if (slug === "email-response" && currentItem) {
+      return {
+        title: currentItem.title.trim(),
+        topic: currentItem.promptJsonb.directions,
+        content: currentItem.promptJsonb.content,
+        wordLimit: 150, // Default for email
+        level: currentItem.difficulty,
+        context: currentItem.promptJsonb.writing_type,
+        tips: currentItem.solutionJsonb.tips,
+        sampleAnswer: currentItem.solutionJsonb.sample_answer,
+        imageUrl: null,
+        keywords: null
+      };
+    } else if (slug === "describe-picture" && currentItem) {
+      return {
+        title: currentItem.title.trim(),
+        topic: currentItem.promptJsonb.directions || "",
+        content: null,
+        wordLimit: 25, 
+        level: currentItem.difficulty,
+        context: currentItem.promptJsonb.writing_type,
+        tips: currentItem.solutionJsonb.tips,
+        sampleAnswer: currentItem.solutionJsonb.sample_answer,
+        imageUrl: currentItem.promptJsonb.image_url,
+        keywords: currentItem.promptJsonb.keywords
+      };
+    } else if (slug === "opinion-essay" && currentItem) {
+      return {
+        title: currentItem.title.trim(),
+        topic: currentItem.promptJsonb.content || "", // The essay prompt is in content field
+        content: null,
+        wordLimit: 300, // Standard essay word limit
+        level: currentItem.difficulty,
+        context: currentItem.promptJsonb.writing_type,
+        tips: currentItem.solutionJsonb.tips,
+        sampleAnswer: currentItem.solutionJsonb.sample_answer,
+        imageUrl: null,
+        keywords: null
+      };
+    } else if (subTopic) {
+      return {
+        title: subTopic.title,
+        topic: subTopic.topic,
+        content: null,
+        wordLimit: subTopic.wordLimit,
+        level: subTopic.level,
+        context: subTopic.context,
+        tips: null,
+        sampleAnswer: null,
+        imageUrl: null,
+        keywords: null
+      };
+    }
+    return null;
   };
+
+  const exerciseInfo = getCurrentExerciseData();
+
 
   // AI Evaluation Functions
   const handleAIEvaluation = async () => {
@@ -120,23 +188,26 @@ export default function WritingExercisePage() {
 
     try {
       let result;
+      console.log(exerciseInfo)
 
       switch (slug) {
-        // case "describe-picture":
-        //   result = await evaluateImageDescription.evaluateImageDescription({
-        //     description: userInput,
-        //     expectedElements: ["person", "laptop", "cafe", "table", "work"],
-        //     descriptionType: "basic",
-        //   });
-        //   break;
+        case "describe-picture":
+          result = await evaluateImageDescription.evaluateImageDescription({
+            description: userInput,
+            expectedElements: exerciseInfo?.keywords || [],
+            descriptionType: "sentence",
+            imageUrl: exerciseInfo?.imageUrl || undefined,
+            sampleAnswer: exerciseInfo?.sampleAnswer || undefined,
+          });
+          break;
 
         case "email-response":
           result = await evaluateWriting.evaluateWriting({
-            type: "email",
-            title: subTopic?.title,
+            type: "email-response",
+            title: exerciseInfo?.title || "",
             content: userInput,
-            topic: subTopic?.topic,
-            context: subTopic?.context || "Colleague/Manager",
+            topic: exerciseInfo?.topic || "",
+            context: exerciseInfo?.content || "Colleague/Manager",
           });
           break;
 
@@ -144,22 +215,22 @@ export default function WritingExercisePage() {
           result = await evaluateWriting.evaluateWriting({
             type: "opinion-essay",
             content: userInput,
-            topic: subTopic?.topic,
-            requiredLength: subTopic?.wordLimit || 200,
-            context: subTopic?.context || "opinion",
+            topic: exerciseInfo?.topic || "",
+            requiredLength: exerciseInfo?.wordLimit || 200,
+            context: exerciseInfo?.context || "opinion",
           });
           break;
 
-        case "grammar-fix":
-          // For grammar fix, we can use the writing evaluation as a general text evaluator
-          result = await evaluateWriting.evaluateWriting({
-            type: "email",
-            content: userInput,
-            title: "Grammar Check",
-            topic: subTopic?.topic,
-            context: "Grammar practice",
-          });
-          break;
+        // case "grammar-fix":
+        //   // For grammar fix, we can use the writing evaluation as a general text evaluator
+        //   result = await evaluateWriting.evaluateWriting({
+        //     type: "email",
+        //     content: userInput,
+        //     title: "Grammar Check",
+        //     topic: exerciseInfo?.topic || "",
+        //     context: "Grammar practice",
+        //   });
+        //   break;
 
         default:
           throw new Error("Unknown exercise type");
@@ -178,7 +249,6 @@ export default function WritingExercisePage() {
   };
 
   const handleGenerateExample = async () => {
-    console.log("runThis", generatedSample);
 
     if (topicId !== "email-response") return;
 
@@ -255,21 +325,72 @@ export default function WritingExercisePage() {
     setGeneratedSample("");
   };
 
-  if (!exerciseData) {
+  useEffect(() => {
+    // Count words
+    const words = userInput
+      .trim()
+      .split(/\s+/)
+      .filter((word) => word.length > 0);
+    setWordCount(words.length);
+
+    // Calculate progress based on word count
+    if (exerciseInfo?.wordLimit) {
+      const progressPercent = Math.min(
+        (words.length / exerciseInfo.wordLimit) * 100,
+        100
+      );
+      setProgress(progressPercent);
+    }
+  }, [userInput, exerciseInfo?.wordLimit]);
+
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white flex items-center justify-center">
-        <Card className="p-6 text-center">
-          <p className="text-gray-600">Không tìm thấy bài tập này.</p>
-          <Button onClick={() => router.back()} className="mt-4">
-            Quay lại
-          </Button>
-        </Card>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-blue-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-700">Đang tải bài tập...</h2>
+        </div>
       </div>
     );
   }
 
+  // Show error for API-backed exercises
+  if (hasError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-700 mb-2">Không thể tải bài tập</h2>
+          <p className="text-gray-500 mb-4">Vui lòng thử lại sau</p>
+          <Button onClick={() => router.back()}>Quay lại</Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show not found if no data for API-backed exercises
+  if (isDataNotFound || isSubTopicNotFound) {
+    if (isSubTopicNotFound) {
+      console.warn("Subtopic not found:", topicId);
+    }
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-700 mb-2">Không tìm thấy bài tập</h2>
+          <Button onClick={() => router.back()}>Quay lại</Button>
+        </div>
+      </div>
+    );
+  }
+
+  // All useEffect hooks must be called before any conditional returns
+
+
+  // Helper function to get current exercise data
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
+    <div className="min-h-(calc(100vh-72px)) bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
       <div className="container mx-auto px-4 py-2">
         {/* Header */}
         <motion.div
@@ -277,39 +398,7 @@ export default function WritingExercisePage() {
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center justify-between mb-6"
         >
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => router.back()}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Quay lại
-            </Button>
-            <div className="flex gap-6">
-              <h1 className="text-2xl font-bold text-[#23085A]">
-                {exerciseData.name}
-              </h1>
-              <div className="flex items-center gap-4 mt-1">
-                <Badge
-                  className={
-                    subTopic?.level === "Easy"
-                      ? "bg-green-100 text-green-800"
-                      : subTopic?.level === "Medium"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : "bg-red-100 text-red-800"
-                  }
-                >
-                  {subTopic?.level}
-                </Badge>
-                <div className="flex items-center gap-1 text-sm text-gray-500">
-                  <Clock className="w-4 h-4" />
-                  <span>{formatTime(timeElapsed)}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          
 
           {/* Progress */}
           <div className="text-right">
@@ -331,55 +420,99 @@ export default function WritingExercisePage() {
             <div className="h-fit sticky top-6 bg-white border p-4 rounded-sm">
               <div>
                 <div className="text-lg font-semibold text-gray-900">
-                  Chủ đề: {subTopic?.title}
+                  Chủ đề: {exerciseInfo?.title}
                 </div>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-4 flex gap-8 mt-4">
                 {/* Image for picture description */}
-                {topicId === "describe-picture" && (
-                  <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                    <div className="flex items-center justify-center h-full text-gray-500">
-                      <FileText className="w-12 h-12" />
-                      <span className="ml-2">Hình ảnh mẫu</span>
-                    </div>
+                {slug === "describe-picture" && exerciseInfo?.imageUrl && (
+                  <div className="relative aspect-video h-80 bg-gray-100 rounded-lg overflow-hidden">
+                    <Image
+                      src={exerciseInfo.imageUrl}
+                      alt="Practice image"
+                      fill
+                      className="object-cover"
+                    />
                   </div>
                 )}
-
-                {/* Prompt */}
-                <p className="text-gray-700 leading-relaxed">
-                  Đề bài: {subTopic?.topic}
-                </p>
-
-                {/* Instructions */}
-                {/* <div className="space-y-2">
-                  <h4 className="font-medium text-gray-900 flex items-center gap-2">
-                    <Target className="w-4 h-4" />
-                    Hướng dẫn:
-                  </h4>
-                  <ul className="space-y-1">
-                    {exerciseData.instructions.map((instruction, index) => (
-                      <li
-                        key={index}
-                        className="text-sm text-gray-600 flex items-start gap-2"
-                      >
-                        <span className="text-pink-500 mt-1">•</span>
-                        <span>{instruction}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div> */}
-
-                {/* Requirements */}
-                {subTopic?.wordLimit && (
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                    <div className="flex items-center gap-1">
-                      <FileText className="w-4 h-4" />
-                      <span>
-                        {subTopic?.wordLimit - 20}-{subTopic?.wordLimit + 20} từ
-                      </span>
+                <div>
+                  {/* Keywords for picture description */}
+                  {slug === "describe-picture" && exerciseInfo?.keywords && (
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                        <Target className="w-4 h-4" />
+                        Từ khóa yêu cầu:
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {exerciseInfo.keywords.map((keyword: string, index: number) => (
+                          <Badge key={index} variant="outline" className="bg-blue-50 text-blue-700">
+                            {keyword}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
+                  )}
+
+                  {/* Email content for email response */}
+                  {slug === "email-response" && exerciseInfo?.content && (
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-gray-900">Email gốc:</h4>
+                      <div
+                        className="bg-gray-50 p-3 rounded-lg text-sm"
+                        dangerouslySetInnerHTML={{ __html: exerciseInfo.content }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Prompt/Directions */}
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-gray-900">
+                      {slug === "opinion-essay" ? "Essay Topic:" : "Yêu cầu:"}
+                    </h4>
+                    {slug === "opinion-essay" ? (
+                      <div
+                        className="text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-lg text-sm"
+                        dangerouslySetInnerHTML={{ __html: exerciseInfo?.topic || "" }}
+                      />
+                    ) : (
+                      <p className="text-gray-700 leading-relaxed">
+                        {exerciseInfo?.topic}
+                      </p>
+                    )}
                   </div>
-                )}
+
+                  {/* Tips */}
+                  {exerciseInfo?.tips && (
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4" />
+                        Gợi ý:
+                      </h4>
+                      <p className="text-sm text-gray-600 bg-yellow-50 p-2 rounded">
+                        {exerciseInfo.tips}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Requirements */}
+                  {exerciseInfo?.wordLimit && (
+                    <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                      <div className="flex items-center gap-1">
+                        <FileText className="w-4 h-4" />
+                        <span>
+                          {slug === "describe-picture"
+                            ? `Viết 1 câu hoàn chỉnh (khoảng ${exerciseInfo.wordLimit} từ)`
+                            : slug === "opinion-essay"
+                              ? `Minimum ${exerciseInfo.wordLimit} từ (Essay)`
+                              : `${exerciseInfo.wordLimit - 20}-${exerciseInfo.wordLimit + 20} từ`
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+
               </div>
             </div>
           </motion.div>
@@ -396,7 +529,7 @@ export default function WritingExercisePage() {
                     Bài làm
                     <div className="flex flex-wrap gap-2 justify-end items-center">
                       <div className="text-sm text-gray-600 w-20">
-                        {wordCount}/{subTopic?.wordLimit} từ
+                        {wordCount}/{exerciseInfo?.wordLimit} từ
                       </div>
                       <Button
                         onClick={handleGrammarCheck}
@@ -468,13 +601,45 @@ export default function WritingExercisePage() {
               <GrammarHighlightTextarea
                 value={userInput}
                 onChange={setUserInput}
-                placeholder="Bắt đầu viết câu trả lời của bạn... (Kiểm tra ngữ pháp tự động sẽ hoạt động khi bạn gõ)"
-                maxLength={(subTopic?.wordLimit ?? 200) * 8} // Rough character estimate
-                className="min-h-[300px]"
+                placeholder={
+                  slug === "describe-picture"
+                    ? "Viết 1 câu mô tả hình ảnh sử dụng các từ khóa đã cho..."
+                    : slug === "opinion-essay"
+                      ? "Viết bài luận thể hiện quan điểm của bạn với các lý lẽ và ví dụ cụ thể... (Tối thiểu 300 từ)"
+                      : "Bắt đầu viết câu trả lời của bạn... (Kiểm tra ngữ pháp tự động sẽ hoạt động khi bạn gõ)"
+                }
+                maxLength={(exerciseInfo?.wordLimit ?? 200) * 8} // Rough character estimate
+                className={
+                  slug === "describe-picture"
+                    ? "min-h-[150px]"
+                    : slug === "opinion-essay"
+                      ? "min-h-[400px]" // Taller for essays
+                      : "min-h-[300px]"
+                }
               />
             </div>
           </motion.div>
         </div>
+
+        {/* Show sample answer */}
+        {exerciseInfo?.sampleAnswer && showAIFeedback && (
+          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <h4 className="font-semibold text-green-800 mb-2 flex items-center gap-2">
+              <CheckCircle className="w-4 h-4" />
+              Bài mẫu tham khảo
+            </h4>
+            {slug === "opinion-essay" ? (
+              <div
+                className="text-green-700 prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{ __html: exerciseInfo.sampleAnswer }}
+              />
+            ) : (
+              <p className="text-green-700 italic">
+                {exerciseInfo.sampleAnswer}
+              </p>
+            )}
+          </div>
+        )}
 
         {showAIFeedback && (
           <div className="space-y-6 mt-8">
@@ -625,19 +790,19 @@ export default function WritingExercisePage() {
                 {/* Sample Improved Version */}
                 {(aiEvaluation.sampleImprovedDescription ||
                   aiEvaluation.sampleImprovedParagraph) && (
-                  <div className="space-y-2">
-                    <h4 className="font-semibold text-blue-700 flex items-center gap-2">
-                      <FileText className="w-4 h-4" />
-                      Mẫu cải thiện
-                    </h4>
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <p className="text-sm text-blue-800 italic">
-                        {aiEvaluation.sampleImprovedDescription ||
-                          aiEvaluation.sampleImprovedParagraph}
-                      </p>
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-blue-700 flex items-center gap-2">
+                        <FileText className="w-4 h-4" />
+                        Mẫu cải thiện
+                      </h4>
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <p className="text-sm text-blue-800 italic">
+                          {aiEvaluation.sampleImprovedDescription ||
+                            aiEvaluation.sampleImprovedParagraph}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
               </>
             ) : (
               <div className="text-center py-8">

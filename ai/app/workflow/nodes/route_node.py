@@ -6,9 +6,14 @@ from app.exceptions.chat_exception import (
     ModelNotFoundException,
 )
 from langchain.schema.messages import AIMessage, HumanMessage, SystemMessage
+import numpy as np
+from typing import List
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 # from app.workflow.tools.chat_tools import Chat
 # from app.constants.define_order import DefineOrder
 # from app.database import PineconeDatabase, PostgresDatabase
+from app.services.qdrant_service import QdrantService
 from app.models.message import MessageRole
 from app.models import ChatMessage
 import re
@@ -25,7 +30,8 @@ class RouteNode:
             # self._chat = Chat()
             # self._llm_bind_tools = self._chat.get_llm_binds_tools()
             # self._tool_node = self._chat.get_tool_node()
-            # self._vector_store = PineconeDatabase().connect()
+            self._vector_service = QdrantService()
+            self._vector_store = QdrantService().connect()
             # self._postgres = PostgresDatabase()
             # self._define_order = DefineOrder()
         except Exception as e:
@@ -42,7 +48,6 @@ class RouteNode:
 
         content = re.sub(r"^```json\n|```$", "", content.strip(), flags=re.MULTILINE)
         
-        print("AI Content:", content)
 
         try:
             cleaned = content.strip().lstrip('{').rstrip('}')
@@ -57,12 +62,33 @@ class RouteNode:
         return [str(item) for item in ast.literal_eval(data_str)]
 
     def similarity_search(self, state: State):
-        # docs = self._vector_store.similarity_search(
-        #     query=state.user_input,
-        #     k=3
-        # )
-        # state.context = "\n".join([doc.page_content for doc in docs])
-        return state
+        """
+        Tìm các đoạn văn/ngữ cảnh liên quan từ Qdrant để hỗ trợ RAG.
+        """
+        try:
+            if not state.user_input or not isinstance(state.user_input, str):
+                raise ValueError("User input invalid or empty")
+
+            results = self._vector_service.search(
+                question=state.user_input,
+                limit=3,
+                score_threshold=0.4  
+            )
+
+            retrieved = [r["payload"].get("content", "") for r in results]
+            context_text = "\n".join(f"- {txt}" for txt in retrieved if txt)
+
+            state.context = context_text or "Không tìm thấy thông tin phù hợp trong cơ sở dữ liệu."
+            state.meta = getattr(state, "meta", {})
+            state.meta["retrieved_docs"] = results
+
+            return state
+
+        except Exception as e:
+            state.context = "Không thể truy vấn ngữ cảnh."
+            state.error.append(str(e))
+            print(f"❌ RAG Error: {e}")
+            return state
 
     def route(self, state: State):
         decision = self._llm.invoke([
@@ -98,7 +124,6 @@ class RouteNode:
             state.error.append(str(e))
             return state
 
-
     def evaluate_history(self, state: State):
         prompt = self._prompt.evaluate_history.format(
             user_input=state.user_input,
@@ -123,105 +148,17 @@ class RouteNode:
 
         state.next_state = "generate" if result.get("datasource") in [True, "true"] else "summarize_history"
         return state
-
-
-    def using_tools(self, state: State):
-        if not state.user_input or not isinstance(state.user_input, str) or not state.user_input.strip():
-            raise ValueError("User input is empty or invalid. Please provide a valid input.")
-
-        tool_prompt = self._prompt.using_tools_prompt.format(
-            user_id=state.user_id,
-            user_input=state.user_input,
-        )
-
-        result = self._llm_bind_tools.invoke([
-            SystemMessage(content=tool_prompt),
-            HumanMessage(content=state.user_input),
-        ])
-
-        if not result.tool_calls or len(result.tool_calls) == 0:
-            state.error.append("No tool calls found in the result.")
-            state.final_generation = "Không tìm thấy thông tin phù hợp."
-            return state
-        tool_call = result.tool_calls[0]
-        tool_call = self.normalize_tool_args(tool_call)
-        tool_call = self.normalize_keywords(tool_call, state)
-
-        # print("Cleaned keywords:", tool_call["args"]["keyword"])
-
-
-        ai_msg = AIMessage(
-            content=result.content,
-            additional_kwargs=result.additional_kwargs,
-            tool_calls=[tool_call]
-        )
-
-        final_result = self._tool_node.invoke([ai_msg])
-
-        prompt_map = {
-            "search_paintings_by_keyword": self._prompt.search_paintings_prompt,
-            "order_painting": self._prompt.order_prompt,
-            "get_size_available": self._prompt.size_prompt,
-            "get_category_available": self._prompt.category_prompt,
-            "get_coupons_available": self._prompt.coupon_prompt,
-            "search_popular_paintings": self._prompt.search_paintings_prompt,
-            "get_price_available": self._prompt.price_prompt
-        }
-
-        prompt_template = prompt_map.get(tool_call['name'], self._prompt.generate_prompt)
-
-        convert_prompt = prompt_template.format(
-            tool_run=final_result,
-            history=state.context,
-            question=state.user_input,
-            context=state.context
-        )
-
-        generation = self._llm.invoke([
-            SystemMessage(content=convert_prompt),
-            HumanMessage(content=state.user_input),
-        ])
-
-
-        state.final_generation = generation.content
-        state.chat_history += [HumanMessage(content=state.user_input), generation]
-        self._save_chat(state)
-        state.next_state = "end"
-        return state
-
+    
     def generate(self, state: State):
-        # self.similarity_search(state)
+        self.similarity_search(state)
 
         prompt = self._prompt.generate_prompt.format(
             question=state.user_input,
             context=state.context,
-            history=[]
-        )
-
-        generation = self._llm.invoke([
-            SystemMessage(content=prompt),
-            *state.chat_history,
-            HumanMessage(content=state.user_input),
-        ])
-
-    
-
-
-        state.final_generation = generation.content
-        # state.chat_history += [HumanMessage(content=state.user_input), generation]
-        # self._save_chat(state)
-        return state
-
-    def order(self, state: State):
-        self.similarity_search(state)
-
-        prompt = self._prompt.order_instructions.format(
-            history=state.chat_history,
-            context=state.context,
-            # payment_methods=self._define_order.payment_methods,
-            # shipping_policy=self._define_order.shipping_policy,
-            # delivery_info=self._define_order.delivery_info,
-            # order_steps=self._define_order.order_steps,
+            history=[],
+            meta=state.meta,
+            user_name="Tu",
+            errors=""
         )
 
         generation = self._llm.invoke([
@@ -232,7 +169,7 @@ class RouteNode:
 
         state.final_generation = generation.content
         state.chat_history += [HumanMessage(content=state.user_input), generation]
-        self._save_chat(state)
+        # self._save_chat(state)
         return state
 
     def _save_chat(self, state: State):
@@ -250,6 +187,72 @@ class RouteNode:
         #     role=MessageRole.AI,
         #     content=state.final_generation
         # ))
+
+    # def using_tools(self, state: State):
+    #     if not state.user_input or not isinstance(state.user_input, str) or not state.user_input.strip():
+    #         raise ValueError("User input is empty or invalid. Please provide a valid input.")
+
+    #     tool_prompt = self._prompt.using_tools_prompt.format(
+    #         user_id=state.user_id,
+    #         user_input=state.user_input,
+    #     )
+
+    #     result = self._llm_bind_tools.invoke([
+    #         SystemMessage(content=tool_prompt),
+    #         HumanMessage(content=state.user_input),
+    #     ])
+
+    #     if not result.tool_calls or len(result.tool_calls) == 0:
+    #         state.error.append("No tool calls found in the result.")
+    #         state.final_generation = "Không tìm thấy thông tin phù hợp."
+    #         return state
+    #     tool_call = result.tool_calls[0]
+    #     tool_call = self.normalize_tool_args(tool_call)
+    #     tool_call = self.normalize_keywords(tool_call, state)
+
+    #     # print("Cleaned keywords:", tool_call["args"]["keyword"])
+
+
+    #     ai_msg = AIMessage(
+    #         content=result.content,
+    #         additional_kwargs=result.additional_kwargs,
+    #         tool_calls=[tool_call]
+    #     )
+
+    #     final_result = self._tool_node.invoke([ai_msg])
+
+    #     prompt_map = {
+    #         "search_paintings_by_keyword": self._prompt.search_paintings_prompt,
+    #         "order_painting": self._prompt.order_prompt,
+    #         "get_size_available": self._prompt.size_prompt,
+    #         "get_category_available": self._prompt.category_prompt,
+    #         "get_coupons_available": self._prompt.coupon_prompt,
+    #         "search_popular_paintings": self._prompt.search_paintings_prompt,
+    #         "get_price_available": self._prompt.price_prompt
+    #     }
+
+    #     prompt_template = prompt_map.get(tool_call['name'], self._prompt.generate_prompt)
+
+    #     convert_prompt = prompt_template.format(
+    #         tool_run=final_result,
+    #         history=state.context,
+    #         question=state.user_input,
+    #         context=state.context
+    #     )
+
+    #     generation = self._llm.invoke([
+    #         SystemMessage(content=convert_prompt),
+    #         HumanMessage(content=state.user_input),
+    #     ])
+
+
+    #     state.final_generation = generation.content
+    #     state.chat_history += [HumanMessage(content=state.user_input), generation]
+    #     self._save_chat(state)
+    #     state.next_state = "end"
+    #     return state
+
+    
 
     # def normalize_tool_args(self, tool_call):
     #     args = tool_call.get("args", {})
@@ -315,4 +318,4 @@ class RouteNode:
     #             tool_call["args"]["keyword"] = state.last_keywords
 
     #     return tool_call
-
+ 
