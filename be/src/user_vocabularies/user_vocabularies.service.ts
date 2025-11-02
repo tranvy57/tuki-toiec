@@ -311,7 +311,7 @@ export class UserVocabulariesService {
     return {
       type: 'cloze',
       vocabId: vocab.id,
-      content: { text, answer: vocab.word, audioUrl: vocab.audioUrl },
+      content: { text, answer: vocab.word, ...vocab  },
     };
   }
 
