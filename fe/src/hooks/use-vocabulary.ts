@@ -7,6 +7,7 @@ import {
   QuizType,
 } from "@/types/implements/vocabulary";
 import { generateQuizOptions } from "@/utils/vocabularyUtils";
+import { patchVocabulary } from "@/api/useVocabulary";
 
 export function useVocabularyReview(
   vocabularies: any[],
@@ -25,7 +26,9 @@ export function useVocabularyReview(
   const [currentQuizType, setCurrentQuizType] = useState<QuizType>(null);
   const [showQuiz, setShowQuiz] = useState(false);
   const [quizAnswer, setQuizAnswer] = useState("");
-  const [quizOptions, setQuizOptions] = useState<string[]>([]);
+  const [quizOptions, setQuizOptions] = useState<
+    { key: string; value: string }[]
+  >([]);
   const [selectedOption, setSelectedOption] = useState("");
   const [quizCompleted, setQuizCompleted] = useState(false);
 
@@ -60,8 +63,6 @@ export function useVocabularyReview(
   }, [vocabularies]);
 
   const startQuizSession = useCallback(() => {
-    console.log("vocabularyReviews", vocabularyReviews?.items[0]);
-
     // const reviewWords = vocabularies.filter((v) => v.isMarkedForReview);
 
     console.log("reviewWords", reviewWords);
@@ -84,7 +85,7 @@ export function useVocabularyReview(
 
     // Start first quiz immediately
     const firstWord = vocabularyReviews?.items[0];
-    setTimeout(() => startQuiz(firstWord), 500);
+    startQuiz(firstWord);
 
     toast.success(`Bắt đầu Quiz với ${vocabularyReviews?.totalItems} từ vựng!`);
   }, [vocabularies, vocabularyReviews]);
@@ -100,7 +101,9 @@ export function useVocabularyReview(
       setQuizAnswer("");
 
       if (word?.type === "mcq") {
-        const options = generateQuizOptions(word.meaning, vocabularies);
+        const currentWord = vocabularyReviews?.items?.[currentReviewIndex];
+        const options = currentWord.content.choices;
+
         setQuizOptions(options);
       }
     },
@@ -125,22 +128,23 @@ export function useVocabularyReview(
   }, [reviewMode, reviewSession]);
 
   const handleQuizSubmit = useCallback(() => {
-    const currentReviewWord = vocabularyReviews?.items?.[currentReviewIndex];
+    const currentWord = vocabularyReviews?.items?.[currentReviewIndex];
 
-    const currentWord = currentReviewWord[currentReviewIndex];
+    // Cập nhật số lần làm bài
+    patchVocabulary(currentWord.vocabId);
 
     let isQuizCorrect = false;
 
     if (currentQuizType === "mcq") {
-      isQuizCorrect = selectedOption === currentWord.meaning;
+      isQuizCorrect = selectedOption === currentWord.content.correctKey;
     } else if (currentQuizType === "cloze") {
-      console.log("quizAnswer", quizAnswer);
-
       isQuizCorrect =
         quizAnswer.toLowerCase().trim() ===
         currentWord?.content.answer.toLowerCase().trim();
     } else if (currentQuizType === "pronunciation") {
-      isQuizCorrect = selectedOption === currentWord.word;
+      isQuizCorrect =
+        quizAnswer.toLowerCase().trim() ===
+        currentWord?.content.answer.toLowerCase().trim();
     }
 
     setQuizCompleted(true);
@@ -163,18 +167,17 @@ export function useVocabularyReview(
   ]);
 
   const proceedToNextWord = useCallback(() => {
-    const currentWord = reviewWords[currentReviewIndex];
-    if (currentReviewIndex < reviewWords.length - 1) {
+    const currentWord = vocabularyReviews?.items?.[currentReviewIndex + 1];
+
+    if (currentReviewIndex < vocabularyReviews?.totalItems - 1) {
       setCurrentReviewIndex(currentReviewIndex + 1);
       setShowAnswer(false);
       setShowQuiz(true);
       setCurrentQuizType(currentWord?.type);
 
       if (currentWord?.type === "mcq") {
-        const options = generateQuizOptions(
-          reviewWords[currentReviewIndex + 1].meaning,
-          vocabularies
-        );
+        const currentWord = vocabularyReviews?.items?.[currentReviewIndex];
+        const options = currentWord.content.choices;
         setQuizOptions(options);
       } else if (currentWord?.type === "cloze") {
         setQuizAnswer("");

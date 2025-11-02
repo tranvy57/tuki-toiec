@@ -13,7 +13,7 @@ interface QuizSessionProps {
   currentQuizType: QuizType;
   allVocabularies: any[];
   // Multiple choice props
-  quizOptions: string[];
+  quizOptions: { key: string; value: string }[];
   selectedOption: string;
   onSelectOption: (option: string) => void;
   // Fill blank props
@@ -60,7 +60,7 @@ export default function QuizSession({
       case "cloze":
         return !!quizAnswer.trim();
       case "pronunciation":
-        return !!selectedOption;
+        return !!quizAnswer.trim();
       default:
         return false;
     }
@@ -91,9 +91,8 @@ export default function QuizSession({
         return (
           <AudioQuiz
             word={currentWord}
-            allVocabularies={allVocabularies}
-            selectedOption={selectedOption}
-            onSelectOption={onSelectOption}
+            answer={quizAnswer}
+            onAnswerChange={onAnswerChange}
             isCompleted={isCompleted}
           />
         );
@@ -148,15 +147,16 @@ export default function QuizSession({
               Đáp án đúng: {currentWord?.content?.answer}
             </h4>
             <div className=" mb-2">
-              <strong>[{currentWord.partOfSpeech}]</strong>{" "}
-              {currentWord.meaning}
+              <strong>{currentWord?.content?.partOfSpeech}</strong>{" "}
+              {currentWord?.content?.meaning}
             </div>
+            <div>{currentWord?.content?.pronunciation}</div>
             <div className="text-sm ">
               <div>
-                <strong>Ví dụ:</strong> {currentWord.exampleEn}
+                <strong>Ví dụ:</strong> {currentWord?.content?.exampleEn}
               </div>
               <div>
-                <strong>Dịch:</strong> {currentWord.exampleVn}
+                <strong>Dịch:</strong> {currentWord?.content?.exampleVn}
               </div>
             </div>
           </div>

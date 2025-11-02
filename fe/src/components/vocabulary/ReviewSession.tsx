@@ -27,7 +27,7 @@ interface ReviewSessionProps {
   // Quiz props
   showQuiz: boolean;
   currentQuizType: QuizType;
-  quizOptions: string[];
+  quizOptions: { key: string; value: string }[];
   selectedOption: string;
   onSelectOption: (option: string) => void;
   quizAnswer: string;
@@ -94,8 +94,9 @@ export default function ReviewSession({
                 Tiến độ: {currentReviewIndex + 1}/{reviewSession.total}
               </span>
               {reviewMode === "quiz" && (
+                // hong hieu gi?
                 <span>
-                  Điểm: {reviewSession.correct}/
+                  Điểm: {reviewSession.correct}/{quizCompleted}
                   {currentReviewIndex + (showQuiz && quizCompleted ? 1 : 0)}
                 </span>
               )}

@@ -128,3 +128,28 @@ export const useGetReviewVocabularies = () => {
     staleTime: 0,
   });
 };
+
+// api update
+
+export const patchVocabulary = async (id: string) => {
+  try {
+    const res = await api.patch(`/vocabularies/${id}`);
+    return res.data;
+  } catch (error) {
+    console.error("Error patching vocabulary:", error);
+    throw error;
+  }
+};
+
+export const usePatchVocabulary = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["patch-vocabulary"],
+    mutationFn: (id: string) => patchVocabulary(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-vocabularies"] });
+      queryClient.invalidateQueries({ queryKey: ["user-vocabularies-review"] });
+    },
+  });
+};

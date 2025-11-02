@@ -39,7 +39,8 @@ export default function VocabularyPage() {
   useEffect(() => {
     console.log("dataReview", dataReview?.data?.data?.items);
     if (dataReview?.data?.data) {
-      setVocabularyReviews(dataReview?.data?.data?.items || []);
+      // setVocabularyReviews(dataReview?.data?.data?.items || []);
+      setVocabularyReviews(dataReview?.data?.data || { items: [] });
     }
   }, [dataReview?.data?.data]);
 
@@ -72,32 +73,6 @@ export default function VocabularyPage() {
     dataReview?.data?.data || {}
   );
 
-  console.log(
-    "concak",
-    currentReviewIndex,
-    isReviewMode,
-    showAnswer,
-    reviewSession,
-    reviewMode,
-    currentQuizType,
-    showQuiz,
-    quizAnswer,
-    quizOptions,
-    selectedOption,
-    quizCompleted,
-    currentReviewWord,
-    startFlashcardSession,
-    startQuizSession,
-    endReviewSession,
-    handleQuizSubmit,
-    proceedToNextWord,
-    handleShowAnswer,
-    handleFlashcardNext,
-    toggleMarkForReview,
-    setQuizAnswer,
-    setSelectedOption
-  );
-
   const filteredVocabularies = vocabularies.filter((vocab) => {
     console.log("vocab", vocab);
     const matchesSearch =
@@ -108,15 +83,14 @@ export default function VocabularyPage() {
     return matchesSearch && matchesFilter;
   });
 
-  console.log("filteredVocabularies", filteredVocabularies);
-
   const markedForReview = vocabularies.filter(
     (v) => v.isMarkedForReview
   ).length;
 
-  console.log("currentReviewWord", currentReviewWord);
+  console.log("reviewSession", reviewSession);
 
   if (isReviewMode && currentReviewWord) {
+    console.log("currentReviewWord", currentReviewWord);
     return (
       <ReviewSession
         reviewMode={reviewMode}

@@ -31,9 +31,9 @@ export default function FillBlankQuiz({
       />
       {isCompleted && (
         <div className="text-center">
-          <p className="text-sm text-gray-600">
+          {/* <p className="text-sm text-gray-600">
             Đáp án: <strong>{word.word}</strong>
-          </p>
+          </p> */}
         </div>
       )}
     </div>
