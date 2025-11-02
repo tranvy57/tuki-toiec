@@ -55,22 +55,35 @@ export class StudyTasksService {
     const userProgressRepo = this.manager.getRepository(UserProgress);
     const lessonSkillRepo = this.manager.getRepository(LessonSkill);
 
-    // 1️⃣ Lấy proficiency hiện tại của user
     const progresses = await userProgressRepo.find({
       where: { user: { id: userId } },
       relations: ['skill'],
     });
-    const profMap = Object.fromEntries(
-      progresses.map((p) => [p.skill.id, p.proficiency]),
-    );
+    const profMap: Record<string, { prof: number; updatedAt?: Date }> = {};
+    for (const p of progresses) {
+      profMap[p.skill.id] = {
+        prof: p.proficiency ?? 0,
+        updatedAt: p.updatedAt,
+      };
+    }
 
-    // 2️⃣ Lấy tất cả study_task có lesson
     const tasks = await studyTaskRepo.find({
       where: { isActive: true, plan: { user: { id: userId } } },
       relations: { lesson: true },
     });
 
     const skippedTaskIds: string[] = [];
+
+    const PROF_THRESHOLD = threshold;
+    const LOGIT = (x: number) => 1 / (1 + Math.exp(-x));
+    const COEFF = { alpha: 2.0, beta: 1.5, gamma: 1.0, bias: -2.0 }; 
+    const RECENCY_TAU_DAYS = 30;
+    const recencyScore = (d?: Date) => {
+      if (!d) return 0.2; 
+      const now = Date.now();
+      const ageDays = Math.max(0, (now - d.getTime()) / (1000 * 60 * 60 * 24));
+      return Math.exp(-ageDays / RECENCY_TAU_DAYS);
+    };
 
     for (const task of tasks) {
       if (!task.lesson?.id) continue;
@@ -81,18 +94,38 @@ export class StudyTasksService {
       });
       if (!lessonSkills.length) continue;
 
-      let weightedSum = 0;
+      let weightedProfSum = 0;
+      let weightedRecencySum = 0;
+      let coveredWeightSum = 0;
       let totalWeight = 0;
-      for (const ls of lessonSkills) {
-        const prof = profMap[ls.skill.id] ?? 0;
-        const weight = ls.weight ?? 1;
-        weightedSum += prof * weight;
-        totalWeight += weight;
-      }
-      const avgScore = totalWeight > 0 ? weightedSum / totalWeight : 0;
 
-      // 5️⃣ Skip nếu proficiency đủ cao
-      if (avgScore >= threshold) {
+      for (const ls of lessonSkills) {
+        const weight = ls.weight ?? 1;
+        const entry = profMap[ls.skill.id];
+        const prof = entry?.prof ?? 0;
+        const rec = recencyScore(entry?.updatedAt);
+
+        totalWeight += weight;
+        weightedProfSum += prof * weight;
+        weightedRecencySum += rec * weight;
+        if (prof >= PROF_THRESHOLD) coveredWeightSum += weight;
+      }
+
+      const avgProf = totalWeight > 0 ? weightedProfSum / totalWeight : 0;
+      const avgRecency = totalWeight > 0 ? weightedRecencySum / totalWeight : 0;
+      const coverage = totalWeight > 0 ? coveredWeightSum / totalWeight : 0;
+
+      const z =
+        COEFF.alpha * avgProf +
+        COEFF.beta * coverage +
+        COEFF.gamma * avgRecency +
+        COEFF.bias;
+      const pSkip = LOGIT(z);
+
+      const COVERAGE_MIN = 0.6;
+      const PSKIP_MIN = 0.5;
+
+      if (coverage >= COVERAGE_MIN && pSkip >= PSKIP_MIN) {
         task.status = 'skipped';
         await studyTaskRepo.save(task);
         skippedTaskIds.push(task.id);
