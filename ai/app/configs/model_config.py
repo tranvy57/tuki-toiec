@@ -1,7 +1,6 @@
 import os
 from dotenv import load_dotenv
 from langchain.chat_models import init_chat_model
-from langchain_huggingface import HuggingFaceEmbeddings
 
 load_dotenv()
 
@@ -14,16 +13,6 @@ class Gemini:
             model=self.model,
             model_provider=self.model_provider,
             temperature=0.3,            
-        )
-    
-class HuggingFace:
-    def __init__(self):
-        self._default_model = "VoVanPhuc/sup-SimCSE-VietNamese-phobert-base"  # Hoặc model bạn muốn
-
-    def embeddings(self):
-        # Nếu model local tồn tại → dùng model local
-        return HuggingFaceEmbeddings(
-            model_name=self._default_model
         )
     
 
