@@ -227,6 +227,7 @@ export class TestService {
     const parts = await this.partRepo.find({
       where: { isActive: true },
       relations: ['skills'],
+      order: { partNumber: 'ASC' },
     });
 
     return this.dataSrc.transaction(async (manager) => {

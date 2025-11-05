@@ -7,7 +7,6 @@ import { LessonContent } from 'src/lesson_content/entities/lesson_content.entity
 export type StudyTaskStatus =
   | 'pending'
   | 'locked'
-  | 'in_progress'
   | 'completed'
   | 'skipped';
 

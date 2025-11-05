@@ -76,7 +76,7 @@ export class AttemptService {
   async createAttempt(dto: CreateAttemptDto, user: User) {
     let idTest = dto.testId;
     if (dto.mode === 'review') {
-      idTest = 'd540bf86-3692-4f42-8286-8166572a6fd0';
+      idTest = '4f6efef5-e9c6-4a92-8431-898dc14aca80';
     }
 
     console.log(idTest);
@@ -115,7 +115,6 @@ export class AttemptService {
 
     console.log('User create attempt ', user);
 
-    // Tạo attempt mới
     const attempt = this.attemptRepo.create({
       user,
       mode: dto.mode,

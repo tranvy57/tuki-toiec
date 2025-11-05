@@ -1,11 +1,12 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateStudyTaskDto } from './dto/create-study_task.dto';
 import { UpdateStudyTaskDto } from './dto/update-study_task.dto';
-import { EntityManager, Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { StudyTask } from './entities/study_task.entity';
 import { UserProgress } from 'src/user_progress/entities/user_progress.entity';
 import { LessonSkill } from 'src/lesson_skills/entities/lesson_skill.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Plan } from 'src/plan/entities/plan.entity';
 
 @Injectable()
 export class StudyTasksService {
@@ -14,6 +15,10 @@ export class StudyTasksService {
     private readonly manager: EntityManager,
     @InjectRepository(StudyTask)
     private readonly studyTaskRepo: Repository<StudyTask>,
+    @InjectRepository(Plan)
+    private readonly planRepo: Repository<Plan>,
+    @Inject()
+    private readonly dataSrc: DataSource,
   ) {}
 
   create(createStudyTaskDto: CreateStudyTaskDto) {
@@ -36,18 +41,88 @@ export class StudyTasksService {
     return `This action removes a #${id} studyTask`;
   }
 
-  async updateStudyTask(id: string, dto: UpdateStudyTaskDto) {
-    const task = await this.studyTaskRepo.findOne({
-      where: { id },
-      relations: { lesson: true, plan: true },
+  // giả định: StudyTask có quan hệ lesson, lessonContent; lesson.order & lessonContent.order tồn tại
+  // và ta muốn đảm bảo TẠI MỌI THỜI ĐIỂM chỉ có 1 task `pending` cho chuỗi này (per plan).
+
+  async completeStudyTask(taskId: string) {
+    return await this.dataSrc.transaction(async (manager) => {
+      const taskRepo = manager.withRepository(this.studyTaskRepo);
+      const planRepo = manager.withRepository(this.planRepo);
+
+      // 1️⃣ Lấy task hiện tại
+      const current = await taskRepo.findOne({
+        where: { id: taskId },
+        relations: { plan: true, lesson: true, lessonContent: true },
+      });
+      if (!current) throw new NotFoundException('Study task not found');
+
+      const plan = current.plan;
+
+      // 2️⃣ Đánh dấu current = completed
+      if (current.status !== 'completed') {
+        current.status = 'completed';
+        await taskRepo.save(current);
+      }
+
+      // 3️⃣ Lấy toàn bộ task thuộc cùng plan, sắp xếp theo thứ tự logic
+      const allTasks = await taskRepo
+        .createQueryBuilder('t')
+        .innerJoinAndSelect('t.lesson', 'lesson')
+        .innerJoinAndSelect('t.lessonContent', 'content')
+        .where('t.plan_id = :planId', { planId: plan.id })
+        .orderBy('lesson.order', 'ASC')
+        .addOrderBy('content.order', 'ASC')
+        .getMany();
+
+      const currentIdx = allTasks.findIndex((t) => t.id === current.id);
+
+      // 4️⃣ Clear mọi pending phía sau để đảm bảo chỉ có 1 task pending
+      for (let i = currentIdx + 1; i < allTasks.length; i++) {
+        if (allTasks[i].status === 'pending') {
+          allTasks[i].status = 'locked';
+          await taskRepo.save(allTasks[i]);
+        }
+      }
+
+      // 5️⃣ Tìm task kế tiếp khả dụng — bỏ qua skipped, chọn locked đầu tiên
+      let toOpen: (typeof allTasks)[number] | undefined;
+      for (let i = currentIdx + 1; i < allTasks.length; i++) {
+        const t = allTasks[i];
+        if (t.status === 'skipped') continue; // bỏ qua các task skipped
+        if (t.status === 'locked') {
+          toOpen = t;
+          break;
+        }
+      }
+
+      if (toOpen) {
+        toOpen.status = 'pending';
+        await taskRepo.save(toOpen);
+      }
+
+      // 6️⃣ Kiểm tra xem plan đã hoàn tất chưa
+      const updatedTasks = await taskRepo.find({
+        where: { plan: { id: plan.id } },
+        select: ['id', 'status'],
+      });
+
+      const isPlanCompleted = updatedTasks.every(
+        (t) => t.status === 'completed' || t.status === 'skipped',
+      );
+
+      if (isPlanCompleted && plan.status !== 'completed') {
+        plan.status = 'completed';
+        plan.completedAt = new Date().toISOString().split('T')[0];
+        await planRepo.save(plan);
+      }
+
+      // 7️⃣ Trả kết quả
+      return {
+        currentId: current.id,
+        openedNextId: toOpen?.id ?? null,
+        isPlanCompleted,
+      };
     });
-
-    if (!task) throw new NotFoundException('Study task not found');
-
-    if (dto.status) task.status = dto.status;
-
-    const updated = await this.studyTaskRepo.save(task);
-    return updated;
   }
 
   async markSkippableStudyTasks(userId: string, threshold = 0.6) {
@@ -76,10 +151,10 @@ export class StudyTasksService {
 
     const PROF_THRESHOLD = threshold;
     const LOGIT = (x: number) => 1 / (1 + Math.exp(-x));
-    const COEFF = { alpha: 2.0, beta: 1.5, gamma: 1.0, bias: -2.0 }; 
+    const COEFF = { alpha: 2.0, beta: 1.5, gamma: 1.0, bias: -2.0 };
     const RECENCY_TAU_DAYS = 30;
     const recencyScore = (d?: Date) => {
-      if (!d) return 0.2; 
+      if (!d) return 0.2;
       const now = Date.now();
       const ageDays = Math.max(0, (now - d.getTime()) / (1000 * 60 * 60 * 24));
       return Math.exp(-ageDays / RECENCY_TAU_DAYS);

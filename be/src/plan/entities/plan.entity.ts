@@ -55,4 +55,14 @@ export class Plan extends BaseEntity {
   @ManyToOne(() => Course, (c) => c.plans, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'course_id', referencedColumnName: 'id' })
   course?: Course;
+
+  @Column({ default: false })
+  isCompleted: boolean;
+
+  @Column({
+    name: 'completed_at',
+    type: 'date',
+    nullable: true,
+  })
+  completedAt?: string;
 }

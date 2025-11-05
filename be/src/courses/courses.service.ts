@@ -127,17 +127,22 @@ export class CoursesService {
       return course;
     }
 
-    // 4️⃣ Map lessonId -> status
-    const taskMap = new Map<string, string>();
+    // 4️⃣ Map lessonId -> {status, taskId}
+    const taskMap = new Map<string, { status: string; taskId: string }>();
     for (const task of plan.studyTasks) {
-      taskMap.set(task.lesson.id, task.status);
+      taskMap.set(task.lesson.id, {
+        status: task.status,
+        taskId: task.id,
+      });
     }
 
-    // 5️⃣ Gắn trạng thái
+    // 5️⃣ Gắn trạng thái và task ID
     for (const phase of course.phases) {
       for (const pl of phase.phaseLessons) {
         const lesson = pl.lesson;
-        lesson['studyTaskStatus'] = taskMap.get(lesson.id) ?? 'locked';
+        const taskData = taskMap.get(lesson.id);
+        lesson['studyTaskStatus'] = taskData?.status ?? 'locked';
+        lesson['studyTaskId'] = taskData?.taskId ?? null;
       }
     }
 
