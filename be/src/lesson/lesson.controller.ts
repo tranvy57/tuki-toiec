@@ -34,9 +34,6 @@ export class LessonController {
 
   @Get('by-modality')
   async getLessonsByModality(@Query('modality') modality: string, @Query('skillType') skillType: string) {
-    if (!modality) {
-      throw new Error('Missing query param: modality');
-    }
     return this.lessonService.findLessonsByModality(modality, skillType);
   }
 
