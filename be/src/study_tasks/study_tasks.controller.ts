@@ -25,10 +25,7 @@ export class StudyTasksController {
     return this.studyTasksService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.studyTasksService.findOne(+id);
-  }
+
 
   @Patch(':id')
   async updateStudyTask(

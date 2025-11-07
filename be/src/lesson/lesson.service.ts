@@ -34,17 +34,19 @@ export class LessonService {
   }
 
   async findLessonsByModality(
-    modality: string,
+    modality?: string,
     skillType?: string,
   ): Promise<LessonWithItemsDto[]> {
     const qb = this.dataSrc
-      .getRepository('Lesson')
+      .getRepository(Lesson)
       .createQueryBuilder('l')
       .leftJoinAndSelect('l.contents', 'lc')
       .leftJoinAndSelect('lc.lessonContentItems', 'lci')
       .leftJoinAndSelect('lci.item', 'i')
-      .andWhere('i.modality = :modality', { modality });
-
+      
+    if (modality) {
+      qb.andWhere('i.modality = :modality', { modality });
+    }
     if (skillType) {
       qb.andWhere('i.skillType = :skillType', {
         skillType,
@@ -52,7 +54,6 @@ export class LessonService {
     }
 
     const lessons = await qb.getMany();
-    lessons.map((x) => console.log(x));
 
     return lessons.map((lesson: any) => ({
       lessonId: lesson.id,
