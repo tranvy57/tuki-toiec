@@ -6,9 +6,9 @@ import { PracticeBreadcrumb, getExerciseName } from "@/components/practice/Pract
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, AlertCircle, RotateCcw, ChevronLeft, ChevronRight, Check, X, Lightbulb, BookOpen, Clock, FileText } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Loader2, AlertCircle, ChevronLeft, ChevronRight, BookOpen, Clock, FileText } from "lucide-react";
+import { useState } from "react";
+import { motion } from "framer-motion";
 
 interface MCQOption {
     content: string;
@@ -39,8 +39,7 @@ export default function ReadingTestPage() {
     const { slug, topicId } = useParams<{ slug: string; topicId: string }>();
     const router = useRouter();
 
-    const [showResults, setShowResults] = useState(false);
-    const [testResults, setTestResults] = useState<{ correct: number; total: number; userAnswers: Record<string, string> } | null>(null);
+
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
     const [timeElapsed, setTimeElapsed] = useState(0);
@@ -57,19 +56,21 @@ export default function ReadingTestPage() {
 
     // Find the current lesson and its items
     const currentLesson = lessons?.find(lesson =>
-        lesson.items.some(item => item.id === topicId)
+        lesson.lessonId === topicId
     );
 
     const questions = currentLesson?.items || [];
+    console.log(questions)
+
 
     // Timer effect
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setTimeElapsed(prev => prev + 1);
-        }, 1000);
+    // useEffect(() => {
+    //     const interval = setInterval(() => {
+    //         setTimeElapsed(prev => prev + 1);
+    //     }, 1000);
 
-        return () => clearInterval(interval);
-    }, []);
+    //     return () => clearInterval(interval);
+    // }, []);
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -111,17 +112,14 @@ export default function ReadingTestPage() {
             userAnswers
         };
 
-        setTestResults(results);
-        setShowResults(true);
+        // Save results to sessionStorage
+        sessionStorage.setItem(`reading-results-${topicId}`, JSON.stringify(results));
+
+        // Navigate to results page
+        router.push(`/practice/reading/${slug}/${topicId}/results`);
     };
 
-    const resetTest = () => {
-        setShowResults(false);
-        setTestResults(null);
-        setCurrentQuestionIndex(0);
-        setUserAnswers({});
-        setTimeElapsed(0);
-    };
+
 
     if (isLoading) {
         return (
@@ -171,168 +169,10 @@ export default function ReadingTestPage() {
         );
     }
 
-    if (showResults && testResults) {
-        const { correct, total, userAnswers } = testResults;
-        const percentage = Math.round((correct / total) * 100);
 
-        return (
-            <div className="container mx-auto px-6 py-4">
-                <PracticeBreadcrumb
-                    items={[
-                        { label: "Reading", href: "/practice/reading" },
-                        { label: getExerciseName(slug), href: `/practice/reading/${slug}` },
-                        { label: "Results" }
-                    ]}
-                />
-
-                <div className="">
-                    {/* Results Header */}
-                    <div className="bg-gradient-to-br from-indigo-50 to-purple-100 rounded-3xl p-8 mb-8 shadow-xl border border-indigo-200">
-                        <div className="text-center space-y-6">
-                            <h2 className="text-3xl font-bold text-gray-900">Test Results</h2>
-                            <div className="text-8xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                                {percentage}%
-                            </div>
-                            <div className="text-xl text-gray-700">
-                                You got <span className="font-semibold text-indigo-600">{correct}</span> out of{' '}
-                                <span className="font-semibold text-indigo-600">{total}</span> questions correct
-                            </div>
-                            <Progress value={percentage} className="w-full max-w-md mx-auto h-3 bg-gray-200" />
-
-                            <div className="flex gap-4 justify-center mt-8">
-                                <Button
-                                    onClick={resetTest}
-                                    variant="outline"
-                                    className="px-6 py-3 rounded-xl border-2 border-gray-400 hover:border-indigo-400 hover:bg-indigo-50 transition-all duration-200"
-                                >
-                                    <RotateCcw className="w-4 h-4 mr-2" />
-                                    Retake Test
-                                </Button>
-                                <Button
-                                    onClick={() => router.push(`/practice/reading/${slug}`)}
-                                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 transition-all duration-200"
-                                >
-                                    <ChevronLeft className="w-4 h-4 mr-2" />
-                                    Back to Lessons
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="space-y-6">
-                        <h3 className="text-2xl font-bold text-gray-900 mb-6">Review Answers</h3>
-                        {questions.map((question, index) => {
-                            const mcqQuestion = question as ReadingMCQItem;
-                            const userAnswer = testResults.userAnswers[question.id];
-                            const correctAnswer = mcqQuestion.solutionJsonb?.correct_answer;
-                            const isCorrect = userAnswer === correctAnswer;
-
-                            return (
-                                <div
-                                    key={question.id}
-                                    className={`rounded-2xl p-6 shadow-lg border-l-4 ${isCorrect ? 'border-l-green-500 bg-green-50/50' : 'border-l-red-500 bg-red-50/50'
-                                        } backdrop-blur-sm`}
-                                >
-                                    <div className="flex items-center justify-between mb-4">
-                                        <h4 className="text-xl font-semibold text-gray-900">Question {index + 1}</h4>
-                                        {isCorrect ? (
-                                            <div className="flex items-center gap-2 text-green-600">
-                                                <Check className="w-6 h-6" />
-                                                <span className="font-medium">Correct</span>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center gap-2 text-red-600">
-                                                <X className="w-6 h-6" />
-                                                <span className="font-medium">Incorrect</span>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        {/* Reading passage if exists */}
-                                        {mcqQuestion.promptJsonb?.passage && (
-                                            <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-blue-400">
-                                                <div className="flex items-center gap-2 mb-3">
-                                                    <BookOpen className="w-4 h-4 text-blue-600" />
-                                                    <span className="font-medium text-blue-900">Reading Passage</span>
-                                                </div>
-                                                <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed">
-                                                    {mcqQuestion.promptJsonb.passage}
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        <p className="text-lg text-gray-800 leading-relaxed font-medium">{mcqQuestion.promptJsonb?.text}</p>
-
-                                        <div className="grid gap-3">
-                                            {mcqQuestion.promptJsonb?.choices?.map((choice, choiceIndex) => {
-                                                const isUserChoice = userAnswer === choice.answer_key;
-                                                const isCorrectChoice = correctAnswer === choice.answer_key;
-
-                                                return (
-                                                    <div
-                                                        key={choiceIndex}
-                                                        className={`p-4 rounded-xl border-2 ${isCorrectChoice
-                                                            ? 'bg-green-100 border-green-300 shadow-md'
-                                                            : isUserChoice
-                                                                ? 'bg-red-100 border-red-300 shadow-md'
-                                                                : 'bg-white border-gray-200'
-                                                            }`}
-                                                    >
-                                                        <div className="flex items-center justify-between">
-                                                            <div className="flex items-center gap-3">
-                                                                <span className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold ${isCorrectChoice
-                                                                    ? 'bg-green-500 text-white'
-                                                                    : isUserChoice
-                                                                        ? 'bg-red-500 text-white'
-                                                                        : 'bg-gray-300 text-gray-700'
-                                                                    }`}>
-                                                                    {choice.answer_key}
-                                                                </span>
-                                                                <span className="font-medium text-gray-800">{choice.content}</span>
-                                                            </div>
-                                                            {isCorrectChoice && <Check className="w-5 h-5 text-green-500" />}
-                                                            {isUserChoice && !isCorrectChoice && <X className="w-5 h-5 text-red-500" />}
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-
-                                        {mcqQuestion.solutionJsonb?.explanation && (
-                                            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 mt-4">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <Lightbulb className="w-4 h-4 text-blue-600" />
-                                                    <span className="font-semibold text-blue-900">Explanation</span>
-                                                </div>
-                                                <p className="text-blue-800 leading-relaxed">
-                                                    {mcqQuestion.solutionJsonb.explanation}
-                                                </p>
-                                            </div>
-                                        )}
-
-                                        {mcqQuestion.solutionJsonb?.translation && (
-                                            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 mt-4">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <BookOpen className="w-4 h-4 text-green-600" />
-                                                    <span className="font-semibold text-green-900">Translation</span>
-                                                </div>
-                                                <p className="text-green-800 leading-relaxed">
-                                                    {mcqQuestion.solutionJsonb.translation}
-                                                </p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            </div>
-        );
-    }
 
     const currentQuestion = questions[currentQuestionIndex] as ReadingMCQItem;
+    console.log("aaaa", currentQuestion)
     const progress = questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0;
 
     return (
@@ -384,18 +224,7 @@ export default function ReadingTestPage() {
                         className="grid lg:grid-cols-2 gap-6"
                     >
                         {/* Left: Passage */}
-                        {currentQuestion.promptJsonb?.passage && (
-                            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <BookOpen className="w-5 h-5 text-blue-600" />
-                                    <h2 className="text-lg font-semibold text-gray-900">Reading Passage</h2>
-                                </div>
 
-                                <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed">
-                                    {currentQuestion.promptJsonb.passage}
-                                </div>
-                            </div>
-                        )}
 
                         {/* Right: Question and choices */}
                         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
@@ -414,14 +243,14 @@ export default function ReadingTestPage() {
                                             <button
                                                 onClick={() => handleAnswer(currentQuestion.id, choice.answer_key)}
                                                 className={`w-full p-4 text-left rounded-xl border-2 transition-all duration-200 ${userAnswers[currentQuestion.id] === choice.answer_key
-                                                        ? 'bg-blue-50 border-blue-300 shadow-md'
-                                                        : 'bg-white border-gray-200 hover:border-blue-200 hover:bg-blue-50/50'
+                                                    ? 'bg-blue-50 border-blue-300 shadow-md'
+                                                    : 'bg-white border-gray-200 hover:border-blue-200 hover:bg-blue-50/50'
                                                     }`}
                                             >
                                                 <div className="flex items-center gap-3">
                                                     <span className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold ${userAnswers[currentQuestion.id] === choice.answer_key
-                                                            ? 'bg-blue-500 text-white'
-                                                            : 'bg-gray-300 text-gray-700'
+                                                        ? 'bg-blue-500 text-white'
+                                                        : 'bg-gray-300 text-gray-700'
                                                         }`}>
                                                         {choice.answer_key}
                                                     </span>
@@ -431,7 +260,10 @@ export default function ReadingTestPage() {
                                         </motion.div>
                                     ))}
                                 </div>
+
                             </div>
+
+
 
                             {/* Navigation */}
                             <div className="flex items-center justify-between pt-4 border-t border-gray-200">
@@ -468,7 +300,20 @@ export default function ReadingTestPage() {
                                     </Button>
                                 )}
                             </div>
+
                         </div>
+                        {currentQuestion.promptJsonb?.passage && (
+                            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <BookOpen className="w-5 h-5 text-blue-600" />
+                                    <h2 className="text-lg font-semibold text-gray-900">Reading Passage</h2>
+                                </div>
+
+                                <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed">
+                                    {currentQuestion.promptJsonb.passage}
+                                </div>
+                            </div>
+                        )}
                     </motion.div>
                 )}
             </div>

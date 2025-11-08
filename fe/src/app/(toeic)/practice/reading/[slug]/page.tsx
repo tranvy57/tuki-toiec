@@ -39,7 +39,7 @@ const itemVariants = {
 };
 const data = mockReadingExercises;
 
-export default function WritingTopicsPage() {
+export default function ReadingTopicsPage() {
   const params = useParams();
   const router = useRouter();
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
@@ -47,17 +47,12 @@ export default function WritingTopicsPage() {
   const slug = params.slug as string;
   const exercise = data.find((ex) => ex.slug === slug);
 
-  // Fetch API data
+  // Fetch API data - chỉ hỗ trợ MCQ cho Reading
   const { data: mcqLessons, isLoading: mcqLoading, error: mcqError } = useLessonsByModality({
     modality: "mcq",
     enabled: slug === "mcq",
     skillType: "reading"
   });
-
-  // const { data: opinionLessons, isLoading: opinionLoading, error: opinionError } = useLessonsByModality({
-  //   modality: "opinion_paragraph",
-  //   enabled: slug === "opinion-essay"
-  // });
 
   // console.log("exercise", exercise);
   // console.log("emailLessons", emailLessons);
@@ -136,7 +131,7 @@ export default function WritingTopicsPage() {
               src={exercise?.imageUrl}
               width={300}
               height={300}
-              alt="hehe"
+              alt="reading exercise"
             />
 
             {exercise.instruction && (
@@ -160,94 +155,55 @@ export default function WritingTopicsPage() {
 
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {/* Loading states */}
-          {((slug === "mcq" && mcqLoading)) && (
-              <>
-                {[1, 2, 3].map((skeleton) => (
-                  <div key={skeleton} className="relative group">
-                    <Card className="h-full bg-white border-gray-200 shadow-md">
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-center h-40">
-                          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-                        </div>
-                        <div className="text-center">
-                          <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
-                          <div className="h-3 bg-gray-100 rounded animate-pulse"></div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                ))}
-              </>
-            )}
+          {(slug === "mcq" && mcqLoading) && (
+            <>
+              {[1, 2, 3].map((skeleton) => (
+                <div key={skeleton} className="relative group">
+                  <Card className="h-full bg-white border-gray-200 shadow-md">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-center h-40">
+                        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                      </div>
+                      <div className="text-center">
+                        <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                        <div className="h-3 bg-gray-100 rounded animate-pulse"></div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              ))}
+            </>
+          )}
 
           {/* Error states */}
-          {((slug === "mcq" && mcqError)) && (
-              <div className="col-span-4 text-center py-8">
-                <div className="text-red-500 mb-4">
-                  {slug === "mcq" ? (
-                    <Mail className="w-12 h-12 mx-auto mb-2" />
-                  ) : slug === "describe-picture" ? (
-                    <ImageIcon className="w-12 h-12 mx-auto mb-2" />
-                  ) : (
-                    <BookOpen className="w-12 h-12 mx-auto mb-2" />
-                  )}
-                  <h3 className="text-lg font-semibold">Không thể tải dữ liệu</h3>
-                  <p className="text-sm">Vui lòng thử lại sau</p>
-                </div>
+          {(slug === "mcq" && mcqError) && (
+            <div className="col-span-4 text-center py-8">
+              <div className="text-red-500 mb-4">
+                <BookOpen className="w-12 h-12 mx-auto mb-2" />
+                <h3 className="text-lg font-semibold">Không thể tải dữ liệu</h3>
+                <p className="text-sm">Vui lòng thử lại sau</p>
               </div>
-            )}
+            </div>
+          )}
 
           {/* Render API data for mcq */}
           {slug === "mcq" && mcqLessons && !mcqLoading && (
             <>
-              {mcqLessons.map((lesson, lessonIndex) =>
+              {mcqLessons.map((lesson) => (
                 <CustomCard
-                  key={`${lesson.lessonId}`}
+                  key={lesson.lessonId}
                   slug={lesson.lessonId}
                   name={lesson.name}
                   description={`Difficulty: easy | Band: 550`}
-                  imageUrl="https://media-blog.jobsgo.vn/blog/wp-content/uploads/2022/06/cach-viet-email-dung-chuan.jpg"
-                  icon={Mail}
+                  imageUrl="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+                  icon={BookOpen}
                   href={`/practice/reading/${exercise.slug}/${lesson.lessonId}`}
                 />
-              )}
+              ))}
             </>
           )}
 
-          {/* {slug === "opinion-essay" && opinionLessons && !opinionLoading && (
-            <>
-              {opinionLessons.map((lesson, lessonIndex) =>
-                lesson.items.map((item, itemIndex) => (
-                  <CustomCard
-                    key={`${lesson.lessonId}-${item.id}`}
-                    slug={item.id}
-                    name={item.title.trim()}
-                    description={`Difficulty: ${item.difficulty} | Band: ${item.bandHint} | Essay Topic`}
-                    imageUrl="https://dotb.vn/wp-content/uploads/2024/08/Ket-qua-hoc-tap-cua-hoc-sinh-thong-bao-ket-qua-hoc-tap-dotb.jpg"
-                    icon={BookOpen}
-                    href={`/practice/writing/${exercise.slug}/${item.id}`}
-                  />
-                ))
-              )}
-            </>
-          )} */}
 
-          {/* Render mock data for other types */}
-          {/* {slug !== "email-response" && slug !== "describe-picture" && slug !== "opinion-essay" && exercise.subTopics.map((topic, i) => {
-            console.log("topic", topic);
-
-            return (
-              <CustomCard
-                key={i}
-                slug={topic.slug}
-                name={topic.title}
-                description={topic.description}
-                imageUrl={topic.imageUrl}
-                icon={topic.icon || Mail}
-                href={`/practice/writing/${exercise.slug}/${topic.id}`}
-              />
-            );
-          })} */}
         </div>
       </div>
       {/* Topics list */}

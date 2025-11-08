@@ -14,22 +14,22 @@ export const PracticeSection = () => {
         <PracticeCard
           title="Nghe Hiểu"
           icon={<FontAwesome5 name="headphones" size={24} color={colors.primary} />}
-          onPress={() => router.push('/study-plan')}
+          onPress={() => router.push('/review?skill=listening')}
         />
         <PracticeCard
           title="Đọc Hiểu"
           icon={<FontAwesome5 name="book" size={24} color={colors.primary} />}
-          onPress={() => router.push('/study-plan')}
+          onPress={() => router.push('/review?skill=reading')}
         />
         <PracticeCard
           title="Luyện nói"
           icon={<FontAwesome5 name="microphone" size={24} color={colors.primary} />}
-          onPress={() => router.push('/study-plan')}
+          onPress={() => router.push('/review?skill=speaking')}
         />
         <PracticeCard
           title="Viết"
           icon={<FontAwesome5 name="pencil-alt" size={24} color={colors.primary} />}
-          onPress={() => router.push('/study-plan')}
+          onPress={() => router.push('/review?skill=writing')}
         />
       </View>
     </>

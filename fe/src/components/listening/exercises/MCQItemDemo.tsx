@@ -227,7 +227,7 @@ export function MCQItem({ lessonId, questions, onFinish, onBack }: ListeningMCQP
         {currentQuestionIndex === questions.length - 1 ? (
           <Button
             onClick={handleFinishTest}
-            disabled={Object.keys(userAnswers).length !== questions.length}
+            // disabled={Object.keys(userAnswers).length !== questions.length}
             className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Finish Test
@@ -235,7 +235,6 @@ export function MCQItem({ lessonId, questions, onFinish, onBack }: ListeningMCQP
         ) : (
           <Button
             onClick={handleNextQuestion}
-            disabled={!userAnswers[currentQuestion?.id || '']}
             className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Next question

@@ -10,6 +10,8 @@ import {
   Video,
   HelpCircle,
   BookOpen,
+  CheckCircle2,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +35,8 @@ import { SidebarToggle } from "./sidebar-toggle";
 import { useLatestCourse } from "@/api/usePlan";
 import { PremiumUpgradeDialog } from "@/components/premium/prenium-upgrade";
 import { usePremiumStatus } from "@/api";
+import { useCompleteStudyTask } from "@/api/useStudyTasks";
+import { toast } from "sonner";
 
 export function MainSidebar({
   activeUnitId,
@@ -60,6 +64,8 @@ export function MainSidebar({
   const { collapsed, setMobileOpen } = useSidebar();
   const { data: courseData, isLoading, error, refetch } = useLatestCourse();
   const { data: premiumData } = usePremiumStatus();
+  const { mutate: completeStudyTask, isPending: isCompleting } = useCompleteStudyTask();
+
   console.log(premiumData?.isPremium)
 
   // State cho content panel
@@ -118,8 +124,33 @@ export function MainSidebar({
       setShowPremiumDialog(true);
       return;
     }
+    console.log("aaaaaa", content)
 
     setSelectedContentId(contentId);
+  };
+
+  const handleCompleteTask = (studyTaskId: string) => {
+    if (!studyTaskId) {
+      toast.error("Không tìm thấy study task ID");
+      return;
+    }
+
+    completeStudyTask(studyTaskId, {
+      onSuccess: (response) => {
+        toast.success("Đã hoàn thành bài học!");
+        console.log("Task completed:", response);
+        // Refresh course data to update status
+        refetch();
+
+        // Reset UI state
+        setSelectedContentId(null);
+        setActiveLessonId(null);
+      },
+      onError: (error: any) => {
+        toast.error("Có lỗi xảy ra: " + (error.message || "Không thể hoàn thành bài học"));
+        console.error("Complete task error:", error);
+      }
+    });
   };
 
   // Reset states when activeUnitId changes
@@ -236,6 +267,8 @@ export function MainSidebar({
             <ContentDetailPanel
               content={selectedContent}
               isPremiumUser={isPremiumUser}
+              onCompleteTask={handleCompleteTask}
+              isCompleting={isCompleting}
             />
           ) : activeLesson ? (
             <LessonOverviewPanel lesson={activeLesson} />
@@ -261,9 +294,13 @@ export function MainSidebar({
 function ContentDetailPanel({
   content,
   isPremiumUser = false,
+  onCompleteTask,
+  isCompleting = false,
 }: {
   content: any;
   isPremiumUser?: boolean;
+  onCompleteTask?: (studyTaskId: string) => void;
+  isCompleting?: boolean;
 }) {
   const [showLearningInterface, setShowLearningInterface] = useState(false);
   console.log(content)
@@ -306,6 +343,11 @@ function ContentDetailPanel({
         onComplete={(stats) => {
           console.log("Learning completed:", stats);
           setShowLearningInterface(false);
+
+          // Auto complete task when interactive learning is finished
+          if (onCompleteTask && content.studyTaskId) {
+            onCompleteTask(content.studyTaskId);
+          }
         }}
       />
     );
@@ -428,6 +470,40 @@ function ContentDetailPanel({
                   className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
                 >
                   {hasVocabularies ? "Học từ vựng" : "Làm bài tập"}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Complete Task Button - Only show for pending lessons */}
+          {onCompleteTask && content.id && (
+            <div className="mt-6 pt-6 border-t border-slate-200">
+              <div className="bg-green-50 p-4 rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <CheckCircle2 className="w-5 h-5 text-green-600" />
+                  <span className="font-medium text-green-900">
+                    Hoàn thành bài học
+                  </span>
+                </div>
+                <p className="text-sm text-green-700 mb-3">
+                  Đánh dấu bài học này đã hoàn thành và mở khóa bài tiếp theo
+                </p>
+                <Button
+                  onClick={() => onCompleteTask(content.studyTaskId)}
+                  disabled={isCompleting}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
+                >
+                  {isCompleting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Đang xử lý...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                      Hoàn thành bài học
+                    </>
+                  )}
                 </Button>
               </div>
             </div>

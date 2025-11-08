@@ -13,7 +13,7 @@ export default function TabLayout() {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <Tabs
-        initialRouteName="home"
+        initialRouteName="(home)"
         screenOptions={({ route }) => ({
           tabBarActiveTintColor: colors.primary,
           tabBarShowLabel: true,
@@ -49,7 +49,7 @@ export default function TabLayout() {
         })}
         tabBar={(props: BottomTabBarProps) => <EnhancedTabBar {...props} />}>
         <Tabs.Screen
-          name="home"
+          name="(home)"
           options={{
             title: 'Trang chủ',
             tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
@@ -80,7 +80,7 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="study-plan"
+          name="(study-plan)"
           options={{
             title: 'Kế hoạch',
             tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (

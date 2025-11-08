@@ -73,19 +73,23 @@ export const usePracticeTest = create<PracticeTestState>()(
         const partCache = new Map<number, Part>();
         const groupCache = new Map<string, Group>();
 
-        // Build cache for performance
-        fullTest.parts.forEach((part) => {
+        const sortedParts = [...fullTest.parts].sort(
+          (a, b) => a.partNumber - b.partNumber
+        );
+
+        sortedParts.forEach((part) => {
           partCache.set(part.partNumber, part);
+
           part.groups.forEach((group) => {
             groupCache.set(group.id, group);
           });
         });
 
-        const firstPart = fullTest.parts[0];
+        const firstPart = sortedParts[0];
         const firstGroup = firstPart?.groups[0];
 
         set({
-          fullTest,
+          fullTest: { ...fullTest, parts: sortedParts },
           partCache,
           groupCache,
           currentPart: firstPart || null,
@@ -95,7 +99,7 @@ export const usePracticeTest = create<PracticeTestState>()(
       },
 
       setTest: (test) => set({ test }),
-      
+
       setResultTest: (resultTest) => set({ resultTest }),
 
       setCurrentPart: (partNumber) => {
@@ -127,7 +131,7 @@ export const usePracticeTest = create<PracticeTestState>()(
         for (let group of groupCache.values()) {
           if (group.questions.some((q) => q.id === questionId)) {
             return group;
-          } 
+          }
         }
         return null;
       },
@@ -216,12 +220,14 @@ export const usePracticeTest = create<PracticeTestState>()(
           0
         );
         const answeredQuestions = part.groups.reduce((sum, group) => {
-          return sum + group.questions.filter(
-            (q) => selectedAnswers[q.id]
-          ).length;
+          return (
+            sum + group.questions.filter((q) => selectedAnswers[q.id]).length
+          );
         }, 0);
 
-        return totalQuestions > 0 ? (answeredQuestions / totalQuestions) * 100 : 0;
+        return totalQuestions > 0
+          ? (answeredQuestions / totalQuestions) * 100
+          : 0;
       },
 
       reset: () =>

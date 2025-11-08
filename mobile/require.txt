@@ -11,3 +11,11 @@
  Header mục tiêu ngày, streak, XP.
 
  Telemetry: tap node, complete, abandon.
+
+ "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/splash.png",
+        "backgroundColor": "#FF776F"
+      },
+      "package": "com.nguyentu2003.smarttoeiclearner"
+    },

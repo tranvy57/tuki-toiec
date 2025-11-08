@@ -181,6 +181,7 @@ export function UnitLessons({
       className="space-y-2"
     >
       {lessons.map((lesson) => {
+        console.log(lesson)
         const isActive = lesson.id === activeLessonId;
         const isExpanded = expandedLessons.has(lesson.id);
         const isLocked = lesson.studyTaskStatus === "locked";

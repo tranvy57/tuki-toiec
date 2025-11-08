@@ -12,6 +12,7 @@ export interface PlanContent {
   content: string;
   order: number;
   isPremium: boolean;
+  studyTaskId?: string; // ID của study task tương ứng với content này
 }
 
 export interface PlanLesson {
@@ -23,7 +24,13 @@ export interface PlanLesson {
   description: string;
   level: string;
   order: number;
-  studyTaskStatus: "pending" | "in_progress" | "completed" | "skipped" | "locked";
+  studyTaskStatus:
+    | "pending"
+    | "in_progress"
+    | "completed"
+    | "skipped"
+    | "locked";
+  studyTaskId?: string; // ID của study task tương ứng với lesson này
   contents: PlanContent[];
 }
 

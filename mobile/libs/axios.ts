@@ -23,32 +23,24 @@ export const api = axios.create({
 api.interceptors.request.use(
   async (config) => {
     const token = await getValueFor('token');
-    console.log(token)
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
-    console.log('➡️ [Request]', config);
     return config;
   },
   (error) => {
-    console.log('❌ [Request Error]', error);
     return Promise.reject(error);
   }
 );
 
 api.interceptors.response.use(
   (response) => {
-    console.log('✅ [Response]', {
-      url: response.config.url,
-      status: response.status,
-      data: response.data,
-    });
+     
     return response;
   },
   (error) => {
     if (error.response) {
       const { status, config } = error.response;
-      console.log('❌ [Response Error]', { url: config?.url, status, data: error.response.data });
 
       // Check 401 Unauthorized
       if (status === 401) {

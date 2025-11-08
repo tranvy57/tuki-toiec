@@ -9,14 +9,16 @@ import {
   BookOpen,
   Play,
   BarChart3,
+  Loader2,
 } from "lucide-react";
 import { TOEIC_PARTS, SAMPLE_QUESTIONS } from "../constants";
 
 interface IntroScreenProps {
   onStart: () => void;
+  isLoading?: boolean;
 }
 
-export function IntroScreen({ onStart }: IntroScreenProps) {
+export function IntroScreen({ onStart, isLoading }: IntroScreenProps) {
   return (
     <motion.div
       key="intro"
@@ -100,13 +102,23 @@ export function IntroScreen({ onStart }: IntroScreenProps) {
         <Button
           onClick={onStart}
           size="lg"
-          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+          disabled={isLoading}
+          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-70"
         >
-          <Play className="w-5 h-5 mr-2" />
-          Start Review Test
+          {isLoading ? (
+            <>
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              Đang chuẩn bị...
+            </>
+          ) : (
+            <>
+              <Play className="w-5 h-5 mr-2" />
+              Start Review Test
+            </>
+          )}
         </Button>
         <p className="text-sm text-gray-500 mt-2">
-          No registration required • Results available immediately
+          {isLoading ? "Vui lòng đợi trong giây lát..." : "No registration required • Results available immediately"}
         </p>
       </div>
     </motion.div>

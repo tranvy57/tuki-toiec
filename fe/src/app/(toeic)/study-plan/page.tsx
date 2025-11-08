@@ -84,14 +84,25 @@ export default function LearnPage() {
     );
     if (!phase?.phaseLessons) return [];
 
-    return phase.phaseLessons.map((phaseLesson: any, index: number) => ({
-      id: phaseId * 100 + index + 1,
-      type: determineLessonType(phaseLesson.lesson.contents),
-      title: phaseLesson.lesson.name,
-      done: phaseLesson.lesson.status === "completed",
-      premium: false,
-      description: `Lesson ${index + 1} description`,
-    }));
+    return phase.phaseLessons.map((phaseLesson: any, index: number) => {
+      // Add studyTaskId to each content from lesson's studyTaskId
+      const contentsWithTaskId = phaseLesson.lesson.contents?.map((content: any) => ({
+        ...content,
+        studyTaskId: phaseLesson.lesson.studyTaskId // Use lesson's studyTaskId
+      })) || [];
+
+      return {
+        id: phaseId * 100 + index + 1,
+        type: determineLessonType(phaseLesson.lesson.contents),
+        title: phaseLesson.lesson.name,
+        done: phaseLesson.lesson.studyTaskStatus === "completed",
+        premium: false,
+        description: `Lesson ${index + 1} description`,
+        contents: contentsWithTaskId,
+        studyTaskId: phaseLesson.lesson.studyTaskId, // Also add to lesson level
+        studyTaskStatus: phaseLesson.lesson.studyTaskStatus,
+      };
+    });
   };
 
   const calculatePhaseProgress = (phase: any) => {

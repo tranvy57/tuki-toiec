@@ -235,7 +235,7 @@ export function ListeningMCQ({ lessonId, questions, onFinish, onBack }: Listenin
                 ) : (
                     <Button
                         onClick={handleNextQuestion}
-                        disabled={!userAnswers[currentQuestion?.id || '']}
+                        // disabled={!userAnswers[currentQuestion?.id || '']}
                         className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         Next question

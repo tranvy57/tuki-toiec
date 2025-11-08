@@ -3,7 +3,7 @@ export interface Phase {
   plan_id: string;
   title: string;
   order_no: number;
-  lessons: number[];
+  lessons: string[];
   status: 'active' | 'locked';
 }
 
@@ -23,15 +23,15 @@ export interface StudyPlanProgress {
 }
 
 export interface StudyPlanPhase {
-  phase_id: number;
+  id: string;
   title: string;
   status: 'completed' | 'in_progress' | 'pending';
   progress: number;
 }
 
 export interface StudyPlan {
-  plan_id: number;
-  user_id: number;
+  plan_id: string;
+  // user_id: string;
   target_score: number;
   start_date: string;
   total_days: number;
@@ -47,14 +47,14 @@ export interface DailySummary {
 }
 
 export interface Lesson {
-  lesson_id: number;
+  lesson_id: string;
   name: string;
   description: string;
   unit: string;
 }
 
 export interface StudyTask {
-  task_id: number;
+  task_id: string;
   mode: 'learn' | 'review';
   status: 'completed' | 'in_progress' | 'pending';
   lesson: Lesson;
@@ -63,8 +63,8 @@ export interface StudyTask {
 
 export interface DailyStudy {
   date: string;
-  plan_id: number;
-  user_id: number;
+  plan_id: string;
+  user_id: string;
   summary: DailySummary;
   tasks: StudyTask[];
 }

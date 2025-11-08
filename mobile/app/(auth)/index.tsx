@@ -38,11 +38,9 @@ export default function Login() {
     setIsLoading(true);
     await login(data);
     if(!error) {
-      console.log('Login successful:', error);
       setIsLoading(false);
       router.replace('/(tabs)/home');
     } else {
-      console.log('Login failed');
       setIsLoading(false);
     }
     // setTimeout(() => setIsLoading(false), 2000);

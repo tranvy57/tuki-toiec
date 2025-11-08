@@ -522,7 +522,7 @@ export default function ClozeListeningQuestion({
           {currentQuestionIndex === questions.length - 1 ? (
             <Button
               onClick={handleFinishTest}
-              disabled={!isChecked}
+              // disabled={!isChecked}
               className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Finish Test
@@ -530,7 +530,7 @@ export default function ClozeListeningQuestion({
           ) : (
             <Button
               onClick={handleNextQuestion}
-              disabled={!isChecked}
+              // disabled={!isChecked}
               className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next Question
