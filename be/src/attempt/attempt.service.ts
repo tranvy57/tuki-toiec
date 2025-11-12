@@ -30,6 +30,9 @@ import { QuestionDto } from 'src/question/dto/question.dto';
 import { AttemptDto } from './dto/attempt.dto';
 import { AttemptResultDto } from './dto/submit-attempt-response.dto';
 import { StudyTasksService } from 'src/study_tasks/study_tasks.service';
+import { Course } from 'src/courses/entities/course.entity';
+import { UserCourse, UserCourseStatus } from 'src/user_courses/entities/user_course.entity';
+import { CourseBand } from 'src/courses/consts';
 
 @Injectable()
 export class AttemptService {
@@ -40,6 +43,10 @@ export class AttemptService {
     @InjectRepository(Test) private testRepo: Repository<Test>,
     @InjectRepository(Answer) private answerRepo: Repository<Answer>,
     @InjectRepository(Plan) private planRepo: Repository<Plan>,
+    @InjectRepository(Course) private courseRepo: Repository<Course>,
+    @InjectRepository(UserCourse)
+    private userCourseRepo: Repository<UserCourse>,
+
     @InjectRepository(TargetSkill)
     private targetSkillRepo: Repository<TargetSkill>,
     @InjectRepository(AttemptAnswer)
@@ -455,20 +462,52 @@ export class AttemptService {
     return saved.map((aa) => this.toAttemptAnswerDto(aa));
   }
 
-  async submitAttemptReview(attemptId: string, user: User) {
+  async submitAttemptReview(
+    attemptId: string,
+    user: User,
+    band: string = '750',
+  ) {
     return this.dataSrc.transaction(async (manager) => {
       const attempt = await this.loadAttempt(manager, attemptId, user);
       const answerMap = await this.loadAttemptAnswers(manager, attemptId);
+      const course = await this.courseRepo.findOne({
+        where: { band: CourseBand.TOEIC_750 },
+      });
 
       const { totalScore, correctCount, totalQuestions, skillMap, allKeys } =
         this.processQuestions(attempt, answerMap);
 
-      // console.log('Skill map from processQuestions:', skillMap);
       await this.updateUserVocabulary(manager, user.id, allKeys, attempt);
       const updatedSkills = await this.userProgressService.updateUserProgress(
         manager,
         user.id,
         skillMap,
+      );
+
+      if (!course) throw new Error('Course not found');
+
+      const newActiveCourse = this.userCourseRepo.create({
+        user,
+        course,
+        status: UserCourseStatus.ACTIVE,
+        purchaseDate: new Date(),
+        expireDate: new Date(
+          Date.now() + (course.durationDays || 60) * 24 * 60 * 60 * 1000,
+        ),
+      });
+      await this.userCourseRepo.save(newActiveCourse);
+
+      await this.planService.create(
+        {
+          courseId: course.id,
+          targetScore: course.band,
+        },
+        user,
+      );
+
+      const plan = await this.planService.getActivePlanByUserId(
+        manager,
+        user.id,
       );
 
       const skippedTasks = await this.studyTaskService.markSkippableStudyTasks(
@@ -477,11 +516,6 @@ export class AttemptService {
       );
 
       await this.updateAttempt(manager, attempt, totalScore);
-
-      const plan = await this.planService.getActivePlanByUserId(
-        manager,
-        user.id,
-      );
 
       if (plan) {
         await this.planService.updatePlan(plan.id, 'in_progress');
@@ -693,8 +727,6 @@ export class AttemptService {
       },
       order: { createdAt: 'DESC' },
     });
-
-    console.log('attempt', attempts);
 
     if (!attempts.length) return [];
 

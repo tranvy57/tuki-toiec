@@ -49,7 +49,6 @@ export class StudyTasksService {
       const taskRepo = manager.withRepository(this.studyTaskRepo);
       const planRepo = manager.withRepository(this.planRepo);
 
-      // 1️⃣ Lấy task hiện tại
       const current = await taskRepo.findOne({
         where: { id: taskId },
         relations: { plan: true, lesson: true, lessonContent: true },
@@ -58,13 +57,11 @@ export class StudyTasksService {
 
       const plan = current.plan;
 
-      // 2️⃣ Đánh dấu current = completed
       if (current.status !== 'completed') {
         current.status = 'completed';
         await taskRepo.save(current);
       }
 
-      // 3️⃣ Lấy toàn bộ task thuộc cùng plan, sắp xếp theo thứ tự logic
       const allTasks = await taskRepo
         .createQueryBuilder('t')
         .innerJoinAndSelect('t.lesson', 'lesson')
@@ -76,7 +73,6 @@ export class StudyTasksService {
 
       const currentIdx = allTasks.findIndex((t) => t.id === current.id);
 
-      // 4️⃣ Clear mọi pending phía sau để đảm bảo chỉ có 1 task pending
       for (let i = currentIdx + 1; i < allTasks.length; i++) {
         if (allTasks[i].status === 'pending') {
           allTasks[i].status = 'locked';
@@ -84,7 +80,6 @@ export class StudyTasksService {
         }
       }
 
-      // 5️⃣ Tìm task kế tiếp khả dụng — bỏ qua skipped, chọn locked đầu tiên
       let toOpen: (typeof allTasks)[number] | undefined;
       for (let i = currentIdx + 1; i < allTasks.length; i++) {
         const t = allTasks[i];
@@ -100,7 +95,6 @@ export class StudyTasksService {
         await taskRepo.save(toOpen);
       }
 
-      // 6️⃣ Kiểm tra xem plan đã hoàn tất chưa
       const updatedTasks = await taskRepo.find({
         where: { plan: { id: plan.id } },
         select: ['id', 'status'],
@@ -116,7 +110,6 @@ export class StudyTasksService {
         await planRepo.save(plan);
       }
 
-      // 7️⃣ Trả kết quả
       return {
         currentId: current.id,
         openedNextId: toOpen?.id ?? null,

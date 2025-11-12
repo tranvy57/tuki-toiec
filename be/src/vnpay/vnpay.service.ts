@@ -168,7 +168,6 @@ export class VnpayService {
 
       const { user, course } = orderWithRelations;
 
-      // Lấy tất cả user_course của user với course này
       const existingCourses = await this.userCourseRepo.find({
         where: {
           user: { id: user.id },
@@ -261,7 +260,6 @@ export class VnpayService {
       });
     } catch (error) {
       console.error('❌ Lỗi khi tạo user_course:', error);
-      // Không throw để không ảnh hưởng flow thanh toán
     }
   }
 }
