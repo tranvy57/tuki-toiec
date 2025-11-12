@@ -16,6 +16,8 @@ import { UserVocabulary } from 'src/user_vocabularies/entities/user_vocabulary.e
 import { UserProgressModule } from 'src/user_progress/user_progress.module';
 import { StudyTasksModule } from 'src/study_tasks/study_tasks.module';
 import { PlanModule } from 'src/plan/plan.module';
+import { Course } from 'src/courses/entities/course.entity';
+import { UserCourse } from 'src/user_courses/entities/user_course.entity';
 
 @Module({
   imports: [
@@ -31,10 +33,12 @@ import { PlanModule } from 'src/plan/plan.module';
       TargetSkill,
       UserProgress,
       UserVocabulary,
+      Course,
+      UserCourse,
     ]),
     UserProgressModule,
     StudyTasksModule,
-    PlanModule
+    PlanModule,
   ],
   controllers: [AttemptController],
   providers: [AttemptService],
