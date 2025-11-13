@@ -9,7 +9,7 @@ import { TestScreen } from "./components/TestScreen";
 import { ResultsScreen } from "./components/ResultsScreen";
 import { ReviewTestStage, TestResults, Question, Group, ApiTestData, ApiPart, ApiGroup } from "./types";
 import { TOEIC_PARTS, BAND_SCORE_MAPPING, generateRecommendations } from "./constants";
-import { useStartTestPractice } from "@/api";
+import { useStartTestPractice, useSubmitTestReview } from "@/api";
 import { usePracticeTest } from "@/hooks";
 
 // Helper function to convert API data to Question format
@@ -135,17 +135,17 @@ export default function ReviewTestPage({ onComplete }: ReviewTestPageProps) {
   const [questions, setQuestions] = useState<Question[]>([]); // Flattened for compatibility
 
   const { mutate: startTest, isPending, isSuccess } = useStartTestPractice();
-  const { fullTest, setFullTest } = usePracticeTest();
+  const { mutate: submitReview, isPending: isSubmittingReview } = useSubmitTestReview();
+  const { fullTest, setFullTest, setResultTest } = usePracticeTest();
 
   const handleStart = () => {
     startTest({ mode: "review" }, {
       onSuccess: (data) => {
         setFullTest(data);
-        // Convert API data to groups format
+        console.log("XXXXXX", data);
         const convertedGroups = convertApiDataToGroups(data);
         setGroups(convertedGroups);
 
-        // Also create flattened questions for compatibility
         const flatQuestions = convertGroupsToQuestions(convertedGroups);
         setQuestions(flatQuestions);
 
@@ -157,12 +157,11 @@ export default function ReviewTestPage({ onComplete }: ReviewTestPageProps) {
         console.error("Failed to start test:", error);
       }
     });
-  };  // Group-based navigation
+  };
   const currentGroup = groups[currentGroupIndex];
   const totalGroups = groups.length;
 
   const handleAnswerForQuestion = (questionIndex: number, optionIndex: number) => {
-    // Update answer for specific question using flat question index
     setAnswers(prev => ({
       ...prev,
       [questionIndex]: optionIndex
@@ -188,14 +187,58 @@ export default function ReviewTestPage({ onComplete }: ReviewTestPageProps) {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setIsSubmitting(true);
 
-    // Simulate processing time for better UX
-    setTimeout(() => {
+    if (fullTest?.id) {
+      submitReview(fullTest.id, {
+        onSuccess: (reviewResult) => {
+          console.log("Review result:", reviewResult);
+
+          // Transform the review result into ResultTestResponse format for store compatibility
+          const transformedResult = {
+            id: reviewResult.attemptId,
+            mode: "practice" as const,
+            parts: reviewResult.parts,
+            startedAt: new Date().toISOString(),
+            finishAt: new Date().toISOString(),
+            totalScore: reviewResult.score,
+            listeningScore: null,
+            readingScore: null,
+            accuracy: Math.round((reviewResult.correctCount / reviewResult.totalQuestions) * 100),
+            correctCount: reviewResult.correctCount,
+            wrongCount: reviewResult.totalQuestions - reviewResult.correctCount,
+            skippedCount: 0,
+            status: "submitted" as const,
+          };
+
+          // Store raw review data for access in components
+          localStorage.setItem('review-result', JSON.stringify(reviewResult));
+
+          // Save the transformed result to store
+          setResultTest(transformedResult);
+
+          // Also calculate local results for compatibility
+          calculateResults();
+
+          setStage("results");
+          setIsSubmitting(false);
+        },
+        onError: (error) => {
+          console.error("Failed to submit test review:", error);
+          // Fallback to local calculation on error
+          calculateResults();
+          setStage("results");
+          setIsSubmitting(false);
+        }
+      });
+    } else {
+      console.error("No test ID available for submission");
+      // Fallback to local calculation
       calculateResults();
+      setStage("results");
       setIsSubmitting(false);
-    }, 1500);
+    }
   };
 
   const calculateResults = () => {
@@ -219,7 +262,6 @@ export default function ReviewTestPage({ onComplete }: ReviewTestPageProps) {
     };
 
     setTestResults(results);
-    setStage("results");
     onComplete?.(results);
   };
 
@@ -373,11 +415,11 @@ export default function ReviewTestPage({ onComplete }: ReviewTestPageProps) {
             <LoadingScreen />
           )}
 
-          {isSubmitting && (
+          {(isSubmitting || isSubmittingReview) && (
             <SubmittingScreen />
           )}
 
-          {stage === "test" && !isPending && !isSubmitting && currentGroupData && (
+          {stage === "test" && !isPending && !isSubmitting && !isSubmittingReview && currentGroupData && (
             <TestScreen
               currentGroupIndex={currentGroupIndex}
               totalGroups={totalGroups}
@@ -398,9 +440,6 @@ export default function ReviewTestPage({ onComplete }: ReviewTestPageProps) {
 
           {stage === "results" && testResults && (
             <ResultsScreen
-              results={testResults}
-              questions={questions}
-              answers={answers}
               onRetake={handleRetake}
               onCreateStudyPlan={handleCreateStudyPlan}
             />

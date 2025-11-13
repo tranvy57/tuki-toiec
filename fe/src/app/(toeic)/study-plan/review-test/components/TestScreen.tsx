@@ -11,8 +11,8 @@ import { Question, Group } from "../types";
 import { formatTime } from "../constants";
 import { CountdownTimer } from "@/components/toeic/test/CountDown";
 import { AudioPlayer } from "@/components/toeic/test/Audio";
-import { useStartTestPractice } from "@/api";
-import { useEffect } from "react";
+import { useAddAttemptAnswer, useStartTestPractice } from "@/api";
+import { useEffect, useCallback, useMemo } from "react";
 import { usePracticeTest } from "@/hooks";
 
 interface TestScreenProps {
@@ -51,17 +51,65 @@ export function TestScreen({
   const progress = ((currentGroupIndex + 1) / totalGroups) * 100;
   const isLastGroup = currentGroupIndex === totalGroups - 1;
 
+  const { fullTest, setAnswer } = usePracticeTest();
 
-  const { fullTest } = usePracticeTest();
-  console.log(fullTest);
+  // Create a question map for easy lookup
+  const questionMap = useMemo(() => {
+    const map = new Map();
+    fullTest?.parts.flatMap(part => part.groups.flatMap(group => group.questions)).forEach((question, index) => {
+      console.log(question)
+      map.set(index + 1, {
+        ...question,
+        answers: question.answers.map((option, optionIndex) => ({
+          id: option.id,
+          answerKey: String.fromCharCode(65 + optionIndex), // A, B, C, D
+          content: option.content,
+          isCorrect: optionIndex === question.answers.findIndex(ans => ans.isCorrect)
+        }))
+      });
+    });
+    return map;
+  }, [fullTest]);
 
-  // Get the starting question index for this group in the flat array
+  // Mock attempt ID and API mutation (you'll need to implement these)
+  const attemptId = fullTest?.id; // Use test ID as attempt ID for now
+    const addAnswerMutation = useAddAttemptAnswer();
+  
+
+  const handleAnswerChange = useCallback(
+    (questionId: string, answerId: string) => {
+      setAnswer(questionId, answerId);
+
+      // Save answer to backend
+      if (attemptId) {
+        addAnswerMutation.mutate({
+          attemptId,
+          questionId,
+          answerId,
+        });
+      }
+    },
+    [setAnswer, attemptId, addAnswerMutation]
+  );
+
+  const handleQuestionAnswerChange = useCallback(
+    (questionNumber: number, value: string) => {
+      const question = questionMap.get(questionNumber);
+      if (question) {
+        const answer = question.answers.find((a: any) => a.answerKey === value);
+        if (answer) {
+          handleAnswerChange(question.id, answer.id);
+        }
+      }
+    },
+    [questionMap, handleAnswerChange]
+  );
+
   let groupStartIndex = 0;
   for (let i = 0; i < currentGroupIndex; i++) {
     groupStartIndex += allGroups[i].questions.length;
   }
 
-  // Group all questions by part for navigation
   const questionsByPart = allQuestions.reduce((acc, q, index) => {
     if (!acc[q.part]) {
       acc[q.part] = [];
@@ -131,11 +179,12 @@ export function TestScreen({
                   {/* Show shared content if available */}
                   {(group.paragraphEn) ? (
                     <div className="flex-1 overflow-y-auto">
-                      <div className="p-4 bg-white rounded-lg border shadow-sm">
+                      <div className="p-4 bg-white rounded-lg">
                         {group.paragraphEn && (
-                          <div className="text-gray-800 text-sm leading-relaxed whitespace-pre-line mb-4">
-                            {group.paragraphEn}
-                          </div>
+                          <div
+                            className="text-gray-800 text-sm leading-relaxed mb-4"
+                            dangerouslySetInnerHTML={{ __html: group.paragraphEn }}
+                          />
                         )}
                         {/* {group.paragraphVn && (
                           <div className="text-gray-600 text-sm leading-relaxed whitespace-pre-line bg-blue-50 p-3 rounded border-l-4 border-blue-200">
@@ -240,6 +289,7 @@ export function TestScreen({
                 // Find the flat question index for this question
                 const questionIndex = groupStartIndex + qIndex;
                 const questionAnswer = selectedAnswers[questionIndex];
+                // console.log(q)
 
                 return (
                   <div key={q.id} className="mb-4">
@@ -275,6 +325,10 @@ export function TestScreen({
                               onChange={() => {
                                 // Update answer for this specific question immediately
                                 onAnswerForQuestion(questionIndex, optionIndex);
+
+                                // Also handle answer change with API call
+                                const answerKey = String.fromCharCode(65 + optionIndex); // A, B, C, D
+                                handleQuestionAnswerChange(questionIndex + 1, answerKey);
                               }}
                               className="w-4 h-4 text-teal-600 border-gray-300 focus:ring-teal-500 mt-0.5 flex-shrink-0"
                             />
@@ -289,12 +343,12 @@ export function TestScreen({
                       </div>
 
                       {/* Show explanation if question is answered */}
-                      {questionAnswer !== undefined && q.explanation && (
+                      {/* {questionAnswer !== undefined && q.explanation && (
                         <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                           <div className="text-xs font-medium text-blue-800 mb-1">💡 Giải thích:</div>
                           <div className="text-xs text-blue-700 leading-relaxed break-words">{q.explanation}</div>
                         </div>
-                      )}
+                      )} */}
                     </div>
                   </div>
                 );

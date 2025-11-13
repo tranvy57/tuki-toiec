@@ -212,7 +212,7 @@ export default function LearnPage() {
     <div className="min-h-screen">
       {step === "overview" && (
         <>
-          <PhaseOverview
+          {/* <PhaseOverview
             testResults={testResults}
             studyPlan={myPlan || undefined}
             latestCourse={latestCourse || undefined}
@@ -222,7 +222,7 @@ export default function LearnPage() {
             open={showUpgrade}
             onOpenChange={setShowUpgrade}
             studyPlan={myPlan || undefined}
-          />
+          /> */}
         </>
       )}
     </div>

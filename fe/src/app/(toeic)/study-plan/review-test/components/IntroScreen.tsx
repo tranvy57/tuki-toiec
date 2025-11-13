@@ -43,35 +43,9 @@ export function IntroScreen({ onStart, isLoading }: IntroScreenProps) {
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6 mb-8">
-        <Card className="border-2 border-blue-100">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-blue-600" />
-              Test Duration
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-blue-600">5-10 minutes</p>
-            <p className="text-gray-600">Quick assessment covering all TOEIC parts</p>
-          </CardContent>
-        </Card>
+      
 
-        <Card className="border-2 border-green-100">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="w-5 h-5 text-green-600" />
-              Questions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-green-600">{SAMPLE_QUESTIONS.length} questions</p>
-            <p className="text-gray-600">Sample questions from all 7 TOEIC parts</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="mb-8">
+      <div className="mb-8">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BookOpen className="w-5 h-5" />
@@ -96,7 +70,7 @@ export function IntroScreen({ onStart, isLoading }: IntroScreenProps) {
             })}
           </div>
         </CardContent>
-      </Card>
+      </div>
 
       <div className="text-center">
         <Button

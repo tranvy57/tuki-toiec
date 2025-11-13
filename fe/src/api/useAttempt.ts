@@ -1,7 +1,25 @@
 import api from "@/libs/axios-config";
 import { CreateAttemptAnswerReq } from "@/types/implements/attempt-answer";
-import { PracticeTestResponse, PracticeTestResponseSchema, ResultTestResponse, ResultTestResponseSchema } from "@/types/implements/test";
+import {
+  PracticeTestResponse,
+  PracticeTestResponseSchema,
+  ResultTestResponse,
+  ResultTestResponseSchema,
+} from "@/types/implements/test";
 import { useMutation, useQuery } from "@tanstack/react-query";
+
+// Type for submit review response
+interface ReviewSubmitResponse {
+  attemptId: string;
+  score: number;
+  correctCount: number;
+  totalQuestions: number;
+  updatedSkills: {
+    skillId: string;
+    proficiency: number;
+  }[];
+  parts: any[]; // We'll use the existing part structure
+}
 
 type StartTestVariables = {
   testId?: string | undefined;
@@ -9,7 +27,8 @@ type StartTestVariables = {
 };
 
 async function startTestPractice(
-  testId: string | undefined, mode: "test" | "review" = "test"
+  testId: string | undefined,
+  mode: "test" | "review" = "test"
 ): Promise<PracticeTestResponse> {
   const res = await api.post(`/attempts`, {
     testId,
@@ -32,7 +51,8 @@ async function addAttemptAnswer(attemptAnswer: CreateAttemptAnswerReq) {
 
 export function useStartTestPractice() {
   return useMutation({
-    mutationFn: ({ testId, mode }: StartTestVariables) => startTestPractice(testId, mode),
+    mutationFn: ({ testId, mode }: StartTestVariables) =>
+      startTestPractice(testId, mode),
   });
 }
 
@@ -64,7 +84,27 @@ export const submitTest = async (
   }
 };
 
-export const  useSubmitTestResult = () => {
+export const submitTestReview = async (
+  attemptId: string
+): Promise<ReviewSubmitResponse> => {
+  try {
+    const response = await api.patch(`/attempts/${attemptId}/submit-review`);
+
+    // Return the raw data structure since it's different from ResultTestResponse
+    return response.data.data;
+  } catch (error) {
+    console.error("Error submitting test review:", error);
+    throw error;
+  }
+};
+
+export const useSubmitTestReview = () => {
+  return useMutation({
+    mutationFn: (attemptId: string) => submitTestReview(attemptId),
+  });
+};
+
+export const useSubmitTestResult = () => {
   return useMutation({
     mutationFn: (attemptId: string) => submitTest(attemptId),
   });

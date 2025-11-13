@@ -1,243 +1,298 @@
-"use client";
+"use client"
 
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  CheckCircle2,
-  TrendingUp,
-  Award,
-  ArrowRight,
-  Users,
-  Calendar,
-  X,
-} from "lucide-react";
-import { TestResults, Question } from "../types";
-import { BAND_SCORE_MAPPING, generateRecommendations, formatTime } from "../constants";
+import { motion } from "framer-motion"
+import { useState, useEffect } from "react"
+import { HeroSection } from "@/components/result/hero-section"
+import { PerformanceSummary } from "@/components/result/performance-summary"
+import { DetailedPartAnalysis } from "@/components/result/detailed-part-analysis"
+import { AnswerReview } from "@/components/result/answer-review"
+import { AIAnalysis } from "@/components/result/ai-analysis"
+import { StudyRecommendations } from "@/components/result/study-recommendations"
+import { FixedActionBar } from "@/components/result/fixed-action-bar"
+import { SummaryInfo } from "@/components/result/summary-info"
+import { usePracticeTest } from "@/hooks"
+import { getDurationString } from "@/utils"
+import { ResultTestResponse } from "@/types"
+import { TestResults, Question } from "../types"
 
-interface ResultsScreenProps {
-  results: TestResults;
-  questions: Question[];
-  answers: Record<number, number>;
-  onRetake: () => void;
-  onCreateStudyPlan: () => void;
+export interface TestData {
+  testTitle: string
+  totalScore: number
+  listeningScore: number
+  readingScore: number
+  accuracy: number
+  correctCount: number
+  incorrectCount: number
+  skippedCount: number
+  duration: string
+  testDate: string
+  parts: {
+    part: number
+    name: string
+    accuracy: number
+    details: {
+      type: string
+      correct: number
+      wrong: number
+      skipped: number
+      questionIds: number[]
+    }[]
+  }[]
+  aiAnalysis: string
+  recommendations: { icon: string; title: string; description: string }[]
 }
 
-export function ResultsScreen({
-  results,
-  questions,
-  answers,
-  onRetake,
-  onCreateStudyPlan,
-}: ResultsScreenProps) {
-  const scoreMapping = BAND_SCORE_MAPPING[results.correctAnswers] || BAND_SCORE_MAPPING[0];
+interface ResultsScreenProps {
+  onRetake: () => void
+  onCreateStudyPlan: () => void
+}
+
+export function ResultsScreen({ onRetake, onCreateStudyPlan }: ResultsScreenProps) {
+  const [activeSection, setActiveSection] = useState<"analysis" | "review">("analysis")
+  const { resultTest, fullTest } = usePracticeTest();
+  const [analysis, setAnalysis] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [reviewData, setReviewData] = useState<any>(null); // Store raw review data
+
+  console.log("TEST", resultTest)
+  console.log("FULL_TEST", fullTest)
+
+  // Store the raw review data from sessionStorage or state management
+  useEffect(() => {
+    // Try to get review data from localStorage or other storage
+    const storedReviewData = localStorage.getItem('review-result');
+    if (storedReviewData) {
+      setReviewData(JSON.parse(storedReviewData));
+    }
+
+    // Cleanup function to remove data when component unmounts
+    return () => {
+      // Uncomment if you want to clean up on unmount
+      // localStorage.removeItem('review-result');
+    };
+  }, []);
+
+  const handleAnalyze = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/analyze-test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(resultTest || fullTest),
+      });
+
+      const data = await res.json();
+      setAnalysis(data);
+    } catch (err) {
+      console.error("AI analysis error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Use resultTest if available (after test completion), otherwise fallback to fullTest for initial display
+  const testData = resultTest || (fullTest ? {
+    id: fullTest.id,
+    mode: "practice" as const,
+    parts: fullTest.parts,
+    startedAt: new Date().toISOString(),
+    finishAt: new Date().toISOString(),
+    totalScore: 0, // Default when no results yet
+    listeningScore: null,
+    readingScore: null,
+    accuracy: 0,
+    correctCount: 0,
+    wrongCount: 0,
+    skippedCount: 0,
+    status: "submitted" as const,
+  } : null);
+
+  if (!testData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-xl font-semibold text-gray-700">Đang tải kết quả...</div>
+          <div className="text-gray-500 mt-2">Vui lòng đợi trong giây lát</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <motion.div
-      key="results"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="max-w-4xl mx-auto space-y-6"
-    >
-      {/* Header */}
-      <div className="text-center">
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50/30 to-white pb-24">
+      <HeroSection data={testData} />
+
+      <div className="container mx-auto px-4 py-8 space-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-6">
+          <div className="lg:col-span-1">
+            <SummaryInfo
+              totalQuestions={reviewData?.totalQuestions || 200}
+              correctCount={testData.correctCount || 0}
+              duration={
+                getDurationString(testData.startedAt, testData.finishAt) ||
+                "02:00:00"
+              }
+            />
+          </div>
+
+          <div className="lg:col-span-4">
+            <PerformanceSummary data={testData} />
+          </div>
+        </div>
+
         <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          className="w-20 h-20 mx-auto mb-4 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
         >
-          <Award className="w-10 h-10 text-white" />
+          <DetailedPartAnalysis data={testData} />
         </motion.div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Test Completed!</h1>
-        <p className="text-gray-600">Here are your results and recommendations</p>
-      </div>
 
-      {/* Score Overview */}
-      <div className="grid md:grid-cols-3 gap-6">
-        <Card className="text-center p-6">
-          <div className="text-3xl font-bold text-blue-600 mb-2">{results.accuracy}%</div>
-          <p className="text-gray-600">Accuracy</p>
-        </Card>
-        <Card className="text-center p-6">
-          <div className="text-3xl font-bold text-green-600 mb-2">
-            {results.correctAnswers}/{results.totalQuestions}
-          </div>
-          <p className="text-gray-600">Correct Answers</p>
-        </Card>
-        <Card className="text-center p-6">
-          <div className="text-3xl font-bold text-purple-600 mb-2">
-            {formatTime(results.timeSpent)}
-          </div>
-          <p className="text-gray-600">Time Spent</p>
-        </Card>
-      </div>
+        {/* Skills Proficiency Section */}
+        {reviewData?.updatedSkills && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.35 }}
+            className="bg-white rounded-xl p-6 shadow-lg border"
+          >
+            <h3 className="text-xl font-semibold mb-4">Năng lực các kỹ năng</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-60 overflow-y-auto">
+              {reviewData.updatedSkills.slice(0, 12).map((skill: any, index: number) => {
+                // Try to find skill name from the parts data
+                let skillName = `Skill ${index + 1}`;
 
-      {/* Score Band */}
-      <Card className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold mb-2">Estimated TOEIC Score</h3>
-            <div className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${scoreMapping.color}`}>
-              {scoreMapping.band} • {scoreMapping.level}
-            </div>
-          </div>
-          <TrendingUp className="w-8 h-8 text-green-500" />
-        </div>
-      </Card>
+                // Look for skill name in the parts structure
+                if (reviewData.parts) {
+                  for (const part of reviewData.parts) {
+                    for (const group of part.groups || []) {
+                      for (const question of group.questions || []) {
+                        const foundSkill = question.questionTags?.find((tag: any) =>
+                          tag.skill?.id === skill.skillId
+                        );
+                        if (foundSkill) {
+                          skillName = foundSkill.skill.name;
+                          break;
+                        }
+                      }
+                    }
+                  }
+                }
 
-      {/* Detailed Results */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Question Review</h3>
-        <div className="space-y-3">
-          {questions.map((question, index) => {
-            const isCorrect = answers[index] === question.correctAnswer;
-            return (
-              <div key={question.id} className="flex items-start gap-3 p-3 rounded-lg border">
-                <div className={`p-1 rounded-full mt-1 ${isCorrect ? 'bg-green-100' : 'bg-red-100'}`}>
-                  {isCorrect ? (
-                    <CheckCircle2 className="w-4 h-4 text-green-600" />
-                  ) : (
-                    <X className="w-4 h-4 text-red-600" />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="font-medium">Part {question.part}: {question.partName}</p>
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      isCorrect ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
-                      {isCorrect ? 'Correct' : 'Incorrect'}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-2">{question.question}</p>
-                  {!isCorrect && (
-                    <div className="text-xs space-y-1">
-                      <p className="text-red-600">
-                        <span className="font-medium">Your answer:</span> {question.options[answers[index]] || 'Not answered'}
-                      </p>
-                      <p className="text-green-600">
-                        <span className="font-medium">Correct answer:</span> {question.options[question.correctAnswer]}
-                      </p>
-                      <p className="text-gray-600">
-                        <span className="font-medium">Explanation:</span> {question.explanation}
-                      </p>
+                const proficiencyPercent = Math.round(skill.proficiency * 100);
+                const proficiencyColor = proficiencyPercent >= 70 ? 'text-green-600' :
+                  proficiencyPercent >= 50 ? 'text-yellow-600' : 'text-red-600';
+                const bgColor = proficiencyPercent >= 70 ? 'bg-green-100' :
+                  proficiencyPercent >= 50 ? 'bg-yellow-100' : 'bg-red-100';
+
+                return (
+                  <div key={skill.skillId} className={`p-3 rounded-lg border ${bgColor}`}>
+                    <div className="text-sm font-medium text-gray-800 mb-1 line-clamp-2" title={skillName}>
+                      {skillName}
                     </div>
-                  )}
-                </div>
+                    <div className={`text-lg font-bold ${proficiencyColor}`}>
+                      {proficiencyPercent}%
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {reviewData.updatedSkills.length > 12 && (
+              <div className="mt-3 text-sm text-gray-500 text-center">
+                Và {reviewData.updatedSkills.length - 12} kỹ năng khác...
               </div>
-            );
-          })}
-        </div>
-      </Card>
-
-      {/* Performance Analysis */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Weak Areas */}
-        {results.weakAreas.length > 0 && (
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4 text-red-700">Areas to Improve</h3>
-            <div className="space-y-3">
-              {results.weakAreas.map((part) => {
-                const Icon = part.icon;
-                return (
-                  <div key={part.id} className="flex items-center gap-3 p-3 rounded-lg bg-red-50 border border-red-200">
-                    <div className="p-2 rounded-lg bg-red-100">
-                      <Icon className="w-4 h-4 text-red-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-red-900">Part {part.id}: {part.name}</p>
-                      <p className="text-sm text-red-700">{part.description}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
+            )}
+          </motion.div>
         )}
 
-        {/* Strong Areas */}
-        {results.strongAreas.length > 0 && (
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4 text-green-700">Your Strengths</h3>
-            <div className="space-y-3">
-              {results.strongAreas.map((part) => {
-                const Icon = part.icon;
-                return (
-                  <div key={part.id} className="flex items-center gap-3 p-3 rounded-lg bg-green-50 border border-green-200">
-                    <div className="p-2 rounded-lg bg-green-100">
-                      <Icon className="w-4 h-4 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-green-900">Part {part.id}: {part.name}</p>
-                      <p className="text-sm text-green-700">{part.description}</p>
-                    </div>
-                  </div>
-                );
-              })}
+        {/* Review specific content */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="bg-white rounded-xl p-6 shadow-lg border"
+        >
+          <h3 className="text-xl font-semibold mb-4">Kết quả chi tiết</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">{testData.correctCount || 0}</div>
+              <div className="text-sm text-gray-600">Câu đúng</div>
             </div>
-          </Card>
-        )}
+            <div className="text-center">
+              <div className="text-2xl font-bold text-red-600">{testData.wrongCount || 0}</div>
+              <div className="text-sm text-gray-600">Câu sai</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">{testData.accuracy || 0}%</div>
+              <div className="text-sm text-gray-600">Độ chính xác</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-purple-600">{testData.totalScore || 0}</div>
+              <div className="text-sm text-gray-600">Điểm tổng</div>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+        >
+          <button
+            onClick={handleAnalyze}
+            disabled={loading}
+            className="bg-primary text-white px-6 py-3 rounded-lg hover:opacity-90 disabled:opacity-50"
+          >
+            {loading ? "Đang phân tích..." : "Phân tích bằng AI"}
+          </button>
+
+          {/* Khi có kết quả AI, hiển thị component */}
+          {analysis && (
+            <div className="mt-8">
+              <AIAnalysis analysis={analysis} />
+            </div>
+          )}
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+        >
+          <StudyRecommendations recommendations={[
+            {
+              icon: "📚",
+              title: "Ôn luyện thêm",
+              description: "Gợi ý học tập dựa trên kết quả của bạn"
+            }
+          ]} />
+        </motion.div>
+
+        {/* Action buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.7 }}
+          className="flex flex-col sm:flex-row gap-4 justify-center"
+        >
+          <button
+            onClick={onRetake}
+            className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
+          >
+            Làm lại bài test
+          </button>
+          <button
+            onClick={onCreateStudyPlan}
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+          >
+            Tạo kế hoạch học tập
+          </button>
+        </motion.div>
       </div>
 
-      {/* Recommendations */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Study Recommendations</h3>
-        <div className="grid md:grid-cols-2 gap-6">
-          <div>
-            <h4 className="font-medium text-blue-700 mb-3">Focus Areas</h4>
-            <ul className="space-y-2">
-              {results.recommendations.map((rec, index) => (
-                <li key={index} className="flex items-start gap-2">
-                  <ArrowRight className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm">{rec}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-medium text-purple-700 mb-3">Next Steps</h4>
-            <ul className="space-y-2">
-              <li className="flex items-start gap-2">
-                <ArrowRight className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
-                <span className="text-sm">Create a personalized study plan</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <ArrowRight className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
-                <span className="text-sm">Practice with full-length tests</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <ArrowRight className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
-                <span className="text-sm">Focus on identified weak areas</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <ArrowRight className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
-                <span className="text-sm">Track progress regularly</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </Card>
-
-      {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-center">
-        <Button
-          size="lg"
-          onClick={onCreateStudyPlan}
-          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-        >
-          <Users className="w-5 h-5 mr-2" />
-          Create Study Plan
-        </Button>
-        <Button
-          variant="outline"
-          size="lg"
-          onClick={onRetake}
-        >
-          <Calendar className="w-5 h-5 mr-2" />
-          Retake Test
-        </Button>
-      </div>
-    </motion.div>
+      {/* Uncomment when needed
+      <FixedActionBar />
+      */}
+    </div>
   );
 }

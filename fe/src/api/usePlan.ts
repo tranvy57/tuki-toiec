@@ -70,6 +70,21 @@ export interface StudyPlan {
   phases: PlanPhase[];
 }
 
+
+async function createMyPlan(): Promise<StudyPlan | null> {
+  try {
+    const res = await api.post("/plans/my-plan");
+    if (!res.data || !res.data.data) return null;
+    return res.data.data;
+  } catch (error: any) {
+    // If user doesn't have a plan, return null instead of throwing
+    if (error.response?.status === 404) {
+      return null;
+    }
+    throw new Error("Failed to fetch study plan");
+  }
+}
+
 async function fetchMyPlan(): Promise<StudyPlan | null> {
   try {
     const res = await api.get("/plans/my-plan");
