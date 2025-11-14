@@ -209,6 +209,7 @@ class RouteNode:
     def generate(self, state: State):
         # Get user profile
         user_profile = self.get_user_profile(state)
+        print("User profile:", user_profile)
         
         # Personalized similarity search
         self.personalized_similarity_search(state, user_profile)
@@ -290,18 +291,17 @@ class RouteNode:
             print(f"Error filtering results: {e}")
             return results[:3]
     
-    def _get_personalized_prompt(self, user_input: str, context: str, user_profile: Optional[SimpleUserProfile], personalization_ctx: dict) -> str:
+    def _get_personalized_prompt(self, user_input: str, context: str, user_profile: any, personalization_ctx: dict) -> str:
         """
         Tạo personalized prompt dựa trên user profile - short, friendly English responses
         """
         if not user_profile:
-            # Fallback to basic TOEIC prompt
+            
             return self._toeic_prompt.get_basic_prompt(user_input, context)
         
-        # Use personalized TOEIC prompt
-        return self._toeic_prompt.get_personalized_prompt(user_input, context, personalization_ctx)
+        return self._toeic_prompt.get_personalized_prompt(user_input, context, user_profile, personalization_ctx)
     
-    def _update_user_interaction(self, state: State, user_profile: SimpleUserProfile):
+    def _update_user_interaction(self, state: State, user_profile: any):
         """
         Cập nhật thông tin tương tác của user
         """

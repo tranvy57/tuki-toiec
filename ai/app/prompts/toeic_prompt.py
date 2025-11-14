@@ -65,9 +65,10 @@ Instructions:
             context=context
         )
     
-    def get_personalized_prompt(self, user_input: str, context: str, personalization_ctx: dict) -> str:
+    def get_personalized_prompt(self, user_input: str, context: str, user_profile: any, personalization_ctx: dict) -> str:
         """Get personalized TOEIC prompt with user profile"""
-        user_name = personalization_ctx.get("user_name", "student")
+        print("Personalization context:", user_profile)
+        user_name = user_profile.display_name if user_profile and hasattr(user_profile, 'display_name') else "Student"
         learning_style = personalization_ctx.get("learning_style", "balanced")
         difficulty_level = personalization_ctx.get("difficulty_level", "intermediate")
         personality_type = personalization_ctx.get("personality", "encouraging")
