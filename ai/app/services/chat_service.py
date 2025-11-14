@@ -15,8 +15,7 @@ async def chat(request: ChatRequest):
         return {
                 "statusCode": 200,
                 "data": {
-                    "result": result_state.final_generation or "No response generated",
-                    "context_used": bool(result_state.context),
+                    "result": result_state or "No response generated",
                 }
             }
     except Exception as e:
