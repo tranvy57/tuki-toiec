@@ -25,7 +25,6 @@ async def chat_endpoint(chat_request: ChatRequest):
     return ResponseModel(
         data=chat_result["data"],
         statusCode=chat_result["statusCode"],
-        message=chat_result["message"]
     )
 
 @chat_router.post("/chat/enhanced")
