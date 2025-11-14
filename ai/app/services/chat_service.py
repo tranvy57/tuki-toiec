@@ -11,8 +11,14 @@ async def root():
 
 async def chat(request: ChatRequest):
     try:
-        result = flow_graph.run(request)
-        return { "data": { "result": result }, "statusCode": 200, "message": "Chat processed successfully" }
+        result_state = flow_graph.run(request)
+        return {
+                "statusCode": 200,
+                "data": {
+                    "result": result_state.final_generation or "No response generated",
+                    "context_used": bool(result_state.context),
+                }
+            }
     except Exception as e:
         print(f"Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))

@@ -1,7 +1,9 @@
 from app.models.chat_request import ChatRequest
 from app.models.chat_response import ResponseModel
 from app.services.chat_service import root, chat
-from fastapi import APIRouter
+from app.services.enhanced_chat_service import enhanced_chat_endpoint, get_user_profile_endpoint
+from fastapi import APIRouter, Query, HTTPException
+from typing import Optional
 
 chat_router = APIRouter()
 import os
@@ -18,12 +20,29 @@ async def graph():
 
 @chat_router.post("/chat")
 async def chat_endpoint(chat_request: ChatRequest):
+    """Standard chat endpoint - maintains compatibility"""
     chat_result = await chat(chat_request)
     return ResponseModel(
         data=chat_result["data"],
         statusCode=chat_result["statusCode"],
         message=chat_result["message"]
     )
+
+@chat_router.post("/chat/enhanced")
+async def enhanced_chat_api(chat_request: ChatRequest):
+    """Enhanced chat endpoint with personalization"""
+    try:
+        return await enhanced_chat_endpoint(chat_request)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@chat_router.get("/user/{user_id}/profile")
+async def get_user_profile_api(user_id: str):
+    """Get user profile and progress"""
+    try:
+        return await get_user_profile_endpoint(user_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 VOICE_ID = "21m00Tcm4TlvDq8ikWAM"  # Giọng mặc định, có thể đổi
 

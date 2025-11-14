@@ -25,4 +25,13 @@ class Gemini:
 # if __name__ == "__main__":
 #     test_connection()
 
+
+class ModelConfig:
+    """Model configuration class"""
+    GEMINI = Gemini()
+    
+    @classmethod
+    def get_default_llm(cls):
+        return cls.GEMINI.llm()
+
     

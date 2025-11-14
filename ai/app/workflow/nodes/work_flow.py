@@ -116,5 +116,5 @@ class FlowGraph:
 
 if __name__ == "__main__":
     flow_graph = FlowGraph()
+    print(flow_graph.get_graph())
     # Example run
-    result = flow_graph.run("Tìm tranh cô gái")

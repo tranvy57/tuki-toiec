@@ -1,5 +1,6 @@
 from app.configs.model_config import Gemini
 from app.prompts.base_prompt import BasePrompt
+from app.prompts.toeic_prompt import TOEICPrompt
 from app.models.state import State
 from app.exceptions.chat_exception import (
     InvalidInputException,
@@ -7,26 +8,47 @@ from app.exceptions.chat_exception import (
 )
 from langchain.schema.messages import AIMessage, HumanMessage, SystemMessage
 import numpy as np
-from typing import List
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+from typing import List, Optional
+
+# Optional sklearn imports with fallback
+try:
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
+    TfidfVectorizer = None
+    cosine_similarity = None
+
 # from app.workflow.tools.chat_tools import Chat
 # from app.constants.define_order import DefineOrder
 # from app.database import PineconeDatabase, PostgresDatabase
 from app.services.qdrant_service import QdrantService
 from app.models.message import MessageRole
 from app.models import ChatMessage
+
+# Optional user profile imports
+try:
+    from app.models.user_profile import SimpleUserProfile, get_personalization_context
+    from app.services.db_profile_service import DatabaseProfileService
+    PERSONALIZATION_AVAILABLE = True
+except ImportError:
+    PERSONALIZATION_AVAILABLE = False
+    SimpleUserProfile = None
+    get_personalization_context = None
+    DatabaseProfileService = None
 import re
 import json
 import ast
 
 
 class RouteNode:
-    def __init__(self):
+    def __init__(self, db_session=None):
         try:
             self._gemini = Gemini()
             self._llm = self._gemini.llm()
             self._prompt = BasePrompt()
+            self._toeic_prompt = TOEICPrompt()
             # self._chat = Chat()
             # self._llm_bind_tools = self._chat.get_llm_binds_tools()
             # self._tool_node = self._chat.get_tool_node()
@@ -34,6 +56,12 @@ class RouteNode:
             self._vector_store = QdrantService().connect()
             # self._postgres = PostgresDatabase()
             # self._define_order = DefineOrder()
+            
+            # Database service for user profiles (optional)
+            if PERSONALIZATION_AVAILABLE and db_session:
+                self._db_profile_service = DatabaseProfileService(db_session)
+            else:
+                self._db_profile_service = None
         except Exception as e:
             raise ModelNotFoundException(f"Failed to initialize chat models: {str(e)}")
 
@@ -61,26 +89,48 @@ class RouteNode:
     def str_to_list_of_str(data_str):
         return [str(item) for item in ast.literal_eval(data_str)]
 
-    def similarity_search(self, state: State):
+    def get_user_profile(self, state: State) -> Optional[SimpleUserProfile]:
         """
-        Tìm các đoạn văn/ngữ cảnh liên quan từ Qdrant để hỗ trợ RAG.
+        Lấy user profile từ database dựa trên user_id
+        """
+        if not self._db_profile_service or not state.user_id:
+            return None
+        
+        try:
+            profile = self._db_profile_service.get_user_with_progress(state.user_id)
+            return profile
+        except Exception as e:
+            print(f"Error getting user profile: {e}")
+            return None
+    
+    def personalized_similarity_search(self, state: State, user_profile: Optional[SimpleUserProfile] = None):
+        """
+        Tìm các đoạn văn/ngữ cảnh liên quan từ Qdrant với personalization
         """
         try:
             if not state.user_input or not isinstance(state.user_input, str):
                 raise ValueError("User input invalid or empty")
 
+            # Basic search
             results = self._vector_service.search(
                 question=state.user_input,
-                limit=3,
-                score_threshold=0.4  
+                limit=5,  # Lấy nhiều hơn để filter
+                score_threshold=0.3  # Threshold thấp hơn để có nhiều options
             )
+            
+            # Filter và rank dựa trên user profile
+            if user_profile and results:
+                filtered_results = self._filter_results_by_profile(results, user_profile, state.user_input)
+            else:
+                filtered_results = results[:3]
 
-            retrieved = [r["payload"].get("content", "") for r in results]
+            retrieved = [r["payload"].get("content", "") for r in filtered_results]
             context_text = "\n".join(f"- {txt}" for txt in retrieved if txt)
 
             state.context = context_text or "Không tìm thấy thông tin phù hợp trong cơ sở dữ liệu."
             state.meta = getattr(state, "meta", {})
-            state.meta["retrieved_docs"] = results
+            state.meta["retrieved_docs"] = filtered_results
+            state.meta["personalized"] = user_profile is not None
 
             return state
 
@@ -89,6 +139,13 @@ class RouteNode:
             state.error.append(str(e))
             print(f"❌ RAG Error: {e}")
             return state
+    
+    def similarity_search(self, state: State):
+        """
+        Backward compatibility wrapper
+        """
+        user_profile = self.get_user_profile(state)
+        return self.personalized_similarity_search(state, user_profile)
 
     def route(self, state: State):
         decision = self._llm.invoke([
@@ -150,15 +207,26 @@ class RouteNode:
         return state
     
     def generate(self, state: State):
-        self.similarity_search(state)
-
-        prompt = self._prompt.generate_prompt.format(
-            question=state.user_input,
-            context=state.context,
-            history=[],
-            meta=state.meta,
-            user_name="Tu",
-            errors=""
+        # Get user profile
+        user_profile = self.get_user_profile(state)
+        
+        # Personalized similarity search
+        self.personalized_similarity_search(state, user_profile)
+        
+        # Get personalization context
+        personalization_ctx = {}
+        if user_profile:
+            personalization_ctx = get_personalization_context(user_profile)
+            # Update user progress based on interaction
+            self._update_user_interaction(state, user_profile)
+        
+        # Enhanced prompt with personalization
+        user_name = personalization_ctx.get("user_name", "bạn")
+        prompt = self._get_personalized_prompt(
+            state.user_input,
+            state.context,
+            user_profile,
+            personalization_ctx
         )
 
         generation = self._llm.invoke([
@@ -169,24 +237,111 @@ class RouteNode:
 
         state.final_generation = generation.content
         state.chat_history += [HumanMessage(content=state.user_input), generation]
+        
+        # Save enhanced metadata
+        state.meta = state.meta or {}
+        state.meta["personalized"] = user_profile is not None
+        state.meta["user_profile"] = {
+            "learning_style": personalization_ctx.get("learning_style", "balanced"),
+            "difficulty": personalization_ctx.get("difficulty_level", "intermediate")
+        } if user_profile else None
+        
         # self._save_chat(state)
         return state
 
-    def _save_chat(self, state: State):
-        if not state.user_id or not state.user_id.strip():
-            return
-
-        # self._postgres.save_message(ChatMessage(
-        #     user_id=state.user_id,
-        #     role=MessageRole.USER,
-        #     content=state.user_input
-        # ))
-
-        # self._postgres.save_message(ChatMessage(
-        #     user_id=state.user_id,
-        #     role=MessageRole.AI,
-        #     content=state.final_generation
-        # ))
+    def _filter_results_by_profile(self, results: List, user_profile: SimpleUserProfile, user_input: str) -> List:
+        """
+        Filter và rank kết quả RAG dựa trên user profile
+        """
+        try:
+            scored_results = []
+            
+            for result in results:
+                content = result.get("payload", {}).get("content", "")
+                base_score = result.get("score", 0)
+                
+                # Bonus score dựa trên user's weak areas
+                bonus_score = 0
+                content_lower = content.lower()
+                
+                # Nếu nội dung liên quan đến skill yếu của user
+                for skill, level in user_profile.skill_levels.items():
+                    if skill.lower() in content_lower and level < 0.5:
+                        bonus_score += 0.1  # Bonus cho weak skills
+                
+                # Nếu nội dung phù hợp với learning style
+                if user_profile.learning_style.value == "visual" and any(
+                    word in content_lower for word in ["image", "chart", "diagram", "visual"]
+                ):
+                    bonus_score += 0.05
+                elif user_profile.learning_style.value == "auditory" and any(
+                    word in content_lower for word in ["listen", "audio", "pronunciation", "sound"]
+                ):
+                    bonus_score += 0.05
+                
+                final_score = base_score + bonus_score
+                scored_results.append((final_score, result))
+            
+            # Sort by final score và return top 3
+            scored_results.sort(key=lambda x: x[0], reverse=True)
+            return [result for _, result in scored_results[:3]]
+            
+        except Exception as e:
+            print(f"Error filtering results: {e}")
+            return results[:3]
+    
+    def _get_personalized_prompt(self, user_input: str, context: str, user_profile: Optional[SimpleUserProfile], personalization_ctx: dict) -> str:
+        """
+        Tạo personalized prompt dựa trên user profile - short, friendly English responses
+        """
+        if not user_profile:
+            # Fallback to basic TOEIC prompt
+            return self._toeic_prompt.get_basic_prompt(user_input, context)
+        
+        # Use personalized TOEIC prompt
+        return self._toeic_prompt.get_personalized_prompt(user_input, context, personalization_ctx)
+    
+    def _update_user_interaction(self, state: State, user_profile: SimpleUserProfile):
+        """
+        Cập nhật thông tin tương tác của user
+        """
+        try:
+            if not self._db_profile_service:
+                return
+            
+            # Phân tích input để xác định skill đang practice
+            user_input_lower = state.user_input.lower()
+            skill_keywords = {
+                "grammar": ["grammar", "tense", "verb", "sentence", "structure"],
+                "vocabulary": ["vocabulary", "word", "meaning", "definition"], 
+                "pronunciation": ["pronunciation", "pronounce", "speak", "sound"],
+                "listening": ["listening", "listen", "hear", "audio"]
+            }
+            
+            # Tìm skills được practice trong interaction này
+            practiced_skills = []
+            for skill, keywords in skill_keywords.items():
+                if any(keyword in user_input_lower for keyword in keywords):
+                    practiced_skills.append(skill)
+            
+            # Cập nhật progress cho các skills được practice
+            if practiced_skills:
+                skill_updates = {}
+                for skill in practiced_skills:
+                    current_level = user_profile.skill_levels.get(skill, 0.0)
+                    # Tăng nhẹ progress (0.01 = 1%)
+                    new_level = min(1.0, current_level + 0.01)
+                    skill_updates[skill] = new_level
+                
+                # Update database
+                self._db_profile_service.update_user_progress(state.user_id, skill_updates)
+                
+                # Update local profile
+                user_profile.skill_levels.update(skill_updates)
+                user_profile.total_conversations += 1
+        
+        except Exception as e:
+            print(f"Error updating user interaction: {e}")
 
     # def using_tools(self, state: State):
     #     if not state.user_input or not isinstance(state.user_input, str) or not state.user_input.strip():

@@ -33,3 +33,8 @@ def session_scope():
         raise e
     finally:
         session.close()
+
+
+def get_db_session():
+    """Get a database session for direct use"""
+    return SessionLocal()
