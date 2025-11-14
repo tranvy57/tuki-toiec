@@ -40,10 +40,11 @@ except ImportError:
 import re
 import json
 import ast
+from app.db.session import get_db_session
 
 
 class RouteNode:
-    def __init__(self, db_session=None):
+    def __init__(self):
         try:
             self._gemini = Gemini()
             self._llm = self._gemini.llm()
@@ -56,10 +57,14 @@ class RouteNode:
             self._vector_store = QdrantService().connect()
             # self._postgres = PostgresDatabase()
             # self._define_order = DefineOrder()
+            self._db_session = get_db_session()
             
             # Database service for user profiles (optional)
-            if PERSONALIZATION_AVAILABLE and db_session:
-                self._db_profile_service = DatabaseProfileService(db_session)
+            print("PERSONALIZATION_AVAILABLE:", PERSONALIZATION_AVAILABLE)
+            print("self._db_session provided:", self._db_session is not None)
+            if PERSONALIZATION_AVAILABLE and self._db_session:
+                print("Initializing DatabaseProfileService with provided self._db_session")
+                self._db_profile_service = DatabaseProfileService(self._db_session)
             else:
                 self._db_profile_service = None
         except Exception as e:
@@ -95,7 +100,6 @@ class RouteNode:
         """
         if not self._db_profile_service or not state.user_id:
             return None
-        
         try:
             profile = self._db_profile_service.get_user_with_progress(state.user_id)
             return profile
@@ -207,6 +211,7 @@ class RouteNode:
         return state
     
     def generate(self, state: State):
+        print("???",state)
         # Get user profile
         user_profile = self.get_user_profile(state)
         print("User profile:", user_profile)

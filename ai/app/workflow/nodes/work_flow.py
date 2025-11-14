@@ -67,7 +67,7 @@ class FlowGraph:
         return self._graph.get_graph().draw_mermaid()
 
     def run(self, chat_request: ChatRequest):
-
+        print("Running FlowGraph with chat request:", chat_request)
         thread_id = {
             "configurable": {
                 "thread_id": chat_request.user_id,
@@ -109,6 +109,7 @@ class FlowGraph:
             meta = {} 
 
         )
+        print("Initial state:", initial_state)
 
         result = self._graph.invoke(initial_state, config=thread_id)
 
