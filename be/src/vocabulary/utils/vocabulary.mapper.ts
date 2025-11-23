@@ -10,11 +10,14 @@ export class VocabularyMapper {
     const entity = new Vocabulary();
     entity.word = dto.word;
     entity.meaning = dto.meaning;
-    entity.pronunciation = dto.pronunciation;
-    entity.partOfSpeech = dto.partOfSpeech;
-    entity.exampleEn = dto.exampleEn;
-    entity.exampleVn = dto.exampleVn;
-    entity.audioUrl = dto.audioUrl;
+    entity.pronunciation = dto.pronunciation || '';
+    entity.partOfSpeech = dto.partOfSpeech || '';
+    entity.exampleEn = dto.exampleEn || '';
+    entity.exampleVn = dto.exampleVn || '';
+    entity.audioUrl = dto.audioUrl || '';
+    entity.lemma = dto.lemma || '';
+    entity.type = dto.type || 'toeic';
+    entity.isPhrase = dto.isPhrase || false;
     return entity;
   }
 

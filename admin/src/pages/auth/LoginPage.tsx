@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '@/stores/authStore';
 import type { LoginRequest } from '@/types';
 
 export default function LoginPage() {
@@ -57,15 +57,7 @@ export default function LoginPage() {
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
-              type="email"
               placeholder="admin@example.com"
-              {...register('email', {
-                required: 'Email là bắt buộc',
-                pattern: {
-                  value: /^\S+@\S+$/i,
-                  message: 'Email không hợp lệ'
-                }
-              })}
             />
             {errors.email && (
               <p className="text-sm text-error">{errors.email.message}</p>

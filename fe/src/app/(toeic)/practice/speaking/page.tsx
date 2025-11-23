@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Card,
@@ -30,6 +30,12 @@ import Image from "next/image";
 import { speakingExerciseTypes } from "@/data/mockMenuSpeaking";
 import { CustomCard } from "@/components/CustomCard";
 import { PracticeBreadcrumb } from "@/components/practice/PracticeBreadcrumb";
+import { SpeakingHistoryButton } from "@/components/practice/speaking/SpeakingHistoryButton";
+import { SpeakingHistoryDialog } from "@/components/practice/speaking/SpeakingHistoryDialog";
+import { SpeakingHistoryDemoButtons } from "@/components/practice/speaking/SpeakingHistoryDemoButtons";
+import { useSpeakingHistory } from "@/store/speaking-history-store";
+import { addSampleSpeakingData } from "@/lib/speaking-history-helpers";
+import { toast, Toaster } from "sonner";
 
 // Mock data cho các loại bài tập nói
 
@@ -56,6 +62,18 @@ const itemVariants = {
 
 export default function SpeakingPracticePage() {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const { isHistoryDialogVisible, hideHistoryDialog, attempts } = useSpeakingHistory();
+
+  // Add mock data on first load if no data exists
+  useEffect(() => {
+    if (attempts.length === 0) {
+      addSampleSpeakingData();
+      toast.success("Đã tải dữ liệu mẫu cho lịch sử Speaking!", {
+        description: "Bạn có thể xem lịch sử bằng cách nhấp vào nút 'Lịch sử'",
+        duration: 4000,
+      });
+    }
+  }, [attempts.length]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -86,12 +104,21 @@ export default function SpeakingPracticePage() {
       />
 
       <div className="container mx-auto px-4 py-4 relative z-10">
-        {/* Breadcrumb */}
-        <PracticeBreadcrumb
-          items={[
-            { label: "Speaking" }
-          ]}
-        />
+        {/* Breadcrumb and History Button */}
+        <div className="flex items-center justify-between mb-4">
+          <PracticeBreadcrumb
+            items={[
+              { label: "Speaking" }
+            ]}
+          />
+          <div className="flex items-center gap-3">
+            <SpeakingHistoryDemoButtons />
+            <SpeakingHistoryButton
+            skill=""
+            topicId=""
+            />
+          </div>
+        </div>
 
         {/* Header */}
         <motion.div
@@ -255,6 +282,24 @@ export default function SpeakingPracticePage() {
           </Card>
         </motion.div>
       </div>
+
+      {/* Speaking History Dialog */}
+      <SpeakingHistoryDialog
+        open={isHistoryDialogVisible}
+        onOpenChange={(open) => !open && hideHistoryDialog()}
+      />
+
+      {/* Toast notifications */}
+      <Toaster
+        position="top-right"
+        richColors
+        closeButton
+        toastOptions={{
+          style: {
+            fontSize: '14px'
+          }
+        }}
+      />
     </div>
   );
 }

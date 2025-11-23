@@ -10,7 +10,7 @@ export default function TestStartPage() {
 
   useEffect(() => {
     // Start the test when the component mounts
-    mutate('ff0e150d-06b5-4177-93fb-8d0b18cdbea7', {
+    mutate('b6ee396d-5820-43b4-bbc7-4753f52d7cb4', {
       onSuccess: (res) => {
         setFullTest(res);
       },

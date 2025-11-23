@@ -29,9 +29,65 @@ export class VocabularyService {
     return VocabularyMapper.toDto(saved);
   }
 
-  async findAll() {
-    const entities = await this.vocabularyRepo.find({ take: 50 });
-    return VocabularyMapper.toDtoList(entities);
+  async findAll(page: number = 1, limit: number = 50) {
+    const skip = (page - 1) * limit;
+    const [entities, total] = await this.vocabularyRepo.findAndCount({
+      skip,
+      take: limit,
+      order: { createdAt: 'DESC' },
+    });
+
+    return {
+      data: VocabularyMapper.toDtoList(entities),
+      meta: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async search(query: {
+    search?: string;
+    type?: string;
+    partOfSpeech?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    const { search, type, partOfSpeech, page = 1, limit = 50 } = query;
+
+    const qb = this.vocabularyRepo.createQueryBuilder('vocabulary');
+
+    if (search) {
+      qb.where(
+        '(vocabulary.word ILIKE :search OR vocabulary.meaning ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    if (type) {
+      qb.andWhere('vocabulary.type = :type', { type });
+    }
+
+    if (partOfSpeech) {
+      qb.andWhere('vocabulary.partOfSpeech = :partOfSpeech', { partOfSpeech });
+    }
+
+    const skip = (page - 1) * limit;
+    qb.skip(skip).take(limit).orderBy('vocabulary.createdAt', 'DESC');
+
+    const [entities, total] = await qb.getManyAndCount();
+
+    return {
+      data: VocabularyMapper.toDtoList(entities),
+      meta: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: string) {
@@ -52,8 +108,13 @@ export class VocabularyService {
     return VocabularyMapper.toDto(saved);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} vocabulary`;
+  async remove(id: string) {
+    const vocabulary = await this.vocabularyRepo.findOne({ where: { id } });
+    if (!vocabulary) {
+      throw new NotFoundException('Vocabulary not found!');
+    }
+    await this.vocabularyRepo.remove(vocabulary);
+    return { success: true, message: 'Vocabulary deleted successfully' };
   }
 
   async importFromExcel(file: Express.Multer.File) {

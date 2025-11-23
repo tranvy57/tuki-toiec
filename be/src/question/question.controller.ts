@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { QuestionService } from './question.service';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
@@ -13,13 +13,27 @@ export class QuestionController {
   }
 
   @Get()
-  findAll() {
-    return this.questionService.findAll();
+  findAll(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('testId') testId?: number,
+    @Query('partId') partId?: number,
+    @Query('groupId') groupId?: number,
+    @Query('difficulty') difficulty?: number,
+  ) {
+    return this.questionService.findAll({
+      page,
+      limit,
+      testId,
+      partId,
+      groupId,
+      difficulty,
+    });
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.questionService.findOne(+id);
+    return this.questionService.findOne(id);
   }
 
   @Patch(':id')
@@ -27,12 +41,12 @@ export class QuestionController {
     @Param('id') id: string,
     @Body() updateQuestionDto: UpdateQuestionDto,
   ) {
-    return this.questionService.update(+id, updateQuestionDto);
+    return this.questionService.update(id, updateQuestionDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.questionService.remove(+id);
+    return this.questionService.remove(id);
   }
 
   @Post('/create-with-tags/:id')

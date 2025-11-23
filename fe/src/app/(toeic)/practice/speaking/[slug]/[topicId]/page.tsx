@@ -11,6 +11,7 @@ import RespondUsingInfoExercise from "@/components/practice/speaking/RespondUsin
 import ExpressOpinionExercise from "@/components/practice/speaking/ExpressOpinionExercise";
 import { useLessonsByModality, type LessonItem } from "@/api/useLessons";
 import { PracticeBreadcrumb } from "@/components/practice";
+import { SpeakingHistoryButton } from "@/components/practice/speaking/SpeakingHistoryButton";
 
 // Mock data cho các loại bài tập nói khác (chưa có API)
 const mockExerciseData = {
@@ -227,7 +228,7 @@ export default function SpeakingExercisePage() {
     switch (slug) {
       case "read-aloud":
         return (
-          <div className="container mx-auto mt-4">
+          <div className="container mx-auto mt-4 space-y-6">
             <PracticeBreadcrumb
               items={[
                 { label: "Speaking", href: "/practice/speaking" },
@@ -238,11 +239,17 @@ export default function SpeakingExercisePage() {
             <SpeakingExerciseBase exerciseData={exerciseData}>
               <ReadAloudExercise exerciseData={exerciseData} />
             </SpeakingExerciseBase>
+
+            {/* History Button */}
+            <SpeakingHistoryButton
+              skill={slug}
+              topicId={topicId}
+            />
           </div>
         );
       case "repeat-sentence":
         return (
-          <div className="container mx-auto mt-4">
+          <div className="container mx-auto mt-4 space-y-6">
             <PracticeBreadcrumb
               items={[
                 { label: "Speaking", href: "/practice/speaking" },
@@ -253,11 +260,17 @@ export default function SpeakingExercisePage() {
             <SpeakingExerciseBase exerciseData={exerciseData}>
               <RepeatSentenceExercise exerciseData={exerciseData} />
             </SpeakingExerciseBase>
+
+            {/* History Button */}
+            <SpeakingHistoryButton
+              skill={slug}
+              topicId={topicId}
+            />
           </div>
         );
       case "describe-picture":
         return (
-          <div className="container mx-auto mt-4">
+          <div className="container mx-auto mt-4 space-y-6">
             <PracticeBreadcrumb
               items={[
                 { label: "Speaking", href: "/practice/speaking" },
@@ -268,12 +281,18 @@ export default function SpeakingExercisePage() {
             <SpeakingExerciseBase exerciseData={exerciseData}>
               <DescribePictureExercise exerciseData={exerciseData} />
             </SpeakingExerciseBase>
+
+            {/* History Button */}
+            <SpeakingHistoryButton
+              skill={slug}
+              topicId={topicId}
+            />
           </div>
         );
       case "respond-using-info":
         return (
           <div className="min-h-screen bg-gray-50">
-            <div className="container mx-auto px-4 py-6">
+            <div className="container mx-auto px-4 py-6 space-y-6">
               <PracticeBreadcrumb
                 items={[
                   { label: "Speaking", href: "/practice/speaking" },
@@ -282,12 +301,18 @@ export default function SpeakingExercisePage() {
                 ]}
               />
               <RespondUsingInfoExercise exerciseData={exerciseData} />
+
+              {/* History Button */}
+              <SpeakingHistoryButton
+                skill={slug}
+                topicId={topicId}
+              />
             </div>
           </div>
         );
       case "express-opinion":
         return (
-          <div className="container mx-auto mt-4">
+          <div className="container mx-auto mt-4 space-y-6">
             <PracticeBreadcrumb
               items={[
                 { label: "Speaking", href: "/practice/speaking" },
@@ -298,11 +323,17 @@ export default function SpeakingExercisePage() {
             <SpeakingExerciseBase exerciseData={exerciseData}>
               <ExpressOpinionExercise exerciseData={exerciseData} />
             </SpeakingExerciseBase>
+
+            {/* History Button */}
+            <SpeakingHistoryButton
+              skill={slug}
+              topicId={topicId}
+            />
           </div>
         );
       default:
         return (
-          <div className="container mx-auto mt-4">
+          <div className="container mx-auto mt-4 space-y-6">
             <PracticeBreadcrumb
               items={[
                 { label: "Speaking", href: "/practice/speaking" },
@@ -313,6 +344,12 @@ export default function SpeakingExercisePage() {
             <SpeakingExerciseBase exerciseData={exerciseData}>
               <ReadAloudExercise exerciseData={exerciseData} />
             </SpeakingExerciseBase>
+
+            {/* History Button */}
+            <SpeakingHistoryButton
+              skill={slug}
+              topicId={topicId}
+            />
           </div>
         );
     }

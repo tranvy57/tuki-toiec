@@ -11,7 +11,8 @@ import { speakingExerciseTypes } from "@/data/mockMenuSpeaking";
 import { CustomCard } from "@/components/CustomCard";
 import { PracticeBreadcrumb } from "@/components/practice/PracticeBreadcrumb";
 import { useLessonsByModality } from "@/api/useLessons";
-
+import { useSpeakingHistory } from "@/store/speaking-history-store";
+import { SpeakingHistoryButton, SpeakingHistoryDialog } from "@/lib/speaking-history-index";
 // Mock data tương tự phần bạn có
 // const speakingExerciseTypes = [
 //   {
@@ -213,6 +214,7 @@ export default function SpeakingTopicsPage() {
   const router = useRouter();
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const slug = params.slug as string;
+  const { isHistoryDialogVisible, hideHistoryDialog } = useSpeakingHistory();
 
   // Fetch API data for read_aloud
   const { data: readAloudLessons, isLoading: readAloudLoading, error: readAloudError } = useLessonsByModality({
@@ -289,14 +291,20 @@ export default function SpeakingTopicsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50  px-6">
-      {/* Breadcrumb */}
+      {/* Breadcrumb and History Button */}
       <div className="container mx-auto pt-6">
-        <PracticeBreadcrumb
-          items={[
-            { label: "Speaking", href: "/practice/speaking" },
-            { label: exercise?.name || 'Bài tập' }
-          ]}
-        />
+        <div className="flex items-center justify-between mb-4">
+          <PracticeBreadcrumb
+            items={[
+              { label: "Speaking", href: "/practice/speaking" },
+              { label: exercise?.name || 'Bài tập' }
+            ]}
+          />
+          <SpeakingHistoryButton
+          skill=""
+          topicId=""
+          />
+        </div>
       </div>
 
       <motion.div
@@ -449,6 +457,13 @@ export default function SpeakingTopicsPage() {
         </motion.div>
       </div>
       {/* Topics list */}
+
+      {/* Speaking History Dialog */}
+      <SpeakingHistoryDialog
+        open={isHistoryDialogVisible}
+        onOpenChange={(open) => !open && hideHistoryDialog()}
+        skillFilter={slug}
+      />
     </div>
   );
 }

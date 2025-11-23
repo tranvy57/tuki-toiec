@@ -18,6 +18,7 @@ export default function LessonDetail() {
 
     const { data: myPlan, isLoading: planLoading, error: planError } = useMyPlan();
     const { data: latestCourse, isLoading: courseLoading, error: courseError } = useLatestCourse();
+    console.log(latestCourse)
 
     // Use the current task hook
     const {
@@ -32,19 +33,37 @@ export default function LessonDetail() {
         resetTask
     } = useCurrentTask();
 
-    // console.log("currentTask:", currentTask);
-    // console.log("currentLesson:", currentLesson);
-    console.log("currentContent:", currentContent);
-    console.log("lessonContentItems:", (currentContent as any)?.lessonContentItems);
 
     // State to control whether to show content renderer
     const [showContentRenderer, setShowContentRenderer] = useState(false);
 
     const isLoading = planLoading || courseLoading;
-    const error = planError || courseError;
+    console.log(courseError)
+    const error = courseError;
 
     // Use myPlan if available, otherwise fallback to latestCourse
     const course = myPlan || latestCourse;
+    // Find the specific phase and lesson
+    const phase = course?.phases?.find((p: any) => p.id === phaseId);
+    const phaseLesson = phase?.phaseLessons?.find((pl: any) => pl.lesson.id === lessonId);
+    const lesson = phaseLesson?.lesson;
+
+    // Use lesson from hook if available, otherwise use from API
+    const displayLesson = currentLesson || lesson;
+
+    const selectedContent = contentId ?
+        displayLesson?.contents?.find((c: any) => c.id === contentId) : null;
+
+    useEffect(() => {
+        if (selectedContent && !currentContent) {
+            setCurrentContent(selectedContent);
+            setShowContentRenderer(true);
+        } else if (currentContent && !showContentRenderer) {
+            setShowContentRenderer(true);
+        } else if (contentId && displayLesson && !selectedContent) {
+            setShowContentRenderer(false);
+        }
+    }, [contentId, selectedContent, currentContent, displayLesson]);
 
     if (isLoading) {
         return (
@@ -70,32 +89,8 @@ export default function LessonDetail() {
         );
     }
 
-    // Find the specific phase and lesson
-    const phase = course?.phases?.find((p: any) => p.id === phaseId);
-    const phaseLesson = phase?.phaseLessons?.find((pl: any) => pl.lesson.id === lessonId);
-    const lesson = phaseLesson?.lesson;
 
-    // Use lesson from hook if available, otherwise use from API
-    const displayLesson = currentLesson || lesson;
 
-    // Find specific content if contentId is provided
-    const selectedContent = contentId ?
-        displayLesson?.contents?.find((c: any) => c.id === contentId) : null;
-
-    // Auto-show content renderer when there's a contentId or currentContent
-    useEffect(() => {
-        if (selectedContent && !currentContent) {
-            // If we have a selected content from URL but no current content in hook
-            setCurrentContent(selectedContent);
-            setShowContentRenderer(true);
-        } else if (currentContent && !showContentRenderer) {
-            // If we have current content in hook but renderer is not shown
-            setShowContentRenderer(true);
-        } else if (contentId && displayLesson && !selectedContent) {
-            // If contentId in URL but no matching content found, stay on lesson list
-            setShowContentRenderer(false);
-        }
-    }, [contentId, selectedContent, currentContent, displayLesson]);
 
     if (!displayLesson) {
         return (

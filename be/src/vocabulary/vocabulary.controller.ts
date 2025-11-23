@@ -23,23 +23,41 @@ import { User } from 'src/user/entities/user.entity';
 export class VocabularyController {
   constructor(private readonly vocabularyService: VocabularyService) {}
 
-  // async create(dto: CreateVocabularyDto) {
-  //   const entity = VocabularyMapper.fromCreateDto(dto);
-  //   const saved = await this.vocabularyRepo.save(entity);
-  //   return VocabularyMapper.toDto(saved);
-  // }
+  @Post()
+  async create(@Body() createVocabularyDto: CreateVocabularyDto) {
+    return this.vocabularyService.create(createVocabularyDto);
+  }
 
   @Get()
   @Public()
-  async findAll() {
-    return this.vocabularyService.findAll();
+  async findAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('type') type?: string,
+    @Query('partOfSpeech') partOfSpeech?: string,
+  ) {
+    if (search || type || partOfSpeech) {
+      return this.vocabularyService.search({
+        search,
+        type,
+        partOfSpeech,
+        page: page ? parseInt(page) : 1,
+        limit: limit ? parseInt(limit) : 50,
+      });
+    }
+
+    return this.vocabularyService.findAll(
+      page ? parseInt(page) : 1,
+      limit ? parseInt(limit) : 50,
+    );
   }
 
-  // @Get(':id')
-  // @Public()
-  // findOne(@Param('id') id: string) {
-  //   return this.vocabularyService.findOne(id);
-  // }
+  @Get(':id')
+  @Public()
+  findOne(@Param('id') id: string) {
+    return this.vocabularyService.findOne(id);
+  }
 
   @Patch(':id')
   update(
@@ -51,7 +69,7 @@ export class VocabularyController {
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.vocabularyService.remove(+id);
+    return this.vocabularyService.remove(id);
   }
 
   @Post('import')

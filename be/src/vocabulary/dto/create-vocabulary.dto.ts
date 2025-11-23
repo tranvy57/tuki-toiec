@@ -1,24 +1,52 @@
 import { Expose } from 'class-transformer';
+import { IsOptional, IsString, IsBoolean, IsEnum } from 'class-validator';
 
 export class CreateVocabularyDto {
   @Expose()
+  @IsString()
   word: string;
 
   @Expose()
+  @IsString()
   meaning: string;
 
   @Expose()
-  pronunciation: string;
+  @IsOptional()
+  @IsString()
+  pronunciation?: string;
 
   @Expose()
-  partOfSpeech: string;
+  @IsOptional()
+  @IsString()
+  partOfSpeech?: string;
 
   @Expose()
-  exampleEn: string;
+  @IsOptional()
+  @IsString()
+  exampleEn?: string;
 
   @Expose()
-  exampleVn: string;
+  @IsOptional()
+  @IsString()
+  exampleVn?: string;
 
   @Expose()
-  audioUrl: string;
+  @IsOptional()
+  @IsString()
+  audioUrl?: string;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  lemma?: string;
+
+  @Expose()
+  @IsOptional()
+  @IsEnum(['ai_generated', 'toeic', 'exercise'])
+  type?: 'ai_generated' | 'toeic' | 'exercise';
+
+  @Expose()
+  @IsOptional()
+  @IsBoolean()
+  isPhrase?: boolean;
 }

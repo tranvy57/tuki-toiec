@@ -489,7 +489,7 @@ export class AttemptService {
       const newActiveCourse = this.userCourseRepo.create({
         user,
         course,
-        status: UserCourseStatus.ACTIVE,
+        status: UserCourseStatus.TRIAL,
         purchaseDate: new Date(),
         expireDate: new Date(
           Date.now() + (course.durationDays || 60) * 24 * 60 * 60 * 1000,

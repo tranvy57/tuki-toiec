@@ -21,12 +21,15 @@ import {
     Eye,
     EyeOff,
     Play,
-    Pause
+    Pause,
+    ArrowDown
 } from "lucide-react";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
 import Spline from "@splinetool/react-spline";
 import { useTTS } from "@/hooks/use-tts";
+import { useChatMessage, generateChatId, DEFAULT_USER_ID } from "@/api/useChat";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 
 // Types
 interface Message {
@@ -308,20 +311,45 @@ export default function VoiceChatPage() {
     const [smoothing, setSmoothing] = useState(0.5);
     const [blinkMode, setBlinkMode] = useState<"auto" | "off" | "always">("auto");
     const [showControls, setShowControls] = useState(false);
+    const [autoScroll, setAutoScroll] = useState(false); // Disable auto scroll by default
+    const [chatId] = useState(() => generateChatId()); // Generate unique chat ID
+
+    // Chat API hook
+    const chatMutation = useChatMessage();
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const { volume, isListening, hasPermission, toggleMicrophone } = useAudio();
     const { play: playTTS, stop: stopTTS } = useTTS();
 
-    // Auto scroll to bottom only when new messages are added
+    // Speech recognition for voice input
+    const {
+        transcript,
+        listening: speechListening,
+        isSupported: speechSupported,
+        startListening: startSpeechListening,
+        stopListening: stopSpeechListening,
+        reset: resetSpeechRecognition
+    } = useSpeechRecognition({
+        language: "en-US",
+        continuous: false,
+        interimResults: true
+    });
+
+    // Auto scroll to bottom only when enabled and new messages are added
     const prevMessagesLengthRef = useRef(messages.length);
     useEffect(() => {
-        // Only scroll if new messages were added, not when message properties change
-        if (messages.length > prevMessagesLengthRef.current) {
-            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        // Only scroll if auto-scroll is enabled and new messages were added
+        if (autoScroll && messages.length > prevMessagesLengthRef.current) {
+            setTimeout(() => {
+                messagesEndRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "end",
+                    inline: "nearest"
+                });
+            }, 100); // Small delay to let DOM update
         }
         prevMessagesLengthRef.current = messages.length;
-    }, [messages]);
+    }, [messages, autoScroll]);
 
     // Initial greeting
     useEffect(() => {
@@ -331,18 +359,39 @@ export default function VoiceChatPage() {
             type: "ai",
             content: greetingText,
             timestamp: new Date(),
-            isVisible: false,
+            isVisible: true, // Make greeting visible by default
             isPlaying: false
         };
         setMessages([greeting]);
 
-        // Auto-play greeting after a short delay
-        setTimeout(() => {
-            playTTS(greetingText);
-        }, 1000);
-    }, [playTTS]);
+        // Don't auto-play greeting - let user decide
+        // setTimeout(() => {
+        //     playTTS(greetingText);
+        // }, 1000);
+    }, []);
 
-    const sendMessage = (content: string, isVoice: boolean = false) => {
+    // Auto-update input when speech recognition provides transcript
+    useEffect(() => {
+        if (transcript && speechListening) {
+            setInputMessage(transcript);
+        }
+    }, [transcript, speechListening]);
+
+    // Auto-send message when speech recognition ends with content
+    useEffect(() => {
+        if (!speechListening && transcript.trim() && transcript !== inputMessage) {
+            setInputMessage(transcript);
+            // Auto-send after a short delay to allow user to see the transcript
+            setTimeout(() => {
+                if (transcript.trim()) {
+                    sendMessage(transcript, true); // Mark as voice message
+                    resetSpeechRecognition();
+                }
+            }, 1000);
+        }
+    }, [speechListening, transcript, inputMessage]);
+
+    const sendMessage = async (content: string, isVoice: boolean = false) => {
         if (!content.trim()) return;
 
         const userMessage: Message = {
@@ -358,10 +407,18 @@ export default function VoiceChatPage() {
         setMessages(prev => [...prev, userMessage]);
         setInputMessage("");
 
-        // Simulate AI response
+        // Show typing indicator
         setIsTyping(true);
-        setTimeout(() => {
-            const aiResponseContent = generateAIResponse(content);
+
+        try {
+            // Call real chat API
+            const response = await chatMutation.mutateAsync({
+                chat_id: chatId,
+                user_input: content,
+                user_id: DEFAULT_USER_ID
+            });
+
+            const aiResponseContent = response.data.result;
             const aiResponse: Message = {
                 id: (Date.now() + 1).toString(),
                 type: "ai",
@@ -374,32 +431,59 @@ export default function VoiceChatPage() {
             setMessages(prev => [...prev, aiResponse]);
             setIsTyping(false);
 
-            // Auto-play AI message
+            // Auto-play AI message with improved teacher voice
             setTimeout(() => {
                 playMessageVoice(aiResponse.id, aiResponseContent);
             }, 500);
-        }, 1000 + Math.random() * 1500);
-    };
+        } catch (error) {
+            console.error('Chat API error:', error);
+            setIsTyping(false);
 
-    const generateAIResponse = (userInput: string): string => {
-        const responses = [
-            "That's very interesting! Can you tell me more about that?",
-            "I understand your point. How do you feel about that situation?",
-            "Great question! Let me think about that for a moment...",
-            "That sounds like quite an experience. What was the most challenging part?",
-            "I appreciate you sharing that with me. What would you recommend to others?",
-            "That's a thoughtful perspective. How has this shaped your thinking?",
-            "Excellent point! Can you give me a specific example?",
-            "I can see why that would be important to you. What's your next step?"
-        ];
+            // Fallback response on error
+            const errorResponse: Message = {
+                id: (Date.now() + 1).toString(),
+                type: "ai",
+                content: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.",
+                timestamp: new Date(),
+                isVisible: false,
+                isPlaying: false
+            };
 
-        return responses[Math.floor(Math.random() * responses.length)];
+            setMessages(prev => [...prev, errorResponse]);
+            toast.error("Failed to send message. Please try again.");
+        }
     };
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             sendMessage(inputMessage);
+        }
+    };
+
+    // Voice input handlers
+    const startVoiceInput = () => {
+        if (!speechSupported) {
+            toast.error("Speech recognition is not supported in your browser.");
+            return;
+        }
+
+        resetSpeechRecognition();
+        setInputMessage("");
+        startSpeechListening();
+        toast.info("Listening... Speak now!");
+    };
+
+    const stopVoiceInput = () => {
+        stopSpeechListening();
+        toast.success("Voice input stopped");
+    };
+
+    const toggleVoiceInput = () => {
+        if (speechListening) {
+            stopVoiceInput();
+        } else {
+            startVoiceInput();
         }
     };
 
@@ -459,7 +543,18 @@ export default function VoiceChatPage() {
             prevMessagesLengthRef.current = newMessages.length;
             return newMessages;
         });
-    }; return (
+    };
+
+    // Manual scroll to bottom function
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "end",
+            inline: "nearest"
+        });
+    };
+
+    return (
         <div className=" bg-white max-h-[calc(100vh-72px)]">
             <div className="container mx-auto p-4 h-[calc(100vh-72px)] flex flex-col lg:flex-row gap-4 w-7xl">
                 {/* Left Panel - Spline Avatar */}
@@ -565,6 +660,24 @@ export default function VoiceChatPage() {
                                                 {mode}
                                             </Button>
                                         ))}
+                                    </div>
+
+                                    {/* Auto-scroll toggle */}
+                                    <div className="mt-4 pt-3 border-t border-gray-200">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-gray-700 font-medium text-sm">Auto-scroll</label>
+                                            <Button
+                                                variant={autoScroll ? "default" : "outline"}
+                                                size="sm"
+                                                onClick={() => setAutoScroll(!autoScroll)}
+                                                className="text-xs"
+                                            >
+                                                {autoScroll ? "ON" : "OFF"}
+                                            </Button>
+                                        </div>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            {autoScroll ? "Messages will auto-scroll to bottom" : "Stay at current position"}
+                                        </p>
                                     </div>
                                 </motion.div>
                             )}
@@ -705,13 +818,26 @@ export default function VoiceChatPage() {
                                         value={inputMessage}
                                         onChange={(e) => setInputMessage(e.target.value)}
                                         onKeyPress={handleKeyPress}
-                                        placeholder="Type your message or use the microphone..."
+                                        placeholder={speechSupported
+                                            ? "Type your message or click the microphone to speak..."
+                                            : "Type your message..."}
                                         className="min-h-[60px] max-h-32 resize-none border-neutral-200 focus:border-blue-500 focus:ring-blue-500"
                                         disabled={isTyping}
                                     />
                                 </div>
 
                                 <div className="flex gap-2">
+                                    {/* Scroll to Bottom Button */}
+                                    <Button
+                                        onClick={scrollToBottom}
+                                        variant="outline"
+                                        size="sm"
+                                        className="border-neutral-200 text-gray-700 hover:bg-gray-50"
+                                        title="Scroll to bottom"
+                                    >
+                                        <ArrowDown className="w-4 h-4" />
+                                    </Button>
+
                                     {/* Send Button */}
                                     <Button
                                         onClick={() => sendMessage(inputMessage)}
@@ -721,16 +847,31 @@ export default function VoiceChatPage() {
                                         <Send className="w-4 h-4" />
                                     </Button>
 
-                                    {/* Microphone Toggle */}
+                                    {/* Voice Input Button */}
+                                    <Button
+                                        onClick={toggleVoiceInput}
+                                        variant={speechListening ? "destructive" : "outline"}
+                                        className={`${speechListening
+                                            ? "bg-red-500 hover:bg-red-600 text-white animate-pulse"
+                                            : "border-neutral-200 text-gray-700 hover:bg-gray-50"
+                                            }`}
+                                        disabled={isTyping || !speechSupported}
+                                        title={speechListening ? "Stop voice input" : "Start voice input"}
+                                    >
+                                        {speechListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                                    </Button>
+
+                                    {/* Audio Visualization Toggle (Original Microphone) */}
                                     <Button
                                         onClick={toggleMicrophone}
                                         variant={isListening ? "destructive" : "outline"}
                                         className={`${isListening
-                                            ? "bg-red-500 hover:bg-red-600 text-white"
+                                            ? "bg-orange-500 hover:bg-orange-600 text-white"
                                             : "border-neutral-200 text-gray-700 hover:bg-gray-50"
                                             }`}
+                                        title={isListening ? "Stop audio visualization" : "Start audio visualization"}
                                     >
-                                        {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                                        {isListening ? <Volume2 className="w-4 h-4" /> : <Volume2 className="w-4 h-4 opacity-50" />}
                                     </Button>
 
                                     {/* Reset Button */}
@@ -743,6 +884,24 @@ export default function VoiceChatPage() {
                                     </Button>
                                 </div>
                             </div>
+
+                            {/* Speech Recognition Status */}
+                            {speechListening && (
+                                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+                                    <motion.div
+                                        animate={{ scale: [1, 1.2, 1] }}
+                                        transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
+                                    >
+                                        <Mic className="w-4 h-4 text-red-600" />
+                                    </motion.div>
+                                    <div className="text-sm text-red-800">
+                                        <p className="font-medium">Listening for speech...</p>
+                                        {transcript && (
+                                            <p className="text-red-600 mt-1">"{transcript}"</p>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Permission Warning */}
                             {!hasPermission && isListening && (

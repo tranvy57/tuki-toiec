@@ -18,12 +18,18 @@ import {
 } from '~/components/review/speaking';
 import { useCurrentLesson } from '~/hooks/useCurrentLesson';
 import { getModalityDisplayName } from '~/hooks/useCurrentReview';
+import { SpeakingHistoryButton } from '~/components/review/speaking/SpeakingHistoryButton';
+import { SpeakingHistoryDialog } from '~/components/review/speaking/SpeakingHistoryDialog';
+import { useSpeakingHistory } from '~/store/speakingHistory';
 
 const initialLayout = { width: Dimensions.get('window').width };
 
 const SpeakingPracticeScreen = () => {
     const { skill, lessonId } = useLocalSearchParams();
     const router = useRouter();
+
+    // Speaking history hooks
+    const { isHistoryDialogVisible, hideHistoryDialog } = useSpeakingHistory();
 
     console.log(skill, lessonId);
 
@@ -292,16 +298,32 @@ const SpeakingPracticeScreen = () => {
         <View style={styles.container}>
             {/* Display skill info */}
             <View style={styles.skillHeader}>
-                <Text style={styles.skillTitle}>
-                    {getModalityDisplayName(skill as string)}
-                </Text>
-                <Text style={styles.lessonTitle}>
-                    {lessonData.name}
-                </Text>
+                <View style={styles.headerContent}>
+                    <View style={styles.headerText}>
+                        <Text style={styles.skillTitle}>
+                            {getModalityDisplayName(skill as string)}
+                        </Text>
+                        <Text style={styles.lessonTitle}>
+                            {lessonData.name}
+                        </Text>
+                    </View>
+                    <SpeakingHistoryButton
+                        skillFilter={skill as string}
+                        size="medium"
+                        variant="ghost"
+                    />
+                </View>
             </View>
 
             {/* Speaking Component */}
             {renderSpeakingComponent()}
+
+            {/* History Dialog */}
+            <SpeakingHistoryDialog
+                visible={isHistoryDialogVisible}
+                onClose={hideHistoryDialog}
+                skillFilter={skill as string}
+            />
         </View>
     );
 };
@@ -330,6 +352,14 @@ const styles = StyleSheet.create({
         padding: 16,
         borderBottomWidth: 1,
         borderBottomColor: '#e2e8f0',
+    },
+    headerContent: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    headerText: {
+        flex: 1,
     },
     skillTitle: {
         fontSize: 18,

@@ -30,23 +30,69 @@ export function useTTS() {
     const utterance = new SpeechSynthesisUtterance(text);
     currentUtteranceRef.current = utterance;
 
-    // Configure voice settings
-    utterance.rate = 0.8; // Slightly slower for better comprehension
-    utterance.pitch = 1;
-    utterance.volume = 0.8;
+    // Configure voice settings for teacher-like speech
+    utterance.rate = 0.75; // Slower for clear pronunciation
+    utterance.pitch = 1.1; // Slightly higher pitch for friendliness
+    utterance.volume = 0.9; // Clear volume
 
-    // Try to use a female voice if available
+    // Try to find the best English teacher voice
     const voices = synthRef.current.getVoices();
-    const femaleVoice = voices.find(
-      (voice) =>
-        voice.name.includes("Female") ||
-        voice.name.includes("Samantha") ||
-        voice.name.includes("Victoria") ||
-        voice.name.includes("Google US English")
-    );
 
-    if (femaleVoice) {
-      utterance.voice = femaleVoice;
+    // Priority order for voice selection (teacher-like voices)
+    const preferredVoices = [
+      // Google voices (usually clearest)
+      "Google US English",
+      "Google UK English Female",
+      "Google UK English Male",
+
+      // Microsoft voices
+      "Microsoft Zira Desktop - English (United States)",
+      "Microsoft David Desktop - English (United States)",
+      "Microsoft Hazel Desktop - English (Great Britain)",
+
+      // Apple voices (if on Safari)
+      "Samantha",
+      "Victoria",
+      "Alex",
+
+      // Fallback to any female English voice
+      "Female",
+      "en-US",
+    ];
+
+    let selectedVoice: SpeechSynthesisVoice | null = null;
+
+    for (const preferredName of preferredVoices) {
+      const foundVoice = voices.find(
+        (voice) =>
+          voice.name.includes(preferredName) ||
+          ((voice.lang.includes("en-US") || voice.lang.includes("en-GB")) &&
+            voice.name.toLowerCase().includes(preferredName.toLowerCase()))
+      );
+      if (foundVoice) {
+        selectedVoice = foundVoice;
+        break;
+      }
+    }
+
+    // If no preferred voice found, use any English voice
+    if (!selectedVoice) {
+      const englishVoice = voices.find(
+        (voice) =>
+          voice.lang.startsWith("en") && !voice.name.includes("Google Deutsch")
+      );
+      if (englishVoice) {
+        selectedVoice = englishVoice;
+      }
+    }
+
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+      console.log(
+        `[TTS] Using voice: ${selectedVoice.name} (${selectedVoice.lang})`
+      );
+    } else {
+      console.log("[TTS] Using default voice");
     }
 
     // Event handlers

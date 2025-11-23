@@ -25,7 +25,7 @@ const TOEICTestsScreen = () => {
   const renderTestItem = ({ item }: { item: TestItem }) => (
     <Link href={{
       pathname: `/(tabs)/(tests)/[id]`,
-      params: { id: item.test_id }
+      params: { id: 'b6ee396d-5820-43b4-bbc7-4753f52d7cb4' }
     }} asChild>
       <TouchableOpacity
         className="m-2 flex-1 rounded-xl p-4 active:scale-95"

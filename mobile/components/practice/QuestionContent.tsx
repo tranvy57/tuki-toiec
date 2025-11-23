@@ -37,13 +37,13 @@ export const QuestionContent = memo<QuestionContentProps>(
             </View>
           )}
 
-          {questionGroup?.paragraphEn && (
+          {/* {questionGroup?.paragraphEn && (
             <View className="mb-4 rounded-lg p-4" style={{ backgroundColor: colors.muted }}>
               <Text className="text-base leading-6" style={{ color: colors.foreground }}>
                 {questionGroup.paragraphEn}
               </Text>
             </View>
-          )}
+          )} */}
           {/* 
         {questionGroup.transcript && (
           <View className="mb-4">

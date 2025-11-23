@@ -24,4 +24,19 @@ export class VocabularyDto {
 
   @Expose()
   audioUrl: string;
+
+  @Expose()
+  lemma: string;
+
+  @Expose()
+  type: 'ai_generated' | 'toeic' | 'exercise';
+
+  @Expose()
+  isPhrase: boolean;
+
+  @Expose()
+  createdAt: string;
+
+  @Expose()
+  updatedAt: string;
 }
