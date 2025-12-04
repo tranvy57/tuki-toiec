@@ -114,7 +114,7 @@ export class CoursesService {
         isActive: true,
         course: { id: course.id },
       },
-      relations: ['studyTasks', 'studyTasks.lesson'],
+      relations: ['studyTasks', 'studyTasks.lesson', 'studyTasks.lessonContent'],
     });
 
     if (!plan) {
@@ -132,12 +132,10 @@ export class CoursesService {
         taskId: task.id,
       });
 
-      for (const content of task.lesson.contents || []) {
-        taskMap.set(content.id, {
-          status: task.status,
-          taskId: task.id,
-        });
-      }
+      taskMap.set(task.lessonContent.id, {
+        status: task.status,
+        taskId: task.id,
+      });
     }
 
     for (const phase of course.phases) {
