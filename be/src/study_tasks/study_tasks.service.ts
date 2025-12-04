@@ -19,7 +19,7 @@ export class StudyTasksService {
     private readonly planRepo: Repository<Plan>,
     @Inject()
     private readonly dataSrc: DataSource,
-  ) {}
+  ) { }
 
   create(createStudyTaskDto: CreateStudyTaskDto) {
     return 'This action adds a new studyTask';
@@ -73,20 +73,20 @@ export class StudyTasksService {
 
       const currentIdx = allTasks.findIndex((t) => t.id === current.id);
 
-      for (let i = currentIdx + 1; i < allTasks.length; i++) {
-        if (allTasks[i].status === 'pending') {
-          allTasks[i].status = 'locked';
-          await taskRepo.save(allTasks[i]);
-        }
-      }
-
       let toOpen: (typeof allTasks)[number] | undefined;
       for (let i = currentIdx + 1; i < allTasks.length; i++) {
         const t = allTasks[i];
-        if (t.status === 'skipped') continue; // bỏ qua các task skipped
-        if (t.status === 'locked') {
+        if (t.status === 'skipped') continue;
+        if (t.status === 'locked' || t.status === 'pending') {
           toOpen = t;
           break;
+        }
+      }
+
+      for (let i = currentIdx + 1; i < allTasks.length; i++) {
+        if (allTasks[i].status === 'pending' && allTasks[i].id !== toOpen?.id) {
+          allTasks[i].status = 'locked';
+          await taskRepo.save(allTasks[i]);
         }
       }
 
