@@ -23,7 +23,7 @@ export class CoursesService {
     private readonly planRepo: Repository<Plan>,
     @InjectRepository(StudyTask)
     private readonly studyTaskRepo: Repository<StudyTask>,
-  ) {}
+  ) { }
   private toDTO(course: Course): CourseDto {
     return plainToInstance(CourseDto, course, {
       excludeExtraneousValues: true,
@@ -89,7 +89,7 @@ export class CoursesService {
               lesson: {
                 contents: {
                   lessonContentItems: {
-                    item: true, 
+                    item: true,
                   },
                   vocabularies: true,
                 },
@@ -125,24 +125,31 @@ export class CoursesService {
       }
       return course;
     }
-
     const taskMap = new Map<string, { status: string; taskId: string }>();
     for (const task of plan.studyTasks) {
       taskMap.set(task.lesson.id, {
         status: task.status,
         taskId: task.id,
       });
+
+      for (const content of task.lesson.contents || []) {
+        taskMap.set(content.id, {
+          status: task.status,
+          taskId: task.id,
+        });
+      }
     }
 
     for (const phase of course.phases) {
       for (const pl of phase.phaseLessons) {
         const lesson = pl.lesson;
-        let taskData = taskMap.get(lesson.id);
+        const taskData = taskMap.get(lesson.id);
         lesson['studyTaskStatus'] = taskData?.status ?? 'locked';
+
         for (const content of lesson.contents || []) {
-          taskData = taskMap.get(content.id);
-          content['studyTaskId'] = taskData?.taskId ?? null;
-          content['studyTaskStatus'] = taskData?.status ?? 'locked';
+          const contentTaskData = taskMap.get(content.id);
+          content['studyTaskId'] = contentTaskData?.taskId ?? null;
+          content['studyTaskStatus'] = contentTaskData?.status ?? 'locked';
         }
       }
     }
