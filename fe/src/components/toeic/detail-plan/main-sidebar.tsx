@@ -266,6 +266,7 @@ export function MainSidebar({
           {selectedContent ? (
             <ContentDetailPanel
               content={selectedContent}
+              
               isPremiumUser={isPremiumUser}
               onCompleteTask={handleCompleteTask}
               isCompleting={isCompleting}
@@ -490,8 +491,7 @@ function ContentDetailPanel({
                 </p>
                 <Button
                   onClick={() => {
-                    console.log("CheckLog", content)
-                    onCompleteTask(content.id)
+                    onCompleteTask(content.studyTaskId)
                   }}
                   disabled={isCompleting}
                   className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"

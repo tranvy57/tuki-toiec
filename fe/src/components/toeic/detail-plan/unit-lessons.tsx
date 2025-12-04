@@ -101,6 +101,17 @@ function ContentItem({
     FileText;
 
   const isPremiumLocked = content.isPremium && !isPremiumUser;
+  const StatusIcon =
+    STUDY_TASK_STATUS_ICONS[
+    content.studyTaskStatus as keyof typeof STUDY_TASK_STATUS_ICONS
+    ];
+  const statusColor =
+    STUDY_TASK_STATUS_COLORS[
+    content.studyTaskStatus as keyof typeof STUDY_TASK_STATUS_COLORS
+    ];
+
+  const showStatus = content.studyTaskStatus !== "pending";
+  const isSpinning = content.studyTaskStatus === "in_progress";
 
   return (
     <button
@@ -147,6 +158,15 @@ function ContentItem({
             {isPremiumLocked && <Lock className="w-3 h-3 text-gray-400" />}
           </div>
         </div>
+        {showStatus && (
+          <StatusIcon
+            className={cn(
+              "w-3.5 h-3.5",
+              statusColor,
+              isSpinning && "animate-spin"
+            )}
+          />
+        )}
       </div>
     </button>
   );

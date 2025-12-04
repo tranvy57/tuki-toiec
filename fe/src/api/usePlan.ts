@@ -13,6 +13,12 @@ export interface PlanContent {
   order: number;
   isPremium: boolean;
   studyTaskId?: string; // ID của study task tương ứng với content này
+  studyTaskStatus:
+    | "pending"
+    | "in_progress"
+    | "completed"
+    | "skipped"
+    | "locked";
 }
 
 export interface PlanLesson {
