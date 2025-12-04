@@ -1,8 +1,9 @@
 import { PlanService } from './../plan/plan.service';
 // src/vnpay/vnpay.service.ts
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Order } from 'src/order/entities/order.entity';
+import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { Repository } from 'typeorm';
 import {
   buildVnpayUrl,
@@ -29,6 +30,8 @@ export class VnpayService {
     private readonly userCourseRepo: Repository<UserCourse>,
     @Inject()
     private readonly planService: PlanService,
+    @InjectRepository(Attempt)
+    private readonly attemptRepo: Repository<Attempt>,
   ) {}
   async createPaymentUrl(
     code: string,
@@ -82,6 +85,44 @@ export class VnpayService {
     console.log('VNPay payment URL:', paymentUrl);
 
     return paymentUrl;
+  }
+
+  async upgradeCourse(
+    code: string,
+    amount: number,
+    clientIp: string,
+    courseId: string,
+    user: User,
+  ) {
+    // 1. Check if user has an active plan
+    const activePlan = await this.planService.getActivePlanByUserId(
+      this.orderRepo.manager,
+      user.id,
+    );
+
+    if (!activePlan) {
+      throw new BadRequestException(
+        'Bạn chưa có lộ trình học. Vui lòng tạo lộ trình trước khi nâng cấp.',
+      );
+    }
+
+    // 2. Check if user has completed a review test
+    const reviewAttempt = await this.attemptRepo.findOne({
+      where: {
+        user: { id: user.id },
+        mode: 'review',
+        status: 'submitted',
+      },
+    });
+
+    if (!reviewAttempt) {
+      throw new BadRequestException(
+        'Bạn cần hoàn thành bài kiểm tra đánh giá năng lực (Review Test) trước khi nâng cấp.',
+      );
+    }
+
+    // 3. Proceed to create payment URL
+    return this.createPaymentUrl(code, amount, clientIp, courseId, user);
   }
 
   verifyChecksum(allParams: Record<string, string>) {

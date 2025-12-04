@@ -6,7 +6,7 @@ load_dotenv()
 
 class Gemini:
     def __init__(self):
-        self.model = "gemini-2.5-flash-lite-preview-06-17"
+        self.model = "gemini-2.5-flash-lite"
         self.model_provider = "google_genai"
     def llm(self):
         return init_chat_model(

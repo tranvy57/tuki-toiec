@@ -50,8 +50,8 @@ export class StudyTasksService {
       const planRepo = manager.withRepository(this.planRepo);
 
       const current = await taskRepo.findOne({
-        where: { id: taskId },
-        relations: { plan: true, lesson: true, lessonContent: true },
+        where: { lessonContent: { id: taskId } },
+        relations: { plan: true, lessonContent: true },
       });
       if (!current) throw new NotFoundException('Study task not found');
 

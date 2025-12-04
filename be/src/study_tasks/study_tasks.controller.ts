@@ -31,7 +31,6 @@ export class StudyTasksController {
   async updateStudyTask(
     @Param('id') id: string,
   ) {
-   
     return this.studyTasksService.completeStudyTask(id);
   }
 

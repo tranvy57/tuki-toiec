@@ -489,7 +489,10 @@ function ContentDetailPanel({
                   Đánh dấu bài học này đã hoàn thành và mở khóa bài tiếp theo
                 </p>
                 <Button
-                  onClick={() => onCompleteTask(content.studyTaskId)}
+                  onClick={() => {
+                    console.log("CheckLog", content)
+                    onCompleteTask(content.id)
+                  }}
                   disabled={isCompleting}
                   className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
                 >

@@ -26,6 +26,24 @@ export class VnpayController {
     return { paymentUrl: url };
   }
 
+  @Get('upgrade')
+  async upgrade(
+    @Query('code') code: string,
+    @Query('amount') amount: string,
+    @Query('courseId') course: string,
+    @CurrentUser() user: any,
+  ) {
+    const clientIp = '127.0.0.1';
+    const url = await this.vnpay.upgradeCourse(
+      code,
+      Number(amount),
+      clientIp,
+      course,
+      user,
+    );
+    return { paymentUrl: url };
+  }
+
   @Get('return')
   async handleReturn(@Query() query: Record<string, string>) {
     const valid = this.vnpay.verifyChecksum(query);

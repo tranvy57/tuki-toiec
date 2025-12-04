@@ -19,15 +19,10 @@ except ImportError:
     SKLEARN_AVAILABLE = False
     TfidfVectorizer = None
     cosine_similarity = None
-
-# from app.workflow.tools.chat_tools import Chat
-# from app.constants.define_order import DefineOrder
-# from app.database import PineconeDatabase, PostgresDatabase
 from app.services.qdrant_service import QdrantService
 from app.models.message import MessageRole
 from app.models import ChatMessage
 
-# Optional user profile imports
 try:
     from app.models.user_profile import SimpleUserProfile, get_personalization_context
     from app.services.db_profile_service import DatabaseProfileService
@@ -94,7 +89,99 @@ class RouteNode:
     def str_to_list_of_str(data_str):
         return [str(item) for item in ast.literal_eval(data_str)]
 
-    def get_user_profile(self, state: State) -> Optional[SimpleUserProfile]:
+    def mmr_select(self, query_vec, candidate_vecs, λ=0.7, top_k=5):
+        """Chọn top_k vector bằng Maximum Marginal Relevance"""
+        if not SKLEARN_AVAILABLE:
+            return list(range(min(top_k, len(candidate_vecs))))
+        
+        sim_query = cosine_similarity([query_vec], candidate_vecs)[0]
+        sim_cand = cosine_similarity(candidate_vecs)
+
+        selected = []
+        candidates = list(range(len(candidate_vecs)))
+
+        while len(selected) < top_k and candidates:
+            scores = [
+                λ * sim_query[i] - (1 - λ) * max([sim_cand[i][j] for j in selected] or [0])
+                for i in candidates
+            ]
+            chosen = candidates[np.argmax(scores)]
+            selected.append(chosen)
+            candidates.remove(chosen)
+
+        return selected
+
+    def refine_query_with_tfidf_mmr(self, query: str, corpus: List[str] = None, top_n=10, λ=0.7) -> str:
+        """
+        Làm giàu query trước khi embedding:
+        - TF-IDF để chọn cụm quan trọng
+        - MMR để giữ các cụm đa dạng nhất
+        - Tối ưu hóa cho TOEIC domain
+        """
+        if not SKLEARN_AVAILABLE or not query.strip():
+            return query
+        
+        try:
+            # TOEIC-specific corpus nếu không có corpus
+            if corpus is None:
+                toeic_corpus = [
+                    "TOEIC listening comprehension practice",
+                    "TOEIC reading comprehension strategies", 
+                    "TOEIC grammar rules and examples",
+                    "TOEIC vocabulary building exercises",
+                    "TOEIC test preparation tips",
+                    "TOEIC speaking practice methods",
+                    "TOEIC writing skills improvement"
+                ]
+                corpus = toeic_corpus
+
+            # Sử dụng english stopwords cho TOEIC content
+            vectorizer = TfidfVectorizer(
+                ngram_range=(1, 2), 
+                stop_words='english',
+                max_features=1000,  # Giới hạn features
+                min_df=1,  # Cho phép terms xuất hiện ít
+                lowercase=True
+            )
+            
+            # Fit với corpus + query
+            all_texts = corpus + [query]
+            tfidf = vectorizer.fit_transform(all_texts)
+            feature_names = vectorizer.get_feature_names_out()
+            query_vec = tfidf[-1].toarray()[0]
+
+            # Lấy top terms có TF-IDF cao
+            top_indices = np.argsort(query_vec)[::-1][:top_n]
+            top_terms = [feature_names[i] for i in top_indices if query_vec[i] > 0]
+
+            if len(top_terms) < 2:
+                return query  # Không đủ terms để refine
+
+            # Transform terms thành vectors để áp dụng MMR
+            term_vecs = vectorizer.transform(top_terms).toarray()
+            query_center = np.mean(term_vecs, axis=0)
+            
+            # Sử dụng MMR để chọn diverse terms
+            selected_ids = self.mmr_select(
+                query_center, 
+                term_vecs, 
+                λ=λ, 
+                top_k=min(5, len(term_vecs))
+            )
+
+            selected_terms = [top_terms[i] for i in selected_ids]
+            
+            # Tạo refined query với TOEIC context
+            refined_query = f"{query}. Related TOEIC concepts: {', '.join(selected_terms)}"
+            
+            print(f"🔍 Query refinement: {query} -> {len(selected_terms)} terms added")
+            return refined_query
+
+        except Exception as e:
+            print(f"❌ TF-IDF/MMR Error: {e}")
+            return query  # Fallback về original query
+
+    def get_user_profile(self, state: State):
         """
         Lấy user profile từ database dựa trên user_id
         """
@@ -107,27 +194,36 @@ class RouteNode:
             print(f"Error getting user profile: {e}")
             return None
     
-    def personalized_similarity_search(self, state: State, user_profile: Optional[SimpleUserProfile] = None):
+    def personalized_similarity_search(self, state: State, user_profile=None):
         """
-        Tìm các đoạn văn/ngữ cảnh liên quan từ Qdrant với personalization
+        Tìm các đoạn văn/ngữ cảnh liên quan từ Qdrant với personalization và TF-IDF/MMR enhancement
         """
         try:
             if not state.user_input or not isinstance(state.user_input, str):
                 raise ValueError("User input invalid or empty")
 
-            # Basic search
+            # Step 1: Refine query với TF-IDF và MMR
+            refined_query = self.refine_query_with_tfidf_mmr(
+                query=state.user_input,
+                corpus=None,  # Sử dụng TOEIC corpus mặc định
+                top_n=12,
+                λ=0.7  # Balance between relevance và diversity
+            )
+
+            # Step 2: Enhanced search với refined query
             results = self._vector_service.search(
-                question=state.user_input,
-                limit=5,  # Lấy nhiều hơn để filter
-                score_threshold=0.3  # Threshold thấp hơn để có nhiều options
+                question=refined_query,  # Sử dụng refined query thay vì original
+                limit=8,  # Lấy nhiều hơn để có options tốt hơn
+                score_threshold=0.25  # Threshold thấp hơn vì refined query tốt hơn
             )
             
-            # Filter và rank dựa trên user profile
+            # Step 3: Filter và rank dựa trên user profile
             if user_profile and results:
                 filtered_results = self._filter_results_by_profile(results, user_profile, state.user_input)
             else:
                 filtered_results = results[:3]
 
+            # Step 4: Extract content và update state
             retrieved = [r["payload"].get("content", "") for r in filtered_results]
             context_text = "\n".join(f"- {txt}" for txt in retrieved if txt)
 
@@ -135,7 +231,10 @@ class RouteNode:
             state.meta = getattr(state, "meta", {})
             state.meta["retrieved_docs"] = filtered_results
             state.meta["personalized"] = user_profile is not None
+            state.meta["refined_query"] = refined_query  # Lưu refined query để debug
+            state.meta["original_query"] = state.user_input
 
+            print(f"✅ RAG Enhanced: {len(filtered_results)} docs retrieved")
             return state
 
         except Exception as e:
@@ -211,7 +310,6 @@ class RouteNode:
         return state
     
     def generate(self, state: State):
-        print("???",state)
         # Get user profile
         user_profile = self.get_user_profile(state)
         print("User profile:", user_profile)
@@ -255,7 +353,7 @@ class RouteNode:
         # self._save_chat(state)
         return state
 
-    def _filter_results_by_profile(self, results: List, user_profile: SimpleUserProfile, user_input: str) -> List:
+    def _filter_results_by_profile(self, results: List, user_profile, user_input: str) -> List:
         """
         Filter và rank kết quả RAG dựa trên user profile
         """

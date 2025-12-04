@@ -1,7 +1,13 @@
 from app.models.chat_request import ChatRequest
 from app.models.chat_response import ResponseModel
+from app.models.toeic_models import (
+    AnalyzeTestRequest, AnalyzeTestResponse,
+    EvaluateWritingRequest, EvaluateWritingResponse
+)
 from app.services.chat_service import root, chat
 from app.services.enhanced_chat_service import enhanced_chat_endpoint, get_user_profile_endpoint
+from app.services.analyze_test_service import AnalyzeTestService
+from app.services.evaluate_writing_service import EvaluateWritingService
 from fastapi import APIRouter, Query, HTTPException
 from typing import Optional
 
@@ -40,6 +46,47 @@ async def get_user_profile_api(user_id: str):
     """Get user profile and progress"""
     try:
         return await get_user_profile_endpoint(user_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ===== TOEIC Services Endpoints =====
+
+@chat_router.post("/analyze-test", response_model=AnalyzeTestResponse)
+async def analyze_test_endpoint(request: AnalyzeTestRequest):
+    """Analyze TOEIC test results with personalization."""
+    try:
+        service = AnalyzeTestService()
+        result = await service.analyze_test_result(
+            test_data=request.test_data,
+            user_id=request.user_id
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@chat_router.post("/evaluate-writing", response_model=EvaluateWritingResponse)
+async def evaluate_writing_endpoint(request: EvaluateWritingRequest):
+    """Evaluate TOEIC writing with personalization."""
+    try:
+        service = EvaluateWritingService()
+        
+        # Prepare metadata
+        metadata = {
+            "title": request.title,
+            "sampleAnswer": request.sampleAnswer,
+            "topic": request.topic,
+            "context": request.context,
+            "requiredLength": request.requiredLength,
+            "timeLimit": request.timeLimit
+        }
+        
+        result = await service.evaluate_writing(
+            content=request.content,
+            writing_type=request.type,
+            metadata=metadata,
+            user_id=request.user_id
+        )
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

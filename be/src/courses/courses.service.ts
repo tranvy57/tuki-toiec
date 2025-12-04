@@ -89,7 +89,7 @@ export class CoursesService {
               lesson: {
                 contents: {
                   lessonContentItems: {
-                    item: true, // ← Lấy chi tiết item
+                    item: true, 
                   },
                   vocabularies: true,
                 },
@@ -117,7 +117,6 @@ export class CoursesService {
       relations: ['studyTasks', 'studyTasks.lesson'],
     });
 
-    // 3️⃣ Nếu chưa có plan, gán tất cả locked
     if (!plan) {
       for (const phase of course.phases) {
         for (const pl of phase.phaseLessons) {
@@ -127,7 +126,6 @@ export class CoursesService {
       return course;
     }
 
-    // 4️⃣ Map lessonId -> {status, taskId}
     const taskMap = new Map<string, { status: string; taskId: string }>();
     for (const task of plan.studyTasks) {
       taskMap.set(task.lesson.id, {
@@ -136,13 +134,15 @@ export class CoursesService {
       });
     }
 
-    // 5️⃣ Gắn trạng thái và task ID
     for (const phase of course.phases) {
       for (const pl of phase.phaseLessons) {
         const lesson = pl.lesson;
         const taskData = taskMap.get(lesson.id);
         lesson['studyTaskStatus'] = taskData?.status ?? 'locked';
-        lesson['studyTaskId'] = taskData?.taskId ?? null;
+        for (const content of lesson.contents || []) {
+          content['studyTaskId'] = taskData?.taskId ?? null;
+          content['studyTaskStatus'] = taskData?.status ?? 'locked';
+        }
       }
     }
 
