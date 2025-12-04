@@ -141,9 +141,6 @@ export class CoursesService {
     for (const phase of course.phases) {
       for (const pl of phase.phaseLessons) {
         const lesson = pl.lesson;
-        const taskData = taskMap.get(lesson.id);
-        lesson['studyTaskStatus'] = taskData?.status ?? 'locked';
-
         for (const content of lesson.contents || []) {
           const contentTaskData = taskMap.get(content.id);
           content['studyTaskId'] = contentTaskData?.taskId ?? null;

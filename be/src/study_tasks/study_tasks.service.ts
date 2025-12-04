@@ -57,6 +57,11 @@ export class StudyTasksService {
 
       const plan = current.plan;
 
+      if (current.status !== 'completed') {
+        current.status = 'completed';
+        await taskRepo.save(current);
+      }
+
       const allTasks = await taskRepo
         .createQueryBuilder('t')
         .innerJoinAndSelect('t.lesson', 'lesson')
@@ -67,12 +72,6 @@ export class StudyTasksService {
         .getMany();
 
       const currentIdx = allTasks.findIndex((t) => t.id === current.id);
-
-      if (current.status !== 'completed') {
-        current.status = 'completed';
-        await taskRepo.save(current);
-        allTasks[currentIdx].status = 'completed';
-      }
 
       let toOpen: (typeof allTasks)[number] | undefined;
       for (let i = currentIdx + 1; i < allTasks.length; i++) {
@@ -93,6 +92,7 @@ export class StudyTasksService {
 
       if (toOpen) {
         toOpen.status = 'pending';
+        console.log(toOpen);
         await taskRepo.save(toOpen);
       }
 

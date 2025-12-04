@@ -218,19 +218,15 @@ export function UnitLessons({
           <m.div key={lesson.id}>
             {/* Lesson Header */}
             <button
-              onClick={() => !isLocked && onSelectLesson(lesson.id)}
+              onClick={() => onSelectLesson(lesson.id)}
               disabled={isLocked}
               className={cn(
                 "w-full text-left p-3 rounded-xl transition-all duration-150",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500",
-                isLocked && "opacity-50 cursor-not-allowed",
                 isActive && "bg-indigo-50 ring-1 ring-indigo-200",
-                !isActive &&
-                !isLocked &&
-                "hover:bg-slate-50 hover:ring-1 hover:ring-slate-200"
+                isLocked && "bg-gray-100 text-gray-500 cursor-not-allowed"
               )}
               aria-selected={isActive}
-              aria-disabled={isLocked}
               aria-expanded={isExpanded}
             >
               <div className="flex items-center gap-3">
@@ -255,20 +251,6 @@ export function UnitLessons({
                     <h4 className="font-medium text-slate-900 text-sm truncate">
                       {lesson.name}
                     </h4>
-                    {!isLocked &&
-                      lesson.contents &&
-                      lesson.contents.length > 0 && (
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs text-slate-500">
-                            {lesson.contents.length}
-                          </span>
-                          {isExpanded ? (
-                            <ChevronDown className="w-4 h-4 text-slate-400" />
-                          ) : (
-                            <ChevronRight className="w-4 h-4 text-slate-400" />
-                          )}
-                        </div>
-                      )}
                   </div>
                   <p className="text-xs text-slate-500 truncate mt-0.5">
                     {lesson.description}
