@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     const user_id = (req.headers.get("x-user-id") || undefined) as string | undefined;
 
     // Call AI backend service
-    const aiBackendUrl = process.env.AI_BACKEND_URL || "http://localhost:1210";
+    const aiBackendUrl = process.env.NEXT_PUBLIC_AI_BACKEND_URL || "http://localhost:1210";
     const response = await fetch(`${aiBackendUrl}/api/analyze-test`, {
       method: "POST",
       headers: {

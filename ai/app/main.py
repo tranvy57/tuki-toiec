@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from dotenv import load_dotenv
 import os
 from app.api.chat import chat_router
+from app.api.crawl_api import crawl_router
 from fastapi.middleware.cors import CORSMiddleware
 
 # Load environment variables
@@ -32,6 +33,7 @@ async def start_up_event():
 
 
 app.include_router(chat_router, prefix="/api")
+app.include_router(crawl_router, prefix="/api/crawl", tags=["crawl"])
 
 
 if __name__ == "__main__":

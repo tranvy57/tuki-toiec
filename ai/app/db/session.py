@@ -38,3 +38,21 @@ def session_scope():
 def get_db_session():
     """Get a database session for direct use"""
     return SessionLocal()
+
+
+def get_db():
+    """Get a database session for FastAPI dependency injection.
+    
+    Yields:
+        sqlalchemy.orm.Session: A local SQLAlchemy session.
+        
+    Examples:
+        >>> @app.get("/items")
+        ... def read_items(db: Session = Depends(get_db)):
+        ...     return db.query(Item).all()
+    """
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

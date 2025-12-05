@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
+import { crawlApi } from "@/api/crawl";
 import {
   Download,
   Globe,
@@ -264,12 +265,16 @@ export default function CrawlExamPage() {
     [crawlerConfig],
   );
 
-  const onSubmit = (data: CrawlFormData) => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const onSubmit = async (data: CrawlFormData) => {
+    setIsLoading(true);
+    
     const newCrawl: CrawlResult = {
       id: Date.now().toString(),
       url: data.url,
       title: data.examTitle || "Đề thi từ " + new URL(data.url).hostname,
-      status: "pending",
+      status: "processing",
       progress: 0,
       questionsFound: 0,
       createdAt: new Date().toISOString(),
@@ -279,159 +284,91 @@ export default function CrawlExamPage() {
     setSelectedResult(newCrawl);
     reset();
 
-    simulateCrawling(newCrawl.id);
-  };
+    try {
+      // Call the real API
+      const result = await crawlApi.crawlTest({
+        url: data.url,
+        title: data.examTitle,
+        cookies: Object.fromEntries(
+          configPairs.cookies.filter(([_, v]) => v)
+        ),
+        headers: Object.fromEntries(
+          configPairs.headers.filter(([_, v]) => v)
+        ),
+      });
 
-  const simulateCrawling = (id: string) => {
-    setTimeout(() => {
+      // Update with real result
       setCrawlResults((prev) =>
         prev.map((item) =>
-          item.id === id ? { ...item, status: "processing" as const } : item,
-        ),
-      );
-    }, 1000);
-
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += Math.random() * 15;
-      if (progress >= 100) {
-        progress = 100;
-        clearInterval(interval);
-
-        const mockMetadata: CrawlMetadata = {
-          parts: 7,
-          groups: 70 + Math.floor(Math.random() * 8),
-          audioTracks: 40 + Math.floor(Math.random() * 5),
-          vocabularyTags: 120 + Math.floor(Math.random() * 10),
-          skillsDetected: 14 + Math.floor(Math.random() * 4),
-          totalAnswers: 800,
-          avgDifficulty: "B1-B2",
-          partStats: [
-            { part: 1, questions: 6, groups: 6, difficulty: "medium" },
-            { part: 2, questions: 25, groups: 25, difficulty: "medium" },
-            { part: 3, questions: 39, groups: 13, difficulty: "hard" },
-            { part: 4, questions: 30, groups: 10, difficulty: "hard" },
-            { part: 5, questions: 30, groups: 30, difficulty: "medium" },
-            { part: 6, questions: 16, groups: 4, difficulty: "medium" },
-            { part: 7, questions: 54, groups: 10, difficulty: "hard" },
-          ],
-          skillStats: [
-            { name: "Listening Inference", questions: 32, confidence: 0.9 },
-            { name: "Listening Details", questions: 48, confidence: 0.84 },
-            { name: "Reading Vocabulary", questions: 25, confidence: 0.88 },
-            { name: "Reading Inference", questions: 22, confidence: 0.8 },
-          ],
-        };
-
-        const mockPipeline: PipelineStep[] = [
-          {
-            key: "fetch_test",
-            title: "Fetch test page",
-            description: "GET HTML & parse DOM",
-            durationMs: 1600,
-            status: "completed",
-            entities: { tests: 1 },
-          },
-          {
-            key: "fetch_audio",
-            title: "Fetch audio",
-            description: "fetch_audio_pages + audio sources",
-            durationMs: 2400,
-            status: "completed",
-          },
-          {
-            key: "crawl_dom",
-            title: "Parse DOM → entities",
-            description: "crawl_to_entities",
-            durationMs: 5200,
-            status: "completed",
-            entities: { parts: 7, groups: 72 + Math.floor(Math.random() * 6), questions: 200, answers: 800 },
-          },
-          {
-            key: "parse_skills",
-            title: "Parse skills",
-            description: "parse_skills + skill mappings",
-            durationMs: 1500,
-            status: "completed",
-            entities: { skills: 14 + Math.floor(Math.random() * 4) },
-          },
-          {
-            key: "cloudinary",
-            title: "Upload assets",
-            description: "upload_image_to_cloudinary",
-            durationMs: 2100,
-            status: "completed",
-          },
-          {
-            key: "persist_entities",
-            title: "Persist to DB",
-            description: "import_test + commit transaction",
-            durationMs: 900,
-            status: "completed",
-            entities: { questionTags: 130 + Math.floor(Math.random() * 20) },
-          },
-        ];
-
-        const mockResources: ResourceUsage = {
-          requests: 55 + Math.floor(Math.random() * 10),
-          bandwidthMb: parseFloat((16 + Math.random() * 4).toFixed(1)),
-          cloudinaryUploads: 10 + Math.floor(Math.random() * 8),
-          cookiesValidUntil: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(),
-        };
-
-        const mockLogs = [
-          "[Now] Fetching DOM from Study4...",
-          "[+2s] Detecting 7 TOEIC parts",
-          "[+4s] Uploading audio/images to Cloudinary...",
-          "[+6s] Mapping skills & difficulty bands...",
-          "[+7s] Writing entities into database...",
-        ];
-
-        setCrawlResults((prev) =>
-          prev.map((item) =>
-            item.id === id
-              ? {
-                  ...item,
-                  status: "completed" as const,
-                  progress: 100,
-                  questionsFound: 200,
-                  metadata: mockMetadata,
-                  pipeline: mockPipeline,
-                  resources: mockResources,
-                  logs: mockLogs,
-                }
-              : item,
-          ),
-        );
-
-        setSelectedResult((prev) =>
-          prev && prev.id === id
+          item.id === newCrawl.id
             ? {
-                ...prev,
-                status: "completed",
-                progress: 100,
-                questionsFound: 200,
-                metadata: mockMetadata,
-                pipeline: mockPipeline,
-                resources: mockResources,
-                logs: mockLogs,
+                ...item,
+                id: result.id,
+                status: result.status as CrawlStatus,
+                progress: result.progress,
+                questionsFound: result.questionsFound,
+                error: result.error,
+                metadata: result.metadata as CrawlMetadata | undefined,
+                pipeline: result.pipeline as PipelineStep[] | undefined,
+                resources: result.resources as ResourceUsage | undefined,
+                logs: result.logs,
               }
-            : prev,
-        );
-      } else {
-        setCrawlResults((prev) =>
-          prev.map((item) =>
-            item.id === id
-              ? {
-                  ...item,
-                  progress: Math.round(progress),
-                  questionsFound: Math.round(progress * 2),
-                }
-              : item,
-          ),
-        );
-      }
-    }, 500);
+            : item
+        )
+      );
+
+      setSelectedResult((prev) =>
+        prev && prev.id === newCrawl.id
+          ? {
+              ...prev,
+              id: result.id,
+              status: result.status as CrawlStatus,
+              progress: result.progress,
+              questionsFound: result.questionsFound,
+              error: result.error,
+              metadata: result.metadata as CrawlMetadata | undefined,
+              pipeline: result.pipeline as PipelineStep[] | undefined,
+              resources: result.resources as ResourceUsage | undefined,
+              logs: result.logs,
+            }
+          : prev
+      );
+    } catch (error: any) {
+      // Handle error
+      const errorMessage = error?.message || "Có lỗi xảy ra khi cào dữ liệu";
+      
+      setCrawlResults((prev) =>
+        prev.map((item) =>
+          item.id === newCrawl.id
+            ? {
+                ...item,
+                status: "error" as const,
+                progress: 0,
+                error: errorMessage,
+                logs: [
+                  `[${new Date().toLocaleTimeString()}] Error: ${errorMessage}`,
+                ],
+              }
+            : item
+        )
+      );
+
+      setSelectedResult((prev) =>
+        prev && prev.id === newCrawl.id
+          ? {
+              ...prev,
+              status: "error" as const,
+              progress: 0,
+              error: errorMessage,
+              logs: [
+                `[${new Date().toLocaleTimeString()}] Error: ${errorMessage}`,
+              ],
+            }
+          : prev
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -683,9 +620,9 @@ export default function CrawlExamPage() {
             <p className="text-sm text-slate-500">
               Pipeline chạy background ≈ 8s • Theo dõi realtime phía dưới.
             </p>
-            <Button type="submit" className="w-full md:w-auto">
+            <Button type="submit" className="w-full md:w-auto" disabled={isLoading}>
               <Download className="h-4 w-4 mr-2" />
-              Bắt đầu cào dữ liệu
+              {isLoading ? "Đang cào dữ liệu..." : "Bắt đầu cào dữ liệu"}
             </Button>
           </div>
         </form>

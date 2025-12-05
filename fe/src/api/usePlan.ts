@@ -30,12 +30,6 @@ export interface PlanLesson {
   description: string;
   level: string;
   order: number;
-  studyTaskStatus:
-    | "pending"
-    | "in_progress"
-    | "completed"
-    | "skipped"
-    | "locked";
   studyTaskId?: string; // ID của study task tương ứng với lesson này
   contents: PlanContent[];
 }
@@ -108,6 +102,7 @@ async function fetchMyPlan(): Promise<StudyPlan | null> {
 async function fetchLatestCourse(): Promise<StudyPlan> {
   const res = await api.get("/courses/latest");
   if (!res.data) throw new Error("Failed to fetch latest course");
+  console.log("res.data", res.data.data)
   return res.data.data;
 }
 

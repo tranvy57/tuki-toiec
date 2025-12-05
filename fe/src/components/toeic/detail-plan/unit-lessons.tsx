@@ -96,6 +96,7 @@ function ContentItem({
   onClick: () => void;
   isPremiumUser?: boolean;
 }) {
+  console.log("content", content)
   const ContentIcon =
     LESSON_CONTENT_ICONS[content.type as keyof typeof LESSON_CONTENT_ICONS] ||
     FileText;
@@ -109,6 +110,7 @@ function ContentItem({
     STUDY_TASK_STATUS_COLORS[
     content.studyTaskStatus as keyof typeof STUDY_TASK_STATUS_COLORS
     ];
+  const isLocked = content.studyTaskStatus === "locked"; 
 
   const showStatus = content.studyTaskStatus !== "pending";
   const isSpinning = content.studyTaskStatus === "in_progress";
@@ -122,7 +124,8 @@ function ContentItem({
         isSelected
           ? "bg-indigo-100 border border-indigo-200"
           : "hover:bg-slate-50 border border-transparent",
-        isPremiumLocked && "opacity-75 hover:opacity-90"
+        isPremiumLocked && "opacity-75 hover:opacity-90",
+        isLocked && "opacity-75 hover:opacity-90 cursor-not-allowed"
       )}
     >
       <div className="flex items-center gap-2">
@@ -204,27 +207,15 @@ export function UnitLessons({
         console.log(lesson)
         const isActive = lesson.id === activeLessonId;
         const isExpanded = expandedLessons.has(lesson.id);
-        const isLocked = lesson.studyTaskStatus === "locked";
-        const StatusIcon =
-          STUDY_TASK_STATUS_ICONS[
-          lesson.studyTaskStatus as keyof typeof STUDY_TASK_STATUS_ICONS
-          ];
-        const statusColor =
-          STUDY_TASK_STATUS_COLORS[
-          lesson.studyTaskStatus as keyof typeof STUDY_TASK_STATUS_COLORS
-          ];
-
         return (
           <m.div key={lesson.id}>
             {/* Lesson Header */}
             <button
               onClick={() => onSelectLesson(lesson.id)}
-              disabled={isLocked}
               className={cn(
                 "w-full text-left p-3 rounded-xl transition-all duration-150",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500",
                 isActive && "bg-indigo-50 ring-1 ring-indigo-200",
-                isLocked && "bg-gray-100 text-gray-500 cursor-not-allowed"
               )}
               aria-selected={isActive}
               aria-expanded={isExpanded}
@@ -238,13 +229,7 @@ export function UnitLessons({
                       : "bg-slate-100 text-slate-600"
                   )}
                 >
-                  <StatusIcon
-                    className={cn(
-                      "w-4 h-4",
-                      statusColor,
-                      lesson.studyTaskStatus === "in_progress" && "animate-spin"
-                    )}
-                  />
+                  
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">

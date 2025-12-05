@@ -4,14 +4,13 @@ import { AppSidebar } from "@/components/side-bar/app-sidebar";
 import { SiteHeader } from "@/components/side-bar/site-header";
 import { useSidebar } from "@/hooks/useSidebar";
 import { useLayoutStore } from "@/stores/layoutStore";
-import { useResponsive } from "@/hooks/useAdmin";
 import { cn } from "@/lib/utils";
-import { useEffect, useRef } from "react";
+
 
 export function DashboardLayout() {
   const { theme } = useLayoutStore();
   const sidebar = useSidebar();
-  const { isMobile } = useResponsive();
+
 
   // Auto-collapse sidebar on mobile - remove to prevent infinite loop
   // useEffect(() => {
@@ -32,10 +31,10 @@ export function DashboardLayout() {
           } as React.CSSProperties
         }
       >
-        <AppSidebar variant={sidebar.variant} />
+        <AppSidebar variant={sidebar.variant as "floating" | "inset" | "sidebar"} />
         <SidebarInset>
           <SiteHeader />
-          <main className="flex-1 overflow-auto">
+          <main className="flex-1 overflow-auto p-6">
             <Outlet />
           </main>
         </SidebarInset>

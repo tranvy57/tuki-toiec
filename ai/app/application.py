@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from .api import chat_router
+from .api.crawl_api import crawl_router
 from .api.voyage_enhanced_chat import voyage_chat_router
 from .configs import get_settings
 from .db import Base, engine
@@ -44,6 +45,7 @@ def create_application() -> FastAPI:
 
     # add defined routers
     application.include_router(chat_router, prefix=settings.API_STR)
+    application.include_router(crawl_router, prefix=f"{settings.API_STR}/crawl")
     application.include_router(voyage_chat_router, prefix=settings.API_STR)
 
     # event handler
