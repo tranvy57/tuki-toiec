@@ -427,7 +427,7 @@ export default function VoiceChatPage() {
                 user_id: DEFAULT_USER_ID
             });
 
-            const aiResponseContent = response.data.result;
+            const aiResponseContent = response.data; // data is now a string directly
             const aiResponse: Message = {
                 id: (Date.now() + 1).toString(),
                 type: "ai",

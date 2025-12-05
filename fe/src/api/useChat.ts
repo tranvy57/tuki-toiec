@@ -1,4 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
+import api from "@/libs/axios-config";
 
 export interface ChatRequest {
   chat_id: string;
@@ -7,28 +8,15 @@ export interface ChatRequest {
 }
 
 export interface ChatResponse {
-  data: {
-    result: string;
-  };
   statusCode: number;
+  message: string;
+  data: string; // The result text directly
 }
 
-// Chat API function
+// Chat API function using axios
 const sendChatMessage = async (request: ChatRequest): Promise<ChatResponse> => {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-  const response = await fetch(`${apiUrl}/chat`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(request),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to send chat message: ${response.status}`);
-  }
-
-  return response.json();
+  const response = await api.post<ChatResponse>("/chat", request);
+  return response.data;
 };
 
 // Hook for sending chat messages
