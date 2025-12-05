@@ -13,17 +13,26 @@ export class ChatService {
     async sendMessage(chatRequest: ChatRequestDto): Promise<ChatResponseDto> {
         try {
             const response = await firstValueFrom(
-                this.httpService.post<{ data: { result: string } }>(
+                this.httpService.post<{
+                    data: {
+                        data: { result: string };
+                        statusCode: number;
+                    };
+                    message: string;
+                    statusCode: number;
+                }>(
                     this.AI_SERVICE_URL,
                     chatRequest,
                 ),
             );
 
+            // AI service returns: { data: { data: { result: "..." }, statusCode: 200 }, message: "Success", statusCode: 200 }
+            // We need to extract: data.data.result
             return {
                 data: {
-                    result: response.data.data.result,
+                    result: response.data.data.data.result,
                 },
-                statusCode: response.status,
+                statusCode: response.data.statusCode,
             };
         } catch (error) {
             console.error('Chat service error:', error);
