@@ -28,8 +28,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     const user = await this.userRepo.find({ where: { id: payload.sub } });
 
-    console.log('user login', user);
-
     if (!user) throw new UnauthorizedException();
     return user;
   }

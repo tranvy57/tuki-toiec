@@ -432,9 +432,12 @@ export class PlanService {
 
   // Legacy method for backward compatibility
   async getMyPlan(user: User) {
+    console.log('user', user);  
     const plan = await this.planRepo.findOne({
       where: { user: { id: user.id }, isActive: true },
     });
+
+    console.log('plan', plan);
 
     if (!plan) throw new NotFoundException('No active plan found for user');
     return this.toDTO(plan);

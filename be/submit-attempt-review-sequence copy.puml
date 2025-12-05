@@ -1,0 +1,146 @@
+@startuml
+hide footbox
+skinparam ParticipantPadding 10
+skinparam BoxPadding 5
+' Sequence: importTest
+
+actor "Người quản trị" as Admin
+boundary UI_Admin as UI
+control CrawlController
+control CrawlService
+control SkillRepository
+control CloudinaryService
+entity TestRepository
+entity PartRepository
+entity GroupRepository
+entity QuestionRepository
+entity AnswerRepository
+entity QuestionTagRepository
+entity SkillPartsRepository
+entity Test
+entity Part
+entity Group
+entity Question
+entity Answer
+entity Skill
+entity QuestionTag
+entity SkillPart
+Admin -> UI : Cung cấp liên kết của đề thi cần nhập
+Admin -> UI : Bấm "Cào đề thi"
+UI -> CrawlController : importTest(url)
+CrawlController -> CrawlService : importTest(url, db)
+CrawlService -> CrawlService : extractTitle(url)
+CrawlService -> CrawlService : fetchTestPage(url, cookies, headers)
+CrawlService -> CrawlService : fetchAudioPages(url, cookies, headers)
+CrawlService -> CrawlService : getAudioUrl()
+CrawlService -> CrawlService : crawlToEntities(soup, audioMain, title, soupAudio)
+activate CrawlService
+CrawlService -> CrawlService : createTest(title, audioUrl)
+CrawlService -> CrawlService : createParts(7 parts)
+
+loop Duyệt qua các nhóm câu hỏi
+    CrawlService -> CrawlService : parseGroupContent()
+    
+    alt Có hình ảnh
+        CrawlService -> CloudinaryService : uploadImageToCloudinary(imageUrl)
+        CloudinaryService -> CloudinaryService : fetchImage(url)
+        CloudinaryService -> CloudinaryService : uploadToCloudinary(imageContent)
+        CloudinaryService --> CrawlService : cloudinaryUrl
+    end
+    
+    CrawlService -> CrawlService : createGroup(orderIndex, paragraphs, imageUrl)
+    
+    loop Duyệt qua các câu hỏi trong nhóm
+        CrawlService -> CrawlService : parseQuestion(wrapper, qOrder, group)
+        CrawlService -> CrawlService : createQuestion(numberLabel, content, explanation)
+        CrawlService -> CrawlService : createAnswers(answerData)
+    end
+end
+
+CrawlService -> CrawlService : mapAudioToGroups(soupAudio)
+deactivate CrawlService
+
+CrawlService --> CrawlService : (test, parts, groups, questions, answers)
+
+CrawlService -> TestRepository : create(test)
+TestRepository -> Test : save(test)
+Test --> TestRepository : saved
+TestRepository --> CrawlService : test
+
+loop Lưu 7 parts
+    CrawlService -> PartRepository : create(part)
+    PartRepository -> Part : save(part)
+    Part --> PartRepository : saved
+    PartRepository --> CrawlService : part
+end
+
+loop Lưu groups
+    CrawlService -> GroupRepository : create(group)
+    GroupRepository -> Group : save(group)
+    Group --> GroupRepository : saved
+    GroupRepository --> CrawlService : group
+end
+
+loop Lưu questions
+    CrawlService -> QuestionRepository : create(question)
+    QuestionRepository -> Question : save(question)
+    Question --> QuestionRepository : saved
+    QuestionRepository --> CrawlService : question
+end
+
+loop Lưu answers
+    CrawlService -> AnswerRepository : create(answer)
+    AnswerRepository -> Answer : save(answer)
+    Answer --> AnswerRepository : saved
+    AnswerRepository --> CrawlService : answer
+end
+
+
+CrawlService -> CrawlService : fetchSkillPage(url, cookies, headers)
+
+CrawlService -> CrawlService : parseSkills(soupSkill)
+CrawlService -> SkillRepository : createOrGetSkills(skillsByPart)
+activate SkillRepository
+SkillRepository -> SkillRepository : collectUniqueSkillNames()
+SkillRepository -> Skill : findByNames(skillNames)
+Skill --> SkillRepository : existingSkills
+
+loop Duyệt qua từng skill name
+    alt Skill đã tồn tại
+        SkillRepository -> SkillRepository : addToSkillMap(existingSkill)
+    else Skill chưa tồn tại
+        SkillRepository -> Skill : create(skillName, description)
+        Skill --> SkillRepository : newSkill
+        SkillRepository -> SkillRepository : addToSkillMap(newSkill)
+    end
+end
+deactivate SkillRepository
+SkillRepository --> CrawlService : skillMap
+CrawlService -> CrawlService : createSkillParts(skillsByPart, partsInstances, skillMap)
+CrawlService -> CrawlService : createQuestionTags(skillsByPart, questionsInstances, skillMap)
+loop Lưu skill_parts
+    CrawlService -> SkillPartsRepository : create(skillPart)
+    SkillPartsRepository -> QuestionTag : save(skillPart)
+    QuestionTag --> SkillPartsRepository : saved
+    SkillPartsRepository --> CrawlService : questionTag
+end
+loop Lưu question_tags
+    CrawlService -> QuestionTagRepository : create(questionTag)
+    QuestionTagRepository -> QuestionTag : save
+    QuestionTag --> QuestionTagRepository : saved
+    QuestionTagRepository --> CrawlService : questionTag
+end
+alt Lưu dữ liệu thành công
+    CrawlService -> TestRepository : commit()
+    TestRepository --> CrawlService : success
+    CrawlService --> CrawlController : test
+    CrawlController --> UI : testInfo
+    UI --> UI : Hiển thị thông tin bài thi
+else Lỗi khi lưu dữ liệu
+    CrawlService -> TestRepository : rollback()
+    TestRepository --> CrawlService : rollbackComplete
+    CrawlService --> CrawlController : error
+    CrawlController --> UI : errorMessage
+    UI --> UI : Hiển thị thông báo lỗi
+end
+@enduml

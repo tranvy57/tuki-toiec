@@ -15,7 +15,8 @@ export interface ChatResponse {
 
 // Chat API function
 const sendChatMessage = async (request: ChatRequest): Promise<ChatResponse> => {
-  const response = await fetch("http://34.143.141.5:8000/api/chat", {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+  const response = await fetch(`${apiUrl}/chat`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

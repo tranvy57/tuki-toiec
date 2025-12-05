@@ -313,6 +313,7 @@ export default function VoiceChatPage() {
     const [showControls, setShowControls] = useState(false);
     const [autoScroll, setAutoScroll] = useState(false); // Disable auto scroll by default
     const [chatId] = useState(() => generateChatId()); // Generate unique chat ID
+    const voiceMessageSentRef = useRef(false); // Track if voice message was sent
 
     // Chat API hook
     const chatMutation = useChatMessage();
@@ -351,7 +352,7 @@ export default function VoiceChatPage() {
         prevMessagesLengthRef.current = messages.length;
     }, [messages, autoScroll]);
 
-    // Initial greeting
+    // Initial greeting - only run once on mount
     useEffect(() => {
         const greetingText = "Hello! I'm Tuki AI, your voice chat assistant. Feel free to speak to me or type your message. How can I help you today?";
         const greeting: Message = {
@@ -362,13 +363,19 @@ export default function VoiceChatPage() {
             isVisible: true, // Make greeting visible by default
             isPlaying: false
         };
-        setMessages([greeting]);
+        setMessages((prev) => {
+            // Only set greeting if messages are empty
+            if (prev.length === 0) {
+                return [greeting];
+            }
+            return prev;
+        });
 
         // Don't auto-play greeting - let user decide
         // setTimeout(() => {
         //     playTTS(greetingText);
         // }, 1000);
-    }, []);
+    }, []); // Empty dependency array - only run once
 
     // Auto-update input when speech recognition provides transcript
     useEffect(() => {
@@ -377,19 +384,15 @@ export default function VoiceChatPage() {
         }
     }, [transcript, speechListening]);
 
-    // Auto-send message when speech recognition ends with content
+    // Populate input with transcript when speech recognition ends
     useEffect(() => {
-        if (!speechListening && transcript.trim() && transcript !== inputMessage) {
+        if (!speechListening && transcript.trim() && !voiceMessageSentRef.current) {
+            voiceMessageSentRef.current = true; // Mark as populated
             setInputMessage(transcript);
-            // Auto-send after a short delay to allow user to see the transcript
-            setTimeout(() => {
-                if (transcript.trim()) {
-                    sendMessage(transcript, true); // Mark as voice message
-                    resetSpeechRecognition();
-                }
-            }, 1000);
+            // User can now edit or send manually
+            toast.success("Voice input captured! You can edit or send the message.");
         }
-    }, [speechListening, transcript, inputMessage]);
+    }, [speechListening, transcript]);
 
     const sendMessage = async (content: string, isVoice: boolean = false) => {
         if (!content.trim()) return;
@@ -406,6 +409,12 @@ export default function VoiceChatPage() {
 
         setMessages(prev => [...prev, userMessage]);
         setInputMessage("");
+        
+        // Reset voice-related state when sending
+        if (transcript.trim()) {
+            resetSpeechRecognition();
+            voiceMessageSentRef.current = false;
+        }
 
         // Show typing indicator
         setIsTyping(true);
@@ -470,6 +479,7 @@ export default function VoiceChatPage() {
 
         resetSpeechRecognition();
         setInputMessage("");
+        voiceMessageSentRef.current = false; // Reset the flag when starting new voice input
         startSpeechListening();
         toast.info("Listening... Speak now!");
     };
