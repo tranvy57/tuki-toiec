@@ -107,7 +107,6 @@ export class CoursesService {
 
     const course = userCourse.course;
 
-    // 2️⃣ Tìm plan đang active của user
     const plan = await this.planRepo.findOne({
       where: {
         user: { id: userId },
