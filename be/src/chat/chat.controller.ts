@@ -12,7 +12,7 @@ export class ChatController {
     @Post()
     async sendMessage(
         @Body() chatRequest: ChatRequestDto,
-    ): Promise<ChatResponseDto> {
+    ): Promise<string> {
         return this.chatService.sendMessage(chatRequest);
     }
 }

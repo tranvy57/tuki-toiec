@@ -10,32 +10,42 @@ export class ChatService {
 
     constructor(private readonly httpService: HttpService) { }
 
-    async sendMessage(chatRequest: ChatRequestDto): Promise<ChatResponseDto> {
+    async sendMessage(chatRequest: ChatRequestDto): Promise<string> {
         try {
             const response = await firstValueFrom(
-                this.httpService.post<{
-                    data: {
-                        data: { result: string };
-                        statusCode: number;
-                    };
-                    message: string;
-                    statusCode: number;
-                }>(
+                this.httpService.post(
                     this.AI_SERVICE_URL,
                     chatRequest,
                 ),
             );
 
-            // AI service returns: { data: { data: { result: "..." }, statusCode: 200 }, message: "Success", statusCode: 200 }
-            // We need to extract: data.data.result
-            return {
-                data: {
-                    result: response.data.data.data.result,
-                },
-                statusCode: response.data.statusCode,
-            };
+            // Log the actual response structure for debugging
+            console.log('AI Service Response:', JSON.stringify(response.data, null, 2));
+
+            // Try to extract the result from various possible structures
+            let result: string;
+
+            // Check different possible response structures
+            if (response.data?.data?.data?.result) {
+                // Structure: { data: { data: { result: "..." } } }
+                result = response.data.data.data.result;
+            } else if (response.data?.data?.result) {
+                // Structure: { data: { result: "..." } }
+                result = response.data.data.result;
+            } else if (response.data?.result) {
+                // Structure: { result: "..." }
+                result = response.data.result;
+            } else {
+                console.error('Unexpected response structure:', response.data);
+                throw new Error('Unable to extract result from AI service response');
+            }
+
+            return result;
         } catch (error) {
             console.error('Chat service error:', error);
+            if (error.response) {
+                console.error('Error response data:', error.response.data);
+            }
             throw new HttpException(
                 {
                     data: {
