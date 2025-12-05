@@ -325,6 +325,7 @@ function ContentDetailPanel({
   const hasVocabularies = content.vocabularies && content.vocabularies.length > 0;
   const hasItems = content.lessonContentItems && content.lessonContentItems.length > 0;
   const isInteractiveContent = hasVocabularies || (hasItems && content.type === "quiz");
+  const isCompleted = content.studyTaskStatus === "completed";  
 
   // Show learning interface if requested
   if (showLearningInterface && isInteractiveContent) {
@@ -489,7 +490,12 @@ function ContentDetailPanel({
                 <p className="text-sm text-green-700 mb-3">
                   Đánh dấu bài học này đã hoàn thành và mở khóa bài tiếp theo
                 </p>
-                <Button
+                {isCompleted ? (
+                  <p className="text-sm text-green-700 mb-3">
+                    Bạn đã hoàn thành bài học này
+                  </p>
+                ) : (
+                  <Button
                   onClick={() => {
                     onCompleteTask(content.studyTaskId)
                   }}
@@ -508,6 +514,7 @@ function ContentDetailPanel({
                     </>
                   )}
                 </Button>
+                )}
               </div>
             </div>
           )}

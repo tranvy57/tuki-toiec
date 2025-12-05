@@ -31,24 +31,26 @@ export class PlanService {
     const { courseId, targetScore } = createPlanDto;
 
     return this.dataSrc.transaction(async (manager) => {
-      const course = await this.courseRepo.findOne({
-        where: { id: courseId },
-        relations: [
-          'phases',
-          'phases.phaseLessons.lesson',
-          'phases.phaseLessons.lesson.contents',
-        ],
-      });
+      const course = await this.courseRepo
+        .createQueryBuilder('course')
+        .leftJoinAndSelect('course.phases', 'phase')
+        .leftJoinAndSelect('phase.phaseLessons', 'phaseLesson')
+        .leftJoinAndSelect('phaseLesson.lesson', 'lesson')
+        .leftJoinAndSelect('lesson.contents', 'content')
+        .where('course.id = :id', { id: courseId })
+        .orderBy('phase.order', 'ASC')
+        .addOrderBy('phaseLesson.order', 'ASC')
+        .addOrderBy('lesson.order', 'ASC')
+        .addOrderBy('content.order', 'ASC')
+        .getOne();
 
       if (!course) throw new NotFoundException('Course not found');
 
-      // 2️⃣ Disable plan hiện tại của user
       await this.planRepo.update(
         { user: { id: user.id }, isActive: true },
         { isActive: false },
       );
 
-      // 3️⃣ Tạo Plan mới
       const plan = this.planRepo.create({
         user,
         course,
@@ -60,10 +62,9 @@ export class PlanService {
       });
       const savedPlan = await this.planRepo.save(plan);
 
-      // 4️⃣ Sinh StudyTask
       const studyTasks: StudyTask[] = [];
       let isFirstTask = true;
-
+      let order = 1;
       for (const phase of course.phases) {
         for (const pl of phase.phaseLessons) {
           for (const lc of pl.lesson.contents ?? []) {
@@ -71,10 +72,11 @@ export class PlanService {
               plan: savedPlan,
               lesson: pl.lesson,
               lessonContent: lc,
+              order: order++,
               status: isFirstTask ? 'pending' : 'locked',
             });
             studyTasks.push(task);
-            isFirstTask = false; // Sau task đầu tiên, các task sau là locked
+            isFirstTask = false; 
           }
         }
       }

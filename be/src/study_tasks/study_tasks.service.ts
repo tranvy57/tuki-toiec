@@ -67,8 +67,7 @@ export class StudyTasksService {
         .innerJoinAndSelect('t.lesson', 'lesson')
         .innerJoinAndSelect('t.lessonContent', 'content')
         .where('t.plan_id = :planId', { planId: plan.id })
-        .orderBy('lesson.order', 'ASC')
-        .addOrderBy('content.order', 'ASC')
+        .orderBy('t.order', 'ASC')
         .getMany();
 
       const currentIdx = allTasks.findIndex((t) => t.id === current.id);

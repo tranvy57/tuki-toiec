@@ -118,6 +118,7 @@ function ContentItem({
   return (
     <button
       onClick={onClick}
+      disabled={isPremiumLocked || isLocked}
       className={cn(
         "w-full text-left p-2 rounded-lg transition-colors duration-150 group relative",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500",
@@ -125,7 +126,7 @@ function ContentItem({
           ? "bg-indigo-100 border border-indigo-200"
           : "hover:bg-slate-50 border border-transparent",
         isPremiumLocked && "opacity-75 hover:opacity-90",
-        isLocked && "opacity-75 hover:opacity-90 cursor-not-allowed"
+        isLocked && "opacity-75 hover:opacity-70 cursor-not-allowed"
       )}
     >
       <div className="flex items-center gap-2">

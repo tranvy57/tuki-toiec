@@ -27,6 +27,9 @@ export class StudyTask extends BaseEntity {
   @Column({ type: 'varchar', length: 16, default: 'pending' })
   status: StudyTaskStatus;
 
+  @Column({ type: 'int', default: 0 })
+  order: number;
+
   @ManyToOne(() => LessonContent, (lc) => lc.studyTasks, {
     onDelete: 'SET NULL',
     nullable: true,

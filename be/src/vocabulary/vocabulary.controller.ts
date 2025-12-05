@@ -53,6 +53,12 @@ export class VocabularyController {
     );
   }
 
+  @Get('lookup')
+  async lookup(@Query('word') word: string, @CurrentUser() user: User) {
+    const result = await this.vocabularyService.lookupWord(word, user);
+    return result;
+  }
+
   @Get(':id')
   @Public()
   findOne(@Param('id') id: string) {
@@ -79,9 +85,4 @@ export class VocabularyController {
     return await this.vocabularyService.importFromExcel(file);
   }
 
-  @Get('lookup')
-  async lookup(@Query('word') word: string, @CurrentUser() user: User) {
-    const result = await this.vocabularyService.lookupWord(word, user);
-    return result;
-  }
 }
