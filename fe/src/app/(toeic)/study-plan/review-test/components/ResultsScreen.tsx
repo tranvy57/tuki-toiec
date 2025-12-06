@@ -14,6 +14,8 @@ import { usePracticeTest } from "@/hooks"
 import { getDurationString } from "@/utils"
 import { ResultTestResponse } from "@/types"
 import { TestResults, Question } from "../types"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 export interface TestData {
   testTitle: string
@@ -44,15 +46,15 @@ export interface TestData {
 
 interface ResultsScreenProps {
   onRetake: () => void
-  onCreateStudyPlan: () => void
 }
 
-export function ResultsScreen({ onRetake, onCreateStudyPlan }: ResultsScreenProps) {
+export function ResultsScreen({ onRetake }: ResultsScreenProps) {
   const [activeSection, setActiveSection] = useState<"analysis" | "review">("analysis")
   const { resultTest, fullTest } = usePracticeTest();
   const [analysis, setAnalysis] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [reviewData, setReviewData] = useState<any>(null); // Store raw review data
+  const router = useRouter();
 
   console.log("TEST", resultTest)
   console.log("FULL_TEST", fullTest)
@@ -63,6 +65,14 @@ export function ResultsScreen({ onRetake, onCreateStudyPlan }: ResultsScreenProp
     const storedReviewData = localStorage.getItem('review-result');
     if (storedReviewData) {
       setReviewData(JSON.parse(storedReviewData));
+    }
+
+    // Check if plan was just created and show success message
+    const planCreated = localStorage.getItem('plan-created');
+    if (planCreated === 'true') {
+      toast.success("Kế hoạch học tập của bạn đã được tạo thành công. Bạn có thể xem chi tiết kế hoạch ngay bây giờ.");
+      // Clear the flag after showing the message
+      localStorage.removeItem('plan-created');
     }
 
     // Cleanup function to remove data when component unmounts
@@ -282,10 +292,10 @@ export function ResultsScreen({ onRetake, onCreateStudyPlan }: ResultsScreenProp
             Làm lại bài test
           </button>
           <button
-            onClick={onCreateStudyPlan}
+            onClick={() => router.push('/study-plan')}
             className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
           >
-            Tạo kế hoạch học tập
+            Xem kế hoạch học tập
           </button>
         </motion.div>
       </div>

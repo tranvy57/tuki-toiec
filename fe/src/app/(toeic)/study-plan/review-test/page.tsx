@@ -11,6 +11,7 @@ import { ReviewTestStage, TestResults, Question, Group, ApiTestData, ApiPart, Ap
 import { TOEIC_PARTS, BAND_SCORE_MAPPING, generateRecommendations } from "./constants";
 import { useStartTestPractice, useSubmitTestReview } from "@/api";
 import { usePracticeTest } from "@/hooks";
+import api from "@/libs/axios-config";
 
 // Helper function to convert API data to Question format
 const convertApiDataToGroups = (apiData: ApiTestData): Group[] => {
@@ -192,7 +193,7 @@ export default function ReviewTestPage({ onComplete }: ReviewTestPageProps) {
 
     if (fullTest?.id) {
       submitReview(fullTest.id, {
-        onSuccess: (reviewResult) => {
+        onSuccess: async (reviewResult) => {
           console.log("Review result:", reviewResult);
 
           // Transform the review result into ResultTestResponse format for store compatibility
@@ -220,6 +221,16 @@ export default function ReviewTestPage({ onComplete }: ReviewTestPageProps) {
 
           // Also calculate local results for compatibility
           calculateResults();
+
+          // Automatically create study plan after successful test submission
+          try {
+            const planResponse = await api.post("/plans/my-plan");
+            console.log("Study plan created:", planResponse.data);
+            localStorage.setItem('plan-created', 'true');
+          } catch (error) {
+            console.error("Failed to create study plan:", error);
+            // Don't block the flow if plan creation fails
+          }
 
           setStage("results");
           setIsSubmitting(false);
@@ -303,11 +314,7 @@ export default function ReviewTestPage({ onComplete }: ReviewTestPageProps) {
     setIsSubmitting(false);
   };
 
-  const handleCreateStudyPlan = () => {
-    // Navigate to study plan creation or trigger callback
-    console.log("Creating study plan with results:", testResults);
-    // You can add navigation logic here
-  };
+
 
   // Get current group for display
   const currentGroupData = groups[currentGroupIndex];
@@ -441,7 +448,7 @@ export default function ReviewTestPage({ onComplete }: ReviewTestPageProps) {
           {stage === "results" && testResults && (
             <ResultsScreen
               onRetake={handleRetake}
-              onCreateStudyPlan={handleCreateStudyPlan}
+
             />
           )}
         </AnimatePresence>

@@ -1,4 +1,4 @@
-import { LoginRequest, AuthResponse, LoginGoogleRequest, LoginFacebookRequest, LogoutRequest, CheckTokenRequest, ResetPasswordRequest } from "@/types";
+import { LoginRequest, AuthResponse, LoginGoogleRequest, LoginFacebookRequest, LogoutRequest, CheckTokenRequest, ResetPasswordRequest, RegisterRequest } from "@/types";
 import api from "@/libs/axios-config";
 import { useQuery } from "@tanstack/react-query";
 
@@ -34,6 +34,16 @@ export const loginFacebook = async (body: LoginFacebookRequest): Promise<AuthRes
   }
 };
 
+export const register = async (body: RegisterRequest): Promise<{ data: any }> => {
+  try {
+    const response = await api.post<{ data: any }>("/users", body);
+    return response.data;
+  } catch (error) {
+    console.error("Registration error:", error);
+    throw error;
+  }
+};
+
 export const logout = async (body: LogoutRequest): Promise<void> => {
   try {
     await api.post("/auth/logout", body);
@@ -46,7 +56,7 @@ export const logout = async (body: LogoutRequest): Promise<void> => {
 export const checkToken = async (): Promise<{ valid: boolean }> => {
   try {
     const response = await api.get<{ data: { valid: boolean } }>("/auth/introspect");
-    if(response.data.data.valid) {
+    if (response.data.data.valid) {
       return { valid: true };
     } else {
       return { valid: false };

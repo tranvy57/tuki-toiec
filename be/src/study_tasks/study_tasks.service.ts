@@ -7,6 +7,7 @@ import { UserProgress } from 'src/user_progress/entities/user_progress.entity';
 import { LessonSkill } from 'src/lesson_skills/entities/lesson_skill.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Plan } from 'src/plan/entities/plan.entity';
+import { UserCoursesService } from 'src/user_courses/user_courses.service';
 
 @Injectable()
 export class StudyTasksService {
@@ -19,6 +20,8 @@ export class StudyTasksService {
     private readonly planRepo: Repository<Plan>,
     @Inject()
     private readonly dataSrc: DataSource,
+    @Inject()
+    private readonly userCoursesService: UserCoursesService,
   ) { }
 
   create(createStudyTaskDto: CreateStudyTaskDto) {
@@ -51,7 +54,7 @@ export class StudyTasksService {
 
       const current = await taskRepo.findOne({
         where: { id: taskId },
-        relations: { plan: true, lesson: true, lessonContent: true },
+        relations: { plan: { user: true }, lesson: true, lessonContent: true },
       });
       if (!current) throw new NotFoundException('Study task not found');
 
@@ -72,27 +75,60 @@ export class StudyTasksService {
 
       const currentIdx = allTasks.findIndex((t) => t.id === current.id);
 
-      let toOpen: (typeof allTasks)[number] | undefined;
-      for (let i = currentIdx + 1; i < allTasks.length; i++) {
-        const t = allTasks[i];
-        if (t.status === 'skipped') continue;
-        if (t.status === 'locked' || t.status === 'pending') {
-          toOpen = t;
-          break;
+      // Check if user is premium
+      const isPremium = await this.userCoursesService.isPremiumUser(plan.user.id);
+
+      const tasksToOpen: (typeof allTasks)[number][] = [];
+
+      if (isPremium) {
+        // Premium user: unlock only the next task (original behavior)
+        for (let i = currentIdx + 1; i < allTasks.length; i++) {
+          const t = allTasks[i];
+          if (t.status === 'skipped') continue;
+          if (t.status === 'locked' || t.status === 'pending') {
+            tasksToOpen.push(t);
+            break;
+          }
+        }
+      } else {
+        // Non-premium user: unlock premium task + 1 non-premium task
+        let foundPremium = false;
+        let foundNonPremium = false;
+
+        for (let i = currentIdx + 1; i < allTasks.length; i++) {
+          const t = allTasks[i];
+          if (t.status === 'skipped') continue;
+          if (t.status === 'locked' || t.status === 'pending') {
+            const isPremiumContent = t.lessonContent?.isPremium ?? false;
+
+            if (isPremiumContent && !foundPremium) {
+              tasksToOpen.push(t);
+              foundPremium = true;
+            } else if (!isPremiumContent && !foundNonPremium) {
+              tasksToOpen.push(t);
+              foundNonPremium = true;
+            }
+
+            // Stop when we have both premium and non-premium
+            if (foundPremium && foundNonPremium) break;
+          }
         }
       }
 
+      // Lock all other pending tasks except the ones we want to open
+      const idsToOpen = new Set(tasksToOpen.map(t => t.id));
       for (let i = currentIdx + 1; i < allTasks.length; i++) {
-        if (allTasks[i].status === 'pending' && allTasks[i].id !== toOpen?.id) {
+        if (allTasks[i].status === 'pending' && !idsToOpen.has(allTasks[i].id)) {
           allTasks[i].status = 'locked';
           await taskRepo.save(allTasks[i]);
         }
       }
 
-      if (toOpen) {
-        toOpen.status = 'pending';
-        console.log(toOpen);
-        await taskRepo.save(toOpen);
+      // Open the selected tasks
+      for (const task of tasksToOpen) {
+        task.status = 'pending';
+        console.log('Opening task:', task.id, 'isPremium:', task.lessonContent?.isPremium);
+        await taskRepo.save(task);
       }
 
       const updatedTasks = await taskRepo.find({
@@ -112,7 +148,7 @@ export class StudyTasksService {
 
       return {
         currentId: current.id,
-        openedNextId: toOpen?.id ?? null,
+        openedNextIds: tasksToOpen.map(t => t.id),
         isPlanCompleted,
       };
     });

@@ -1,19 +1,19 @@
 import { useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
-import { Plus, Minus, Save, Upload, FileSpreadsheet } from 'lucide-react';
+import { Plus, Minus, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
-import { ExcelImport } from '@/components/ExcelImport';
+import { FileUploadButton } from '@/components/FileUploadButton';
 import { useCreateTest } from '@/hooks/useTests';
 import type { CreateTestDto } from '@/types/api';
 import { toast } from 'sonner';
 import {
     PageContainer,
     ContentWrapper,
-} from "@/components/common";
+} from '@/components/common';
 
 const TOEIC_PARTS = [
     { number: 1, name: 'Photographs', description: 'Mô tả hình ảnh' },
@@ -29,11 +29,10 @@ interface TestFormData extends CreateTestDto { }
 
 export default function CreateTestPage() {
     const [activeTab, setActiveTab] = useState(0);
-    const [showExcelImport, setShowExcelImport] = useState(false);
     const navigate = useNavigate();
     const createMutation = useCreateTest();
 
-    const { register, control, handleSubmit, formState: { errors }, reset } = useForm<TestFormData>({
+    const { register, control, handleSubmit, formState: { errors }, setValue } = useForm<TestFormData>({
         defaultValues: {
             title: '',
             audioUrl: '',
@@ -79,14 +78,6 @@ export default function CreateTestPage() {
         }
     };
 
-    const handleExcelImport = (importedData: TestFormData) => {
-        reset(importedData);
-        setShowExcelImport(false);
-        toast.success('Import Excel thành công!', {
-            description: 'Dữ liệu đã được tải vào form.'
-        });
-    };
-
     const currentPart = TOEIC_PARTS[activeTab];
 
     return (
@@ -102,13 +93,6 @@ export default function CreateTestPage() {
                     </div>
                 </div>
                 <div className="flex gap-3">
-                    <Button
-                        variant="outline"
-                        onClick={() => setShowExcelImport(true)}
-                    >
-                        <FileSpreadsheet className="w-4 h-4 mr-2" />
-                        Import Excel
-                    </Button>
                     <Button
                         onClick={handleSubmit(onSubmit)}
                         disabled={createMutation.isPending}
@@ -182,10 +166,15 @@ export default function CreateTestPage() {
                                         placeholder="https://example.com/audio/test.mp3"
                                         {...register('audioUrl')}
                                     />
-                                    <Button type="button" variant="outline">
-                                        <Upload className="h-4 w-4 mr-2" />
-                                        Upload
-                                    </Button>
+                                    <FileUploadButton
+                                        accept="audio/*"
+                                        label="Upload"
+                                        onUploadSuccess={(url) => {
+                                            console.log('Setting audioUrl to:', url);
+                                            setValue('audioUrl', url, { shouldDirty: true, shouldValidate: true });
+                                            console.log('setValue called');
+                                        }}
+                                    />
                                 </div>
                             </div>
                         </CardContent>
@@ -245,22 +234,11 @@ export default function CreateTestPage() {
                                 partIndex={activeTab}
                                 control={control}
                                 register={register}
+                                setValue={setValue}
                             />
                         </CardContent>
                     </Card>
                 </form>
-
-                {/* Excel Import Modal */}
-                {showExcelImport && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                        <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                            <ExcelImport
-                                onImportSuccess={handleExcelImport}
-                                onClose={() => setShowExcelImport(false)}
-                            />
-                        </div>
-                    </div>
-                )}
             </ContentWrapper>
         </PageContainer>
     );
@@ -270,11 +248,13 @@ export default function CreateTestPage() {
 function PartGroupsEditor({
     partIndex,
     control,
-    register
+    register,
+    setValue
 }: {
     partIndex: number;
     control: any;
     register: any;
+    setValue: any;
 }) {
     const { fields: groupFields, append: appendGroup, remove: removeGroup } = useFieldArray({
         control,
@@ -355,17 +335,41 @@ function PartGroupsEditor({
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <Label>Link hình ảnh</Label>
-                                <Input
-                                    placeholder="https://example.com/image.jpg"
-                                    {...register(`parts.${partIndex}.groups.${groupIndex}.imageUrl`)}
-                                />
+                                <div className="flex space-x-2">
+                                    <Input
+                                        id={`parts.${partIndex}.groups.${groupIndex}.imageUrl`}
+                                        placeholder="https://example.com/image.jpg"
+                                        {...register(`parts.${partIndex}.groups.${groupIndex}.imageUrl`)}
+                                    />
+                                    <FileUploadButton
+                                        accept="image/*"
+                                        label="Upload"
+                                        onUploadSuccess={(url) => {
+                                            console.log('Setting group imageUrl to:', url);
+                                            setValue(`parts.${partIndex}.groups.${groupIndex}.imageUrl`, url, { shouldDirty: true, shouldValidate: true });
+                                            console.log('setValue called for group image');
+                                        }}
+                                    />
+                                </div>
                             </div>
                             <div>
                                 <Label>Link audio</Label>
-                                <Input
-                                    placeholder="https://example.com/audio.mp3"
-                                    {...register(`parts.${partIndex}.groups.${groupIndex}.audioUrl`)}
-                                />
+                                <div className="flex space-x-2">
+                                    <Input
+                                        id={`parts.${partIndex}.groups.${groupIndex}.audioUrl`}
+                                        placeholder="https://example.com/audio.mp3"
+                                        {...register(`parts.${partIndex}.groups.${groupIndex}.audioUrl`)}
+                                    />
+                                    <FileUploadButton
+                                        accept="audio/*"
+                                        label="Upload"
+                                        onUploadSuccess={(url) => {
+                                            console.log('Setting group audioUrl to:', url);
+                                            setValue(`parts.${partIndex}.groups.${groupIndex}.audioUrl`, url, { shouldDirty: true, shouldValidate: true });
+                                            console.log('setValue called for group audio');
+                                        }}
+                                    />
+                                </div>
                             </div>
                         </div>
 

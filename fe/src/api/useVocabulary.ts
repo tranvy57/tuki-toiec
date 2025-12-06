@@ -131,9 +131,10 @@ export const useGetReviewVocabularies = () => {
 
 // api update
 
-export const patchVocabulary = async (id: string) => {
+export const patchVocabulary = async (id: string, isCorrect: boolean) => {
   try {
     const res = await api.patch(`/vocabularies/${id}`);
+    await api.post(`/user-vocabularies/update`, { vocabularyId: id, isCorrect });
     return res.data;
   } catch (error) {
     console.error("Error patching vocabulary:", error);
@@ -146,10 +147,18 @@ export const usePatchVocabulary = () => {
 
   return useMutation({
     mutationKey: ["patch-vocabulary"],
-    mutationFn: (id: string) => patchVocabulary(id),
+    mutationFn: ({
+      id,
+      isCorrect,
+    }: {
+      id: string;
+      isCorrect: boolean;
+    }) => patchVocabulary(id, isCorrect),
+
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user-vocabularies"] });
       queryClient.invalidateQueries({ queryKey: ["user-vocabularies-review"] });
     },
   });
 };
+

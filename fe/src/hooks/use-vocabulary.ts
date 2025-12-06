@@ -129,11 +129,14 @@ export function useVocabularyReview(
 
   const handleQuizSubmit = useCallback(() => {
     const currentWord = vocabularyReviews?.items?.[currentReviewIndex];
+    let isCorrect = false;
+    isCorrect =
+      quizAnswer.toLowerCase().trim() ===
+      currentWord?.content.answer.toLowerCase().trim();
 
-    console.log("runThis");
-
+    console.log("isCorrect", isCorrect);
     // Cập nhật số lần làm bài
-    patchVocabulary(currentWord.vocabId);
+    patchVocabulary(currentWord.vocabId, isCorrect);
 
     let isQuizCorrect = false;
 

@@ -5,13 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { ExcelImport } from '@/components/ExcelImport';
-import { useTests, useCreateTest, useImportTestFromExcel, useDeleteTest } from '@/hooks/useTests';
+import { useTests, useCreateTest, useDeleteTest } from '@/hooks/useTests';
 import type { Test as ApiTest } from '@/types/api';
 import { toast } from 'sonner';
 import {
   FileText,
-  Upload,
   Search,
   Filter,
   MoreHorizontal,
@@ -79,12 +77,10 @@ const TestsPage = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   // API hooks - sử dụng API thực thay vì mock data
   const { data: apiTests = [], isLoading, error } = useTests();
   const createMutation = useCreateTest();
-  const importMutation = useImportTestFromExcel();
   const deleteMutation = useDeleteTest();
 
   const handleDelete = async (id: string, title: string) => {
@@ -150,12 +146,6 @@ const TestsPage = () => {
     return matchesSearch && matchesType;
   });
 
-  const handleImportSuccess = (data: any) => {
-    console.log('Import successful:', data);
-    setIsImportModalOpen(false);
-    // The data will automatically refresh through TanStack Query
-  };
-
   if (isLoading) {
     return (
       <div className="p-6">
@@ -188,14 +178,6 @@ const TestsPage = () => {
           <p className="text-gray-600 mt-1">Create, manage and organize your TOEIC tests</p>
         </div>
         <div className="flex gap-3">
-          <Button
-            onClick={() => setIsImportModalOpen(true)}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <Upload className="w-4 h-4" />
-            Import from Excel
-          </Button>
           <Button className="flex items-center gap-2" onClick={() => navigate('/tests/create')}>
             <Plus className="w-4 h-4" />
             Create Test
@@ -361,14 +343,6 @@ const TestsPage = () => {
           )}
         </CardContent>
       </Card>
-
-      {/* Import Modal */}
-      {isImportModalOpen && (
-        <ExcelImport
-          onImportSuccess={handleImportSuccess}
-          onClose={() => setIsImportModalOpen(false)}
-        />
-      )}
     </div>
   );
 };

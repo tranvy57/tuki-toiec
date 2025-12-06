@@ -10,5 +10,6 @@ import { PlanModule } from 'src/plan/plan.module';
   imports: [TypeOrmModule.forFeature([UserCourse, User]), PlanModule],
   controllers: [UserCoursesController],
   providers: [UserCoursesService],
+  exports: [UserCoursesService],
 })
-export class UserCoursesModule {}
+export class UserCoursesModule { }

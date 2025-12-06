@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
-import { Plus, Minus, Save, ArrowLeft, Upload, FileSpreadsheet } from 'lucide-react';
+import { Plus, Minus, Save, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
-import { ExcelImport } from '@/components/ExcelImport';
+import { FileUploadButton } from '@/components/FileUploadButton';
 import type { ExamFormData } from '@/types';
+import {
+  PageContainer,
+  ContentWrapper,
+} from '@/components/common';
 
 const TOEIC_PARTS = [
   { number: 1, name: 'Photographs', description: 'Mô tả hình ảnh' },
@@ -21,9 +25,8 @@ const TOEIC_PARTS = [
 
 export default function CreateExamPage() {
   const [activeTab, setActiveTab] = useState(0);
-  const [showExcelImport, setShowExcelImport] = useState(false);
   
-  const { register, control, handleSubmit, formState: { errors }, reset } = useForm<ExamFormData>({
+  const { register, control, handleSubmit, formState: { errors }, setValue } = useForm<ExamFormData>({
     defaultValues: {
       title: '',
       audioUrl: '',
@@ -59,22 +62,12 @@ export default function CreateExamPage() {
     // TODO: Submit to API
   };
 
-  const handleExcelImport = (importedData: ExamFormData) => {
-    // Simply reset with imported data, keeping any title/audioUrl that was already entered
-    console.log("importedData", importedData);
-    reset(importedData);
-    // setShowExcelImport(false);
-    
-    // Show success notification (you can add a toast library later)
-    alert('Import Excel thành công! Dữ liệu đã được tải vào form.');
-  };
-
   const currentPart = TOEIC_PARTS[activeTab];
 
   return (
-    <div className="space-y-6">
+    <PageContainer>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
           <Link to="/exams/list">
             <Button variant="ghost" size="sm">
@@ -83,27 +76,18 @@ export default function CreateExamPage() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-warm-gray-900">Tạo đề thi mới</h1>
-            <p className="text-warm-gray-600">Tạo một đề thi TOEIC hoàn chỉnh với 7 phần</p>
+            <h1 className="text-2xl font-bold">Tạo đề thi mới</h1>
+            <p className="text-gray-600">Tạo một đề thi TOEIC hoàn chỉnh với 7 phần</p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={() => setShowExcelImport(true)}
-          >
-            <FileSpreadsheet className="h-4 w-4 mr-2" />
-            Import Excel
-          </Button>
-          <Button onClick={handleSubmit(onSubmit)}>
-            <Save className="h-4 w-4 mr-2" />
-            Lưu đề thi
-          </Button>
-        </div>
+        <Button onClick={handleSubmit(onSubmit)}>
+          <Save className="h-4 w-4 mr-2" />
+          Lưu đề thi
+        </Button>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <ContentWrapper>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Basic Info */}
         <Card>
           <CardHeader>
@@ -133,10 +117,15 @@ export default function CreateExamPage() {
                   placeholder="https://example.com/audio/test.mp3"
                   {...register('audioUrl')}
                 />
-                <Button type="button" variant="outline">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload
-                </Button>
+                <FileUploadButton
+                  accept="audio/*"
+                  label="Upload"
+                  onUploadSuccess={(url) => {
+                    console.log('Setting audioUrl to:', url);
+                    setValue('audioUrl', url, { shouldDirty: true, shouldValidate: true });
+                    console.log('setValue called');
+                  }}
+                />
               </div>
             </div>
           </CardContent>
@@ -196,23 +185,13 @@ export default function CreateExamPage() {
               partIndex={activeTab}
               control={control}
               register={register}
+              setValue={setValue}
             />
           </CardContent>
         </Card>
-      </form>
-
-      {/* Excel Import Modal */}
-      {showExcelImport && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <ExcelImport
-              onImportSuccess={handleExcelImport}
-              onClose={() => setShowExcelImport(false)}
-            />
-          </div>
-        </div>
-      )}
-    </div>
+        </form>
+      </ContentWrapper>
+    </PageContainer>
   );
 }
 
@@ -220,11 +199,13 @@ export default function CreateExamPage() {
 function PartGroupsEditor({ 
   partIndex, 
   control, 
-  register
+  register,
+  setValue
 }: {
   partIndex: number;
   control: any; // eslint-disable-line @typescript-eslint/no-explicit-any
   register: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  setValue: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 }) {
   const { fields: groupFields, append: appendGroup, remove: removeGroup } = useFieldArray({
     control,
@@ -305,17 +286,37 @@ function PartGroupsEditor({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label>Link hình ảnh</Label>
-                <Input
-                  placeholder="https://example.com/image.jpg"
-                  {...register(`parts.${partIndex}.groups.${groupIndex}.imageUrl`)}
-                />
+                <div className="flex space-x-2">
+                  <Input
+                    id={`parts.${partIndex}.groups.${groupIndex}.imageUrl`}
+                    placeholder="https://example.com/image.jpg"
+                    {...register(`parts.${partIndex}.groups.${groupIndex}.imageUrl`)}
+                  />
+                  <FileUploadButton
+                    accept="image/*"
+                    label="Upload"
+                    onUploadSuccess={(url) => {
+                      setValue(`parts.${partIndex}.groups.${groupIndex}.imageUrl`, url, { shouldDirty: true, shouldValidate: true });
+                    }}
+                  />
+                </div>
               </div>
               <div>
                 <Label>Link audio</Label>
-                <Input
-                  placeholder="https://example.com/audio.mp3"
-                  {...register(`parts.${partIndex}.groups.${groupIndex}.audioUrl`)}
-                />
+                <div className="flex space-x-2">
+                  <Input
+                    id={`parts.${partIndex}.groups.${groupIndex}.audioUrl`}
+                    placeholder="https://example.com/audio.mp3"
+                    {...register(`parts.${partIndex}.groups.${groupIndex}.audioUrl`)}
+                  />
+                  <FileUploadButton
+                    accept="audio/*"
+                    label="Upload"
+                    onUploadSuccess={(url) => {
+                      setValue(`parts.${partIndex}.groups.${groupIndex}.audioUrl`, url, { shouldDirty: true, shouldValidate: true });
+                    }}
+                  />
+                </div>
               </div>
             </div>
 

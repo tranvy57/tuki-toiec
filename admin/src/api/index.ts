@@ -6,3 +6,4 @@ export { ordersApi } from "./orders";
 export { questionsApi, questionTagsApi } from "./questions";
 export { lessonsApi } from "./lessons";
 export { phasesApi } from "./phases";
+export { uploadApi, uploadFile } from "./upload";

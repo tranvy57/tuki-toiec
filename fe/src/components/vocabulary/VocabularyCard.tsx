@@ -57,7 +57,7 @@ export default function VocabularyCard({
 
             <div className="text-xs text-muted-foreground">
               Ôn tập lần cuối:{" "}
-              {new Date(vocabulary.lastReviewDate).toLocaleDateString("vi-VN")}
+              {new Date(vocabulary.lastReviewedAt).toLocaleDateString("vi-VN")}
             </div>
           </div>
 

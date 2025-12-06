@@ -118,14 +118,14 @@ function ContentItem({
   return (
     <button
       onClick={onClick}
-      disabled={isPremiumLocked || isLocked}
+      disabled={isLocked}
       className={cn(
         "w-full text-left p-2 rounded-lg transition-colors duration-150 group relative",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500",
         isSelected
           ? "bg-indigo-100 border border-indigo-200"
           : "hover:bg-slate-50 border border-transparent",
-        isPremiumLocked && "opacity-75 hover:opacity-90",
+        isPremiumLocked && "opacity-75 hover:opacity-90 cursor-pointer",
         isLocked && "opacity-75 hover:opacity-70 cursor-not-allowed"
       )}
     >
