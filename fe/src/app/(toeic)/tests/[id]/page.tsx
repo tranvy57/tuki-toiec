@@ -480,7 +480,7 @@ export default function TestDetailPage() {
                         }
                         router.push(`/tests/${params.id}/start`);
                       }}
-                      className="w-full py-6 text-lg font-bold bg-pink-400 hover:bg-pink-300 text-white shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full py-6 text-lg font-bold bg-primary hover:bg-primary/80 text-white shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Bắt đầu Bài thi đầy đủ (120 phút)
                     </Button>
