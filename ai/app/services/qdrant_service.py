@@ -133,11 +133,11 @@ class QdrantService:
         query = refine_query_with_tfidf_mmr(question)
         query_vector = self.get_embedding(query)
 
-        results = self.client.search(
+        results = self.client.query_points(
             collection_name=self.collection_name,
-            query_vector=query_vector,
+            query=query_vector,
             limit=limit
-        )
+        ).points
 
         formatted = []
         for r in results:

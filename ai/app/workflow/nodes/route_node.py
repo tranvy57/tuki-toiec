@@ -12,7 +12,7 @@ from typing import List, Optional
 
 # Optional sklearn imports with fallback
 try:
-    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.feature_extraction.text import TfidfVectorizer, ENGLISH_STOP_WORDS
     from sklearn.metrics.pairwise import cosine_similarity
     SKLEARN_AVAILABLE = True
 except ImportError:
@@ -111,75 +111,91 @@ class RouteNode:
 
         return selected
 
-    def refine_query_with_tfidf_mmr(self, query: str, corpus: List[str] = None, top_n=10, λ=0.7) -> str:
+    def refine_query_with_tfidf_mmr(self, query: str, corpus: List[str] = None, top_n=10, λ=0.7):
         """
-        Làm giàu query trước khi embedding:
-        - TF-IDF để chọn cụm quan trọng
-        - MMR để giữ các cụm đa dạng nhất
-        - Tối ưu hóa cho TOEIC domain
+        Làm giàu query:
+        - TF-IDF lấy keywords quan trọng
+        - MMR chọn keywords đa dạng
+        - Loại bỏ conversational noise (hello, tuki, don know...)
         """
         if not SKLEARN_AVAILABLE or not query.strip():
             return query
-        
+
         try:
-            # TOEIC-specific corpus nếu không có corpus
+            # ---------------------------
+            # 1. STOPWORDS TÙY CHỈNH
+            # ---------------------------
+            custom_stopwords = {
+                "hello", "hi", "hey", "tuki",
+                "don", "dont", "don't", "know", "i", "me",
+                "please", "tell", "explain", "help",
+                "what", "how", "why", "when", "where", "who",
+                "idk", "ok", "okay", "yeah", "yep",
+                "uh", "um", "hmm"
+            }
+
+            stopwords = list(ENGLISH_STOP_WORDS.union(custom_stopwords))
+
+            # ---------------------------
+            # 2. CORPUS TOEIC mặc định
+            # ---------------------------
             if corpus is None:
-                toeic_corpus = [
+                corpus = [
                     "TOEIC listening comprehension practice",
-                    "TOEIC reading comprehension strategies", 
+                    "TOEIC reading comprehension strategies",
                     "TOEIC grammar rules and examples",
                     "TOEIC vocabulary building exercises",
                     "TOEIC test preparation tips",
                     "TOEIC speaking practice methods",
                     "TOEIC writing skills improvement"
                 ]
-                corpus = toeic_corpus
 
-            # Sử dụng english stopwords cho TOEIC content
+            # ---------------------------
+            # 3. TF-IDF CLEAN + UNIGRAM
+            # ---------------------------
             vectorizer = TfidfVectorizer(
-                ngram_range=(1, 2), 
-                stop_words='english',
-                max_features=1000,  # Giới hạn features
-                min_df=1,  # Cho phép terms xuất hiện ít
+                ngram_range=(1, 1),      # chỉ lấy unigram → tránh bigram rác
+                stop_words=stopwords,
+                max_features=500,
                 lowercase=True
             )
-            
-            # Fit với corpus + query
+
             all_texts = corpus + [query]
             tfidf = vectorizer.fit_transform(all_texts)
+
             feature_names = vectorizer.get_feature_names_out()
             query_vec = tfidf[-1].toarray()[0]
 
-            # Lấy top terms có TF-IDF cao
+            # Top TF-IDF terms
             top_indices = np.argsort(query_vec)[::-1][:top_n]
             top_terms = [feature_names[i] for i in top_indices if query_vec[i] > 0]
 
             if len(top_terms) < 2:
-                return query  # Không đủ terms để refine
+                return query
 
-            # Transform terms thành vectors để áp dụng MMR
+            # ---------------------------
+            # 4. MMR CHỌN KEYWORDS CHÍNH
+            # ---------------------------
             term_vecs = vectorizer.transform(top_terms).toarray()
             query_center = np.mean(term_vecs, axis=0)
-            
-            # Sử dụng MMR để chọn diverse terms
+
             selected_ids = self.mmr_select(
-                query_center, 
-                term_vecs, 
-                λ=λ, 
+                query_center,
+                term_vecs,
+                λ=λ,
                 top_k=min(5, len(term_vecs))
             )
 
             selected_terms = [top_terms[i] for i in selected_ids]
-            
-            # Tạo refined query với TOEIC context
+
             refined_query = f"{query}. Related TOEIC concepts: {', '.join(selected_terms)}"
-            
-            print(f"🔍 Query refinement: {query} -> {len(selected_terms)} terms added")
+
+            print(f"🔍 Query refinement: {selected_terms} -> {len(selected_terms)} terms added")
             return refined_query
 
         except Exception as e:
             print(f"❌ TF-IDF/MMR Error: {e}")
-            return query  # Fallback về original query
+            return query
 
     def get_user_profile(self, state: State):
         """
