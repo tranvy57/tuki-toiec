@@ -87,7 +87,7 @@ export default function TestDetailPage() {
 
   return (
     <div className="bg-gradient-to-b from-slate-50 via-white to-slate-50/50 min-h-full py-5">
-      <div className="container mx-auto px-8 py-6 max-w-5xl bg-white border border-gray-200 shadow-lg rounded-2xl ">
+      <div className="container mx-auto px-8 py-6 max-w-5xl bg-white rounded-2xl ">
         <motion.div
           initial="hidden"
           animate="visible"
@@ -267,17 +267,17 @@ export default function TestDetailPage() {
             <TabsList className="grid w-full grid-cols-2 mb-6 bg-white/80 backdrop-blur-sm p-1 rounded-xl shadow-md">
               <TabsTrigger
                 value="practice"
-                className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:bg-pink-400 data-[state=active]:text-white"
+                className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:bg-primary data-[state=active]:text-white"
               >
                 Chế độ Luyện tập
               </TabsTrigger>
               <TabsTrigger
                 value="fulltest"
-                className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:bg-pink-400 data-[state=active]:text-white"
+                className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:bg-primary data-[state=active]:text-white"
               >
                 Chế độ Thi đầy đủ
               </TabsTrigger>
-              
+
             </TabsList>
 
             <TabsContent value="practice" className="space-y-6">
@@ -428,8 +428,18 @@ export default function TestDetailPage() {
                   }}
                 >
                   <Button
-                    disabled={selectedParts.length === 0}
-                    className="w-full py-6 text-lg font-bold bg-pink-400 to-primary hover:bg-pink-300 text-white shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => {
+                      if (testData?.id) {
+                        try {
+                          clearPersistedState();
+                        } catch (e) {
+                          console.warn("Error clearing state:", e);
+                        }
+                        router.push(`/tests/${params.id}/start?mode=practice&parts=${selectedParts.join(',')}`);
+                      }
+                    }}
+                    disabled={selectedParts.length === 0 || !testData}
+                    className="w-full py-6 text-lg font-bold bg-primary hover:bg-primary/80 text-white shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Bắt đầu Phần đã chọn ({selectedParts.length})
                   </Button>
@@ -440,7 +450,7 @@ export default function TestDetailPage() {
             <TabsContent value="fulltest" className="space-y-6">
               <div className="">
                 <div className="space-y-4">
-                 
+
                   <Alert className="border-blue-200 bg-blue-50">
                     <Info className="h-4 w-4 text-blue-600" />
                     <AlertDescription className="text-blue-700">
@@ -468,7 +478,7 @@ export default function TestDetailPage() {
                             e
                           );
                         }
-                        router.push(`/tests/${testData?.id}/start`);
+                        router.push(`/tests/${params.id}/start`);
                       }}
                       className="w-full py-6 text-lg font-bold bg-pink-400 hover:bg-pink-300 text-white shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -481,6 +491,6 @@ export default function TestDetailPage() {
           </Tabs>
         </motion.div>
       </div>
-    </div>
+    </div >
   );
 }

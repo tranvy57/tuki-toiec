@@ -84,6 +84,7 @@ export function MainSidebar({
   // State cho premium upgrade dialog
   const [showPremiumDialog, setShowPremiumDialog] = useState(false);
   const [premiumContentType, setPremiumContentType] = useState<string>("");
+  const [isSyncing, setIsSyncing] = useState(false); // Local state for refetching
 
   const isPremiumUser = premiumData?.isPremium || false;
 
@@ -145,8 +146,10 @@ export function MainSidebar({
         toast.success("Đã hoàn thành bài học!");
         console.log("Task completed:", response);
         // Refresh course data to update status
+        setIsSyncing(true);
         refetch().then(() => {
           console.log("Refetch completed. ActiveLessonId:", activeLessonId);
+          setIsSyncing(false);
         });
 
         // Only reset selected content, keep lesson selected
@@ -283,7 +286,7 @@ export function MainSidebar({
               content={selectedContent}
               isPremiumUser={isPremiumUser}
               onCompleteTask={handleCompleteTask}
-              isCompleting={isCompleting}
+              isCompleting={isCompleting || isSyncing}
               interactiveLearningCompleted={interactiveLearningCompleted}
               onInteractiveLearningComplete={(contentId) => {
                 console.log("Marking interactive complete for:", contentId);

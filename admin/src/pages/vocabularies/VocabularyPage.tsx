@@ -56,7 +56,8 @@ export default function VocabularyPage() {
   };
 
   const { data: vocabularyResponse, isLoading, error } = useVocabularies(searchParams);
-  const vocabularies = vocabularyResponse || [];
+  const vocabularies = vocabularyResponse?.data || [];
+  console.log(vocabularies);
   const meta = vocabularyResponse?.meta;
   const createMutation = useCreateVocabulary();
   const deleteMutation = useDeleteVocabulary();

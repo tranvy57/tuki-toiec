@@ -25,7 +25,7 @@ export const getWeaknessLabel = (strength: number, timesReviewed: number) => {
     return "Trung bình";
   }
   if (strength < 0.75) {
-    return "Hơi yếu";
+    return "Khá";
   }
   if (strength < 0.9) {
     return "Tốt";

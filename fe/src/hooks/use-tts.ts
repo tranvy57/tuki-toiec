@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+export interface TTSOptions {
+  rate?: number;
+  pitch?: number;
+  volume?: number;
+  voice?: SpeechSynthesisVoice | null;
+}
 
 /**
  * Hook for Text-to-Speech playback
@@ -9,13 +16,29 @@ import { useCallback, useRef } from "react";
 export function useTTS() {
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const currentUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [isReady, setIsReady] = useState(false);
 
-  // Initialize speech synthesis
-  if (typeof window !== "undefined" && !synthRef.current) {
-    synthRef.current = window.speechSynthesis;
-  }
+  // Initialize speech synthesis and load voices
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      synthRef.current = window.speechSynthesis;
+      setIsReady(true);
 
-  const play = useCallback((text: string) => {
+      const loadVoices = () => {
+        const availableVoices = window.speechSynthesis.getVoices();
+        setVoices(availableVoices);
+      };
+
+      loadVoices();
+
+      if (window.speechSynthesis.onvoiceschanged !== undefined) {
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+      }
+    }
+  }, []);
+
+  const play = useCallback((text: string, options?: TTSOptions) => {
     // Stop any currently playing speech
     if (synthRef.current && currentUtteranceRef.current) {
       synthRef.current.cancel();
@@ -30,69 +53,31 @@ export function useTTS() {
     const utterance = new SpeechSynthesisUtterance(text);
     currentUtteranceRef.current = utterance;
 
-    // Configure voice settings for teacher-like speech
-    utterance.rate = 0.75; // Slower for clear pronunciation
-    utterance.pitch = 1.1; // Slightly higher pitch for friendliness
-    utterance.volume = 0.9; // Clear volume
+    // Configure voice settings using options or defaults
+    utterance.rate = options?.rate ?? 0.9;
+    utterance.pitch = options?.pitch ?? 1;
+    utterance.volume = options?.volume ?? 1;
 
-    // Try to find the best English teacher voice
-    const voices = synthRef.current.getVoices();
-
-    // Priority order for voice selection (teacher-like voices)
-    const preferredVoices = [
-      // Google voices (usually clearest)
-      "Google US English",
-      "Google UK English Female",
-      "Google UK English Male",
-
-      // Microsoft voices
-      "Microsoft Zira Desktop - English (United States)",
-      "Microsoft David Desktop - English (United States)",
-      "Microsoft Hazel Desktop - English (Great Britain)",
-
-      // Apple voices (if on Safari)
-      "Samantha",
-      "Victoria",
-      "Alex",
-
-      // Fallback to any female English voice
-      "Female",
-      "en-US",
-    ];
-
-    let selectedVoice: SpeechSynthesisVoice | null = null;
-
-    for (const preferredName of preferredVoices) {
-      const foundVoice = voices.find(
-        (voice) =>
-          voice.name.includes(preferredName) ||
-          ((voice.lang.includes("en-US") || voice.lang.includes("en-GB")) &&
-            voice.name.toLowerCase().includes(preferredName.toLowerCase()))
-      );
-      if (foundVoice) {
-        selectedVoice = foundVoice;
-        break;
-      }
-    }
-
-    // If no preferred voice found, use any English voice
-    if (!selectedVoice) {
-      const englishVoice = voices.find(
-        (voice) =>
-          voice.lang.startsWith("en") && !voice.name.includes("Google Deutsch")
-      );
-      if (englishVoice) {
-        selectedVoice = englishVoice;
-      }
-    }
-
-    if (selectedVoice) {
-      utterance.voice = selectedVoice;
-      console.log(
-        `[TTS] Using voice: ${selectedVoice.name} (${selectedVoice.lang})`
-      );
+    // Voice selection logic
+    if (options?.voice) {
+      utterance.voice = options.voice;
+      console.log(`[TTS] Using selected voice: ${options.voice.name}`);
     } else {
-      console.log("[TTS] Using default voice");
+      // Fallback/Default selection logic
+      const availableVoices = synthRef.current.getVoices();
+
+      // Try to find a good English voice if no specific voice is provided
+      const bestVoice = availableVoices.find(v =>
+        (v.name.includes("Google US English") ||
+          v.name.includes("Samantha") ||
+          v.name.includes("Microsoft Zira")) &&
+        v.lang.startsWith("en")
+      ) || availableVoices.find(v => v.lang.startsWith("en"));
+
+      if (bestVoice) {
+        utterance.voice = bestVoice;
+        console.log(`[TTS] Using default best match: ${bestVoice.name}`);
+      }
     }
 
     // Event handlers
@@ -126,5 +111,5 @@ export function useTTS() {
     return synthRef.current?.speaking || false;
   }, []);
 
-  return { play, stop, isPlaying };
+  return { play, stop, isPlaying, voices, isReady };
 }

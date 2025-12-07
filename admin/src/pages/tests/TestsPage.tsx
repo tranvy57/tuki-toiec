@@ -174,64 +174,24 @@ const TestsPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Tests Management</h1>
-          <p className="text-gray-600 mt-1">Create, manage and organize your TOEIC tests</p>
+          <h1 className="text-3xl font-bold text-gray-900">Quản lý đề thi</h1>
         </div>
         <div className="flex gap-3">
           <Button className="flex items-center gap-2" onClick={() => navigate('/tests/create')}>
             <Plus className="w-4 h-4" />
-            Create Test
+            Tạo đề thi mới
           </Button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Total Tests</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{tests.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Published</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {tests.filter(t => t.status === 'published').length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Drafts</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">
-              {tests.filter(t => t.status === 'draft').length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Total Questions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {tests.reduce((sum, t) => sum + t.questionsCount, 0)}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      
 
       {/* Filters */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>All Tests</CardTitle>
+            <CardTitle>Danh sách đề thi</CardTitle>
             <div className="flex items-center gap-4">
               {/* Search */}
               <div className="relative">
@@ -245,7 +205,7 @@ const TestsPage = () => {
               </div>
 
               {/* Type Filter */}
-              <select
+              {/* <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -256,7 +216,7 @@ const TestsPage = () => {
                 <option value="speaking">Speaking</option>
                 <option value="writing">Writing</option>
                 <option value="full">Full Test</option>
-              </select>
+              </select> */}
             </div>
           </div>
         </CardHeader>
@@ -264,14 +224,14 @@ const TestsPage = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Test Title</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Questions</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Difficulty</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Last Updated</TableHead>
-                <TableHead className="w-[100px]">Actions</TableHead>
+                <TableHead>Tên đề thi</TableHead>
+                <TableHead>Loại đề thi</TableHead>
+                <TableHead>Số câu hỏi</TableHead>
+                <TableHead>Thời gian</TableHead>
+                <TableHead>Khó khăn</TableHead>
+                <TableHead>Trạng thái</TableHead>
+                <TableHead>Ngày cập nhật</TableHead>
+                <TableHead className="w-[100px]">Hành động</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -288,7 +248,7 @@ const TestsPage = () => {
                       {test.type.toUpperCase()}
                     </Badge>
                   </TableCell>
-                  <TableCell>{test.questionsCount}</TableCell>
+                  <TableCell>200</TableCell>
                   <TableCell>{test.duration} min</TableCell>
                   <TableCell>
                     <Badge className={getDifficultyColor(test.difficulty)}>

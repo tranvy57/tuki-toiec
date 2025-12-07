@@ -22,8 +22,15 @@ import {
     EyeOff,
     Play,
     Pause,
-    ArrowDown
+    ArrowDown,
 } from "lucide-react";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
 import Spline from "@splinetool/react-spline";
@@ -320,7 +327,31 @@ export default function VoiceChatPage() {
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const { volume, isListening, hasPermission, toggleMicrophone } = useAudio();
-    const { play: playTTS, stop: stopTTS } = useTTS();
+    const { play: playTTS, stop: stopTTS, voices } = useTTS();
+
+    // Voice settings state
+    const [speechRate, setSpeechRate] = useState(0.9);
+    const [speechVolume, setSpeechVolume] = useState(1);
+    const [selectedVoiceURI, setSelectedVoiceURI] = useState<string>("");
+
+    // Set default voice when voices are loaded and no voice is selected
+    useEffect(() => {
+        if (voices.length > 0 && !selectedVoiceURI) {
+            // Try to find a good English voice
+            const bestVoice = voices.find(v =>
+                (v.name.includes("Google US English") ||
+                    v.name.includes("Samantha") ||
+                    v.name.includes("Microsoft Zira")) &&
+                v.lang.startsWith("en")
+            ) || voices.find(v => v.lang.startsWith("en"));
+
+            if (bestVoice) {
+                setSelectedVoiceURI(bestVoice.voiceURI);
+            } else if (voices[0]) {
+                setSelectedVoiceURI(voices[0].voiceURI);
+            }
+        }
+    }, [voices, selectedVoiceURI]);
 
     // Speech recognition for voice input
     const {
@@ -409,7 +440,7 @@ export default function VoiceChatPage() {
 
         setMessages(prev => [...prev, userMessage]);
         setInputMessage("");
-        
+
         // Reset voice-related state when sending
         if (transcript.trim()) {
             resetSpeechRecognition();
@@ -530,7 +561,12 @@ export default function VoiceChatPage() {
             return newMessages;
         });
 
-        playTTS(content);
+        const selectedVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
+        playTTS(content, {
+            rate: speechRate,
+            volume: speechVolume,
+            voice: selectedVoice || null
+        });
 
         // Reset playing state after some time (approximate TTS duration)
         setTimeout(() => {
@@ -630,64 +666,55 @@ export default function VoiceChatPage() {
                                     exit={{ opacity: 0, height: 0 }}
                                     className="border-b border-neutral-200 bg-gray-50 p-4"
                                 >
-                                    <div className="grid grid-cols-2 gap-4 text-sm">
-                                        <div>
-                                            <label className="text-gray-700 font-medium">Sensitivity</label>
-                                            <Slider
-                                                value={[sensitivity]}
-                                                onValueChange={([value]) => setSensitivity(value)}
-                                                max={1}
-                                                min={0}
-                                                step={0.05}
-                                                className="mt-2"
-                                            />
-                                            <span className="text-xs text-gray-500">{sensitivity.toFixed(2)}</span>
-                                        </div>
+                                    {/* Voice Settings */}
+                                    <div className="mt-4 border-gray-200">
+                                        <h3 className="text-sm font-medium text-gray-900 mb-3">Voice Settings</h3>
 
-                                        <div>
-                                            <label className="text-gray-700 font-medium">Smoothing</label>
-                                            <Slider
-                                                value={[smoothing]}
-                                                onValueChange={([value]) => setSmoothing(value)}
-                                                max={1}
-                                                min={0}
-                                                step={0.05}
-                                                className="mt-2"
-                                            />
-                                            <span className="text-xs text-gray-500">{smoothing.toFixed(2)}</span>
-                                        </div>
-                                    </div>
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="text-xs text-gray-500 mb-1.5 block">Voice</label>
+                                                <Select value={selectedVoiceURI} onValueChange={setSelectedVoiceURI}>
+                                                    <SelectTrigger className="w-full h-8 text-xs">
+                                                        <SelectValue placeholder="Select a voice" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {voices.filter(v => v.lang.startsWith("en")).map((voice) => (
+                                                            <SelectItem key={voice.voiceURI} value={voice.voiceURI} className="text-xs">
+                                                                {voice.name} ({voice.lang})
+                                                            </SelectItem>
+                                                        ))}
+                                                        {voices.length === 0 && (
+                                                            <div className="p-2 text-xs text-center text-gray-500">No voices available</div>
+                                                        )}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
 
-                                    <div className="flex gap-2 mt-3">
-                                        {["auto", "off", "always"].map((mode) => (
-                                            <Button
-                                                key={mode}
-                                                variant={blinkMode === mode ? "default" : "outline"}
-                                                size="sm"
-                                                onClick={() => setBlinkMode(mode as any)}
-                                                className="text-xs"
-                                            >
-                                                {mode}
-                                            </Button>
-                                        ))}
-                                    </div>
-
-                                    {/* Auto-scroll toggle */}
-                                    <div className="mt-4 pt-3 border-t border-gray-200">
-                                        <div className="flex items-center justify-between">
-                                            <label className="text-gray-700 font-medium text-sm">Auto-scroll</label>
-                                            <Button
-                                                variant={autoScroll ? "default" : "outline"}
-                                                size="sm"
-                                                onClick={() => setAutoScroll(!autoScroll)}
-                                                className="text-xs"
-                                            >
-                                                {autoScroll ? "ON" : "OFF"}
-                                            </Button>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="text-xs text-gray-500 mb-1.5 block">Speed: {speechRate}x</label>
+                                                    <Slider
+                                                        value={[speechRate]}
+                                                        onValueChange={([value]) => setSpeechRate(value)}
+                                                        max={2}
+                                                        min={0.5}
+                                                        step={0.1}
+                                                        className="mt-2"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs text-gray-500 mb-1.5 block">Volume (Text): {Math.round(speechVolume * 100)}%</label>
+                                                    <Slider
+                                                        value={[speechVolume]}
+                                                        onValueChange={([value]) => setSpeechVolume(value)}
+                                                        max={1}
+                                                        min={0}
+                                                        step={0.1}
+                                                        className="mt-2"
+                                                    />
+                                                </div>
+                                            </div>
                                         </div>
-                                        <p className="text-xs text-gray-500 mt-1">
-                                            {autoScroll ? "Messages will auto-scroll to bottom" : "Stay at current position"}
-                                        </p>
                                     </div>
                                 </motion.div>
                             )}

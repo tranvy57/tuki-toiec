@@ -6,7 +6,7 @@ export const writingExerciseTypes = [
     slug: "describe-picture",
     name: "Mô tả hình ảnh",
     description: "Viết câu mô tả dựa trên hình ảnh và từ khóa cho sẵn",
-    imageUrl: "https://static.athenaonline.vn//img.tmp/48%20edit.png",
+    imageUrl: "https://aten.edu.vn/wp-content/uploads/2023/12/hinh-anh-bai-mau-chu-de-natural-process-writing-task-1-3.jpeg",
     icon: ImageIcon,
     difficulty: "Easy",
     difficultyColor: "bg-green-100 text-green-800",

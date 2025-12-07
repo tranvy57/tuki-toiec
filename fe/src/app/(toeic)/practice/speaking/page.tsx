@@ -111,13 +111,13 @@ export default function SpeakingPracticePage() {
               { label: "Speaking" }
             ]}
           />
-          <div className="flex items-center gap-3">
+          {/* <div className="flex items-center gap-3">
             <SpeakingHistoryDemoButtons />
             <SpeakingHistoryButton
             skill=""
             topicId=""
             />
-          </div>
+          </div> */}
         </div>
 
         {/* Header */}

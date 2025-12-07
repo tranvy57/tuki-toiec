@@ -165,7 +165,7 @@ export const SpeakingTopicResults: React.FC<SpeakingTopicResultsProps> = ({
             </div>
 
             {/* History Button and Dialog */}
-            <div className="flex justify-center">
+            {/* <div className="flex justify-center">
                 <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
                     <DialogTrigger asChild>
                         <Button variant="outline" className="flex items-center gap-2">
@@ -190,7 +190,6 @@ export const SpeakingTopicResults: React.FC<SpeakingTopicResultsProps> = ({
                                 </div>
                             ) : (
                                 <div className="space-y-4">
-                                    {/* Summary Stats */}
                                     <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
                                         <div className="text-center">
                                             <div className="text-lg font-semibold text-gray-900">{totalTime > 0 ? Math.round(totalTime / 60) : 0}</div>
@@ -208,7 +207,6 @@ export const SpeakingTopicResults: React.FC<SpeakingTopicResultsProps> = ({
 
                                     <Separator />
 
-                                    {/* Attempts List */}
                                     <div className="space-y-3">
                                         {topicAttempts
                                             .sort((a, b) => new Date(b.attemptDate).getTime() - new Date(a.attemptDate).getTime())
@@ -256,7 +254,7 @@ export const SpeakingTopicResults: React.FC<SpeakingTopicResultsProps> = ({
                         </ScrollArea>
                     </DialogContent>
                 </Dialog>
-            </div>
+            </div> */}
         </div>
     )
 }

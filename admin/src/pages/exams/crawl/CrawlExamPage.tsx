@@ -599,7 +599,7 @@ export default function CrawlExamPage() {
 
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <p className="text-sm text-slate-500">
-              Pipeline chạy background ≈ 8s • Theo dõi realtime phía dưới.
+              Pipeline chạy background ≈ 3m 
             </p>
             <Button type="submit" className="w-full md:w-auto" disabled={isLoading}>
               <Download className="h-4 w-4 mr-2" />

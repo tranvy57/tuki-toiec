@@ -115,6 +115,7 @@ export const useTestLogic = () => {
     setFullTest,
     setCurrentPart,
     setAnswer,
+    nextPart,
   } = usePracticeTest();
 
   // Local state for UI
@@ -389,6 +390,20 @@ export const useTestLogic = () => {
     [partTabs, handleQuestionChange]
   );
 
+  // Handle next part navigation
+  const handleNextPart = useCallback(() => {
+    if (currentPart && fullTest && partTabs) {
+      const nextPart = partTabs.find(
+        (p) => p.partNumber === currentPart.partNumber + 1
+      );
+      if (nextPart && nextPart.groups.length > 0 && nextPart.groups[0].questions.length > 0) {
+        const firstQuestionOfNextPart = nextPart.groups[0].questions[0].numberLabel;
+        console.log("Navigating to next part:", nextPart.partNumber, "Question:", firstQuestionOfNextPart);
+        handleQuestionChange(firstQuestionOfNextPart);
+      }
+    }
+  }, [currentPart, fullTest, partTabs, handleQuestionChange]);
+
   // Get necessary data for rendering
   const currentPartQuestions = getCurrentPartQuestions();
 
@@ -408,6 +423,11 @@ export const useTestLogic = () => {
     mappedAnswers,
     currentPartQuestions,
     testId,
+    isLastPart:
+      currentPart && fullTest
+        ? currentPart.partNumber ===
+        fullTest.parts[fullTest.parts.length - 1].partNumber
+        : false,
 
     // Handlers
     handleSubmit,
@@ -418,6 +438,7 @@ export const useTestLogic = () => {
     handleExit,
     setHighlightContent,
     setOpen,
+    nextPart: handleNextPart,
 
     // Constants
     TEST_DURATION,

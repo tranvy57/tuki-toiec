@@ -241,10 +241,10 @@ export default function SpeakingExercisePage() {
             </SpeakingExerciseBase>
 
             {/* History Button */}
-            <SpeakingHistoryButton
+            {/* <SpeakingHistoryButton
               skill={slug}
               topicId={topicId}
-            />
+            /> */}
           </div>
         );
       case "repeat-sentence":
@@ -262,10 +262,10 @@ export default function SpeakingExercisePage() {
             </SpeakingExerciseBase>
 
             {/* History Button */}
-            <SpeakingHistoryButton
+            {/* <SpeakingHistoryButton
               skill={slug}
               topicId={topicId}
-            />
+            /> */}
           </div>
         );
       case "describe-picture":
@@ -283,10 +283,10 @@ export default function SpeakingExercisePage() {
             </SpeakingExerciseBase>
 
             {/* History Button */}
-            <SpeakingHistoryButton
+            {/* <SpeakingHistoryButton
               skill={slug}
               topicId={topicId}
-            />
+            /> */}
           </div>
         );
       case "respond-using-info":
@@ -303,10 +303,10 @@ export default function SpeakingExercisePage() {
               <RespondUsingInfoExercise exerciseData={exerciseData} />
 
               {/* History Button */}
-              <SpeakingHistoryButton
+              {/* <SpeakingHistoryButton
                 skill={slug}
                 topicId={topicId}
-              />
+              /> */}
             </div>
           </div>
         );
@@ -325,10 +325,10 @@ export default function SpeakingExercisePage() {
             </SpeakingExerciseBase>
 
             {/* History Button */}
-            <SpeakingHistoryButton
+            {/* <SpeakingHistoryButton
               skill={slug}
               topicId={topicId}
-            />
+            /> */}
           </div>
         );
       default:
@@ -346,10 +346,10 @@ export default function SpeakingExercisePage() {
             </SpeakingExerciseBase>
 
             {/* History Button */}
-            <SpeakingHistoryButton
+            {/* <SpeakingHistoryButton
               skill={slug}
               topicId={topicId}
-            />
+            /> */}
           </div>
         );
     }

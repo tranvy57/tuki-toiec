@@ -41,6 +41,8 @@ export default function TestStartPage() {
     handleExit,
     setHighlightContent,
     setOpen,
+    nextPart,
+    isLastPart,
 
     // Constants
     TEST_DURATION,
@@ -136,6 +138,31 @@ export default function TestStartPage() {
               isTransitioning={isTransitioning}
               currentQuestion={currentQuestion}
             />
+
+            {!isLastPart && (
+              <div className="mt-8 flex justify-end pb-8">
+                <button
+                  onClick={nextPart}
+                  className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm"
+                >
+                  Chuyển qua Part kế tiếp
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M5 12h14" />
+                    <path d="m12 5 7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

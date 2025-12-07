@@ -300,10 +300,10 @@ export default function SpeakingTopicsPage() {
               { label: exercise?.name || 'Bài tập' }
             ]}
           />
-          <SpeakingHistoryButton
+          {/* <SpeakingHistoryButton
           skill=""
           topicId=""
-          />
+          /> */}
         </div>
       </div>
 

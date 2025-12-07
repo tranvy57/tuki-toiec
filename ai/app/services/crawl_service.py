@@ -43,13 +43,13 @@ HEADERS = {
 }
 
 def fetch_test_page(url, cookies=None, headers=None):
-    resp = requests.get(url, headers=headers, cookies=cookies)
+    resp = requests.get(url, headers=HEADERS, cookies=COOKIES)
     resp.raise_for_status()
     return BeautifulSoup(resp.text, "html.parser")
 
 def fetch_skill_page(url, cookies=None, headers=None):
     skill_url = url.rstrip("/").removesuffix("details")
-    resp = requests.get(skill_url, headers=headers, cookies=cookies)
+    resp = requests.get(skill_url, headers=HEADERS, cookies=COOKIES)
     resp.raise_for_status()
     return BeautifulSoup(resp.text, "html.parser")
 
@@ -61,12 +61,12 @@ def fetch_audio_pages(url, cookies=None, headers=None):
     base_url = f"{parsed.scheme}://{parsed.netloc}/{base_path}"
     name_test = url.split("/")[5]
 
-    resp_part = requests.get(f"{base_url}/{name_test}/", headers=headers, cookies=cookies)
+    resp_part = requests.get(f"{base_url}/{name_test}/", headers=HEADERS, cookies=COOKIES)
     soup_part = BeautifulSoup(resp_part.text, "html.parser")
 
     part_audio = soup_part.find_all(class_="form-check-input")
     audio_url = base_url + "/practice/?" + "&".join([f"part={a['value']}" for a in part_audio])
-    resp_audio = requests.get(audio_url, headers=headers, cookies=cookies)
+    resp_audio = requests.get(audio_url, headers=HEADERS, cookies=COOKIES)
     return BeautifulSoup(resp_audio.text, "html.parser"), audio_url
 
 def parse_question(wrapper, q_order: int, group: Groups, content_listening=None, part_number=None) -> Tuple[Questions, List[Answers]]:

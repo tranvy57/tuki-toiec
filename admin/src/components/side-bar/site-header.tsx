@@ -37,17 +37,7 @@ export function SiteHeader() {
 
         {/* Right side actions */}
         <div className="ml-auto flex items-center gap-2">
-          {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
-          </Button>
-
-          {/* Messages */}
-          <Button variant="ghost" size="icon" className="relative">
-            <MessageSquare className="h-5 w-5" />
-            <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-blue-500"></span>
-          </Button>
+          
 
           {/* User Profile */}
           <DropdownMenu>

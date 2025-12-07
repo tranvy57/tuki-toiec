@@ -15,7 +15,7 @@ export const questionsApi = {
     const { data } = await api.get<ApiResponse<Question[]>>("/question", {
       params,
     });
-    return data.data || (data as any);
+    return data.data.data || (data as any);
   },
 
   // Get question by ID

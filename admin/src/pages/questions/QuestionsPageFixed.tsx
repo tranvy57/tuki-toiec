@@ -26,6 +26,7 @@ export default function QuestionsPage() {
 
     // Convert API data to display format - safely handle non-array data
     const questions = useMemo(() => {
+        console.log("hhehe",apiQuestions);
         if (!apiQuestions || !Array.isArray(apiQuestions)) {
             return [];
         }
@@ -83,16 +84,7 @@ export default function QuestionsPage() {
                 title="Ngân hàng câu hỏi"
                 description="Đồng bộ với bảng questions, answers, question_tags, skills từ backend NestJS."
             >
-                <div className="flex flex-wrap gap-3">
-                    <Button variant="outline" className="w-full md:w-auto">
-                        <FileSpreadsheet className="mr-2 h-4 w-4" />
-                        Import Excel
-                    </Button>
-                    <Button className="w-full md:w-auto">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Tạo câu hỏi mới
-                    </Button>
-                </div>
+                
             </PageHeader>
 
             <ContentWrapper>
@@ -149,7 +141,7 @@ export default function QuestionsPage() {
                                 <TableHead>Status</TableHead>
                                 <TableHead>Tags</TableHead>
                                 <TableHead>Updated</TableHead>
-                                <TableHead>Actions</TableHead>
+                                {/* <TableHead>Actions</TableHead> */}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -203,7 +195,7 @@ export default function QuestionsPage() {
                                     <TableCell className="text-sm text-slate-500">
                                         {new Date(question.updatedAt).toLocaleDateString()}
                                     </TableCell>
-                                    <TableCell>
+                                    {/* <TableCell>
                                         <div className="flex gap-2">
                                             <Button variant="outline" size="sm">
                                                 Edit
@@ -212,7 +204,7 @@ export default function QuestionsPage() {
                                                 Delete
                                             </Button>
                                         </div>
-                                    </TableCell>
+                                    </TableCell> */}
                                 </TableRow>
                             ))}
                         </TableBody>

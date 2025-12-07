@@ -141,7 +141,7 @@ export const dataListening = [
   {
     id: "mcq",
     name: "Trắc nghiệm",
-    image:
+    imageUrl:
       "https://test-english.com/staging11/wp-content/uploads/A2%E2%80%93Test-2_Use-of-English.jpg",
     description: "Nghe và chọn đáp án đúng",
     icon: Headphones,
@@ -184,6 +184,8 @@ export const dataListening = [
     id: "dictation",
     name: "Điền chính tả",
     description: "Nghe và gõ chính xác những gì bạn nghe được",
+    imageUrl:
+      "https://c8.alamy.com/comp/WK42RR/dictation-concept-banner-with-texture-from-colorful-items-of-education-science-objects-and-1-september-school-supplies-dictation-with-abstract-educa-WK42RR.jpg",
     icon: MessageSquare,
     color: "red" as const,
     questions: mockDictationQuestions,
@@ -194,6 +196,7 @@ export const dataListening = [
     id: "cloze-enhanced",
     name: "Điền từ nâng cao",
     description: "Nghe và điền từ còn thiếu vào chỗ trống ",
+    imageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQFvM5xUyuRuTNTLLGkS0kegiWC6_YegxJy_w&s",
     icon: Edit,
     color: "purple" as const,
     questions: [],
@@ -336,6 +339,7 @@ export default function InteractiveListeningDemo() {
                   <CustomCard
                     slug={exercise.id}
                     name={exercise.name}
+                    imageUrl={exercise.imageUrl}
                     description={exercise.description}
                     icon={exercise.icon}
                     href={exercise.href}
