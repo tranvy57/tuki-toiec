@@ -407,6 +407,44 @@ export const useTestLogic = () => {
   // Get necessary data for rendering
   const currentPartQuestions = getCurrentPartQuestions();
 
+  // Auto-fill script exposed to window
+  useEffect(() => {
+    window.autoFill = async (delay = 100) => {
+      console.log("🚀 Starting auto-fill...");
+      if (!allQuestions || allQuestions.length === 0) {
+        console.warn("No questions found!");
+        return;
+      }
+
+      let count = 0;
+      for (const question of allQuestions) {
+        if (question.answers && question.answers.length > 0) {
+          // Select the first answer choice (usually 'A')
+          const answerToSelect = question.answers[0];
+
+          // Call the existing handler which updates state + calls API
+          handleAnswerChange(question.id, answerToSelect.id);
+          count++;
+
+          console.log(`Filled question ${question.numberLabel} (${count}/${allQuestions.length})`);
+
+          // Small delay to prevent overwhelming the API/browser
+          if (delay > 0) {
+            await new Promise((resolve) => setTimeout(resolve, delay));
+          }
+        }
+      }
+      console.log("✅ Auto-fill completed! You can now submit the test.");
+      alert("Đã điền xong tất cả đáp án! Bạn có thể nộp bài ngay bây giờ.");
+    };
+
+    // Cleanup
+    return () => {
+      // @ts-ignore
+      delete window.autoFill;
+    };
+  }, [allQuestions, handleAnswerChange]);
+
   return {
     // State
     fullTest,
@@ -444,3 +482,9 @@ export const useTestLogic = () => {
     TEST_DURATION,
   };
 };
+
+declare global {
+  interface Window {
+    autoFill: (delay?: number) => Promise<void>;
+  }
+}

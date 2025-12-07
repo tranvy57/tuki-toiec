@@ -2,14 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { AnimatePresence, m } from "framer-motion";
-import { PracticeBreadcrumb } from "@/components/practice/PracticeBreadcrumb";
 import { Loader2 } from "lucide-react";
 import { IntroScreen } from "./components/IntroScreen";
 import { TestScreen } from "./components/TestScreen";
 import { ResultsScreen } from "./components/ResultsScreen";
 import { ReviewTestStage, TestResults, Question, Group, ApiTestData, ApiPart, ApiGroup } from "./types";
 import { TOEIC_PARTS, BAND_SCORE_MAPPING, generateRecommendations } from "./constants";
-import { useStartTestPractice, useSubmitTestReview } from "@/api";
+import { useStartTestPractice, useSubmitTestReview, useAddAttemptAnswer } from "@/api";
 import { usePracticeTest } from "@/hooks";
 import api from "@/libs/axios-config";
 
@@ -29,6 +28,8 @@ const convertApiDataToGroups = (apiData: ApiTestData): Group[] => {
       const questions: Question[] = apiGroup.questions.map((apiQuestion) => {
         // Extract options from answers array
         const options = apiQuestion.answers.map(answer => answer.content);
+        // Extract answer IDs
+        const answerIds = apiQuestion.answers.map(answer => answer.id);
 
         // Find correct answer index
         const correctAnswerIndex = apiQuestion.answers.findIndex(answer => answer.isCorrect);
@@ -45,6 +46,7 @@ const convertApiDataToGroups = (apiData: ApiTestData): Group[] => {
           partName: getPartName(part.partNumber),
           question: questionText,
           options: options,
+          answerIds: answerIds,
           correctAnswer: correctAnswerIndex,
           explanation: apiQuestion.explanation || undefined,
           questionNumber: globalQuestionNumber++, // Use global counter and increment
@@ -78,14 +80,6 @@ const convertApiDataToGroups = (apiData: ApiTestData): Group[] => {
     return a.orderIndex - b.orderIndex;
   });
 
-  // Debug: Log question numbers to check if they're correct
-  console.log("Question numbers:", sortedGroups.flatMap(g => g.questions.map(q => ({
-    id: q.id,
-    part: q.part,
-    questionNumber: q.questionNumber,
-    groupId: q.groupId
-  }))));
-
   return sortedGroups;
 };
 
@@ -112,15 +106,6 @@ const getPartName = (partNumber: number): string => {
   return partNames[partNumber as keyof typeof partNames] || `Part ${partNumber}`;
 };
 
-// Helper function to extract options from paragraph (for Part 1 & 2)
-const extractOptionsFromParagraph = (paragraphEn?: string): string[] => {
-  if (!paragraphEn) return [];
-
-  // Extract options like "(A) Text (B) Text (C) Text (D) Text"
-  const matches = paragraphEn.match(/\([A-D]\)[^(]+/g);
-  return matches?.map(match => match.replace(/^\([A-D]\)\s*/, '').trim()) || [];
-};
-
 interface ReviewTestPageProps {
   onComplete?: (results: TestResults) => void;
 }
@@ -137,13 +122,13 @@ export default function ReviewTestPage({ onComplete }: ReviewTestPageProps) {
 
   const { mutate: startTest, isPending, isSuccess } = useStartTestPractice();
   const { mutate: submitReview, isPending: isSubmittingReview } = useSubmitTestReview();
+  const { mutate: addAttemptAnswer } = useAddAttemptAnswer();
   const { fullTest, setFullTest, setResultTest } = usePracticeTest();
 
   const handleStart = () => {
     startTest({ mode: "review" }, {
       onSuccess: (data) => {
         setFullTest(data);
-        console.log("XXXXXX", data);
         const convertedGroups = convertApiDataToGroups(data);
         setGroups(convertedGroups);
 
@@ -322,29 +307,61 @@ export default function ReviewTestPage({ onComplete }: ReviewTestPageProps) {
   // Expose helper for demo/testing
   useEffect(() => {
     // @ts-ignore
-    window.demoTest = () => {
-      console.log("Auto-filling answers and jumping to end...");
+    window.autoFill = async (delay = 100) => {
+      console.log("🚀 Starting auto-fill with backend sync...");
 
-      // 1. Fill random answers
-      const mockAnswers: Record<number, number> = {};
-      questions.forEach((q, index) => {
-        mockAnswers[index] = Math.floor(Math.random() * 4); // Random 0-3
-      });
-      setAnswers(mockAnswers);
+      if (questions.length === 0) {
+        console.warn("No questions loaded yet!");
+        return;
+      }
+
+      // 1. Iterate and fill answers
+      let count = 0;
+      for (let i = 0; i < questions.length; i++) {
+        const q = questions[i];
+        if (q.answerIds && q.answerIds.length > 0) {
+          // Select first answer (index 0)
+          const optionIndex = 0;
+          const answerId = q.answerIds[optionIndex];
+
+          // Update local state
+          setAnswers(prev => ({
+            ...prev,
+            [i]: optionIndex
+          }));
+
+          // Sync with backend
+          if (fullTest?.id) {
+            addAttemptAnswer({
+              attemptId: fullTest.id,
+              questionId: q.id,
+              answerId: answerId
+            });
+          }
+
+          count++;
+          console.log(`Filled question ${i + 1}/${questions.length}`);
+
+          if (delay > 0) {
+            await new Promise(r => setTimeout(r, delay));
+          }
+        }
+      }
 
       // 2. Jump to last group
       if (groups.length > 0) {
         setCurrentGroupIndex(groups.length - 1);
       }
 
-      console.log("Ready to submit!");
+      console.log("✅ Auto-fill completed! Ready to submit.");
+      alert("Đã điền xong tất cả đáp án và lưu lên server! Bạn có thể nộp bài.");
     };
 
     return () => {
       // @ts-ignore
-      delete window.demoTest;
+      delete window.autoFill;
     };
-  }, [questions, groups]);
+  }, [questions, groups, fullTest, addAttemptAnswer]);
 
   // Loading Screen Component
   const LoadingScreen = () => {
@@ -462,7 +479,21 @@ export default function ReviewTestPage({ onComplete }: ReviewTestPageProps) {
               allQuestions={questions}
               selectedAnswers={answers}
               timeLimit={7200} // 2 hours
-              onAnswerForQuestion={handleAnswerForQuestion}
+              onAnswerForQuestion={(qIdx, oIdx) => {
+                handleAnswerForQuestion(qIdx, oIdx);
+
+                const q = questions[qIdx];
+                if (fullTest?.id && q && q.answerIds) {
+                  const answerId = q.answerIds[oIdx];
+                  if (answerId) {
+                    addAttemptAnswer({
+                      attemptId: fullTest.id,
+                      questionId: q.id,
+                      answerId: answerId
+                    });
+                  }
+                }
+              }}
               onGroupSelect={handleGroupSelect}
               onNext={handleNext}
               onPrevious={handlePrevious}
@@ -482,4 +513,10 @@ export default function ReviewTestPage({ onComplete }: ReviewTestPageProps) {
       </div>
     </div>
   );
+}
+
+declare global {
+  interface Window {
+    autoFill: (delay?: number) => Promise<void>;
+  }
 }

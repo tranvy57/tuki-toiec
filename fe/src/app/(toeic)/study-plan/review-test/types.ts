@@ -26,6 +26,7 @@ export interface Question {
   partName: string;
   question: string;
   options: string[];
+  answerIds?: string[]; // IDs for API mapping
   correctAnswer: number;
   explanation?: string;
   questionNumber: number; // Question number within the group (1, 2, 3...)

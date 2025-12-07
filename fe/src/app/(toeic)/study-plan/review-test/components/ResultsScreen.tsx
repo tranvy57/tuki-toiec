@@ -130,11 +130,11 @@ export function ResultsScreen({ onRetake }: ResultsScreenProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50/30 to-white pb-24">
-      <HeroSection data={testData} />
+      {/* <HeroSection data={testData} /> */}
 
       <div className="container mx-auto px-4 py-8 space-y-8">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-6">
-          <div className="lg:col-span-1">
+          {/* <div className="lg:col-span-1">
             <SummaryInfo
               totalQuestions={reviewData?.totalQuestions || 200}
               correctCount={testData.correctCount || 0}
@@ -143,7 +143,7 @@ export function ResultsScreen({ onRetake }: ResultsScreenProps) {
                 "02:00:00"
               }
             />
-          </div>
+          </div> */}
 
           <div className="lg:col-span-4">
             <PerformanceSummary data={testData} />

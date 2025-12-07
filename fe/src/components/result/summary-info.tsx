@@ -19,7 +19,7 @@ export function SummaryInfo({
     : "0.0";
 
   return (
-    <Card className="bg-white/80 backdrop-blur-sm border border-gray-100 shadow-sm p-5 rounded-xl">
+    <Card className="bg-white/80 backdrop-blur-sm border border-gray-100 shadow-sm p-5 rounded-xl hidden">
       <div className="space-y-4 text-gray-700 text-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

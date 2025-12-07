@@ -646,7 +646,7 @@ export default function WritingExercisePage() {
             {aiEvaluation ? (
               <>
                 {/* Overall Score */}
-                <div className="text-center">
+                {/* <div className="text-center">
                   <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full px-6 py-3">
                     <Star className="w-5 h-5 text-yellow-500" />
                     <span className="text-2xl font-bold text-purple-700">
@@ -654,7 +654,7 @@ export default function WritingExercisePage() {
                     </span>
                     <span className="text-purple-600">Điểm tổng</span>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Score Breakdown */}
                 <div className="flex gap-4">
