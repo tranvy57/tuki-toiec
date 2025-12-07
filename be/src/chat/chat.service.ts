@@ -6,9 +6,9 @@ import { ChatResponseDto } from './dto/chat-response.dto';
 
 @Injectable()
 export class ChatService {
-  private readonly AI_SERVICE_URL = 'http://34.143.141.5:8000/api/chat';
+  private readonly AI_SERVICE_URL = 'http://http://34.87.152.106/:8000/api/chat';
 
-  constructor(private readonly httpService: HttpService) {}
+  constructor(private readonly httpService: HttpService) { }
 
   async sendMessage(chatRequest: ChatRequestDto): Promise<string> {
     try {
