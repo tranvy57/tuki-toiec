@@ -172,6 +172,51 @@ export default function VocabularyLearningInterface({
     fetchAudios();
   }, [vocabularies]);
 
+  // Expose helper for demo/testing
+  React.useEffect(() => {
+    // @ts-ignore
+    window.demoVocab = async () => {
+      console.log("Auto-completing vocabulary session...");
+
+      if (vocabularies.length === 0) {
+        console.warn("No vocabularies available.");
+        return;
+      }
+
+      // 1. Simulate learning each word (optional, but good for consistency)
+      // We process them sequentially to avoid overwhelming the server
+      console.log("Updating word statuses...");
+      for (const vocab of vocabularies) {
+        try {
+          // Mock updating status
+          updateVocabStatus({ id: vocab.id, isCorrect: true });
+        } catch (e) {
+          console.error("Failed to update status for", vocab.word);
+        }
+      }
+
+      // 2. Complete the session
+      const stats: LearningStats = {
+        totalWords: vocabularies.length,
+        correct: vocabularies.length,
+        incorrect: 0,
+        timeSpent: 60,
+        accuracy: 100,
+      };
+
+      console.log("Completing session with stats:", stats);
+      onComplete?.(stats);
+      setSession(null);
+      setCurrentView("overview");
+      alert("Vocabulary session completed! (Demo Mode)");
+    };
+
+    return () => {
+      // @ts-ignore
+      delete window.demoVocab;
+    };
+  }, [vocabularies, onComplete, updateVocabStatus]);
+
   // Smart quiz type selection based on available data
   const getOptimalQuizType = (vocab: WeakVocabulary | Vocabulary): QuizType => {
     const availableTypes: QuizType[] = [];
@@ -726,8 +771,8 @@ export default function VocabularyLearningInterface({
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         className={`p-4 rounded-lg border ${isAnswerCorrect
-                            ? "bg-green-50 border-green-200 text-green-800"
-                            : "bg-red-50 border-red-200 text-red-800"
+                          ? "bg-green-50 border-green-200 text-green-800"
+                          : "bg-red-50 border-red-200 text-red-800"
                           }`}
                       >
                         <div className="flex items-center gap-2 mb-2">

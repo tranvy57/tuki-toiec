@@ -319,6 +319,33 @@ export default function ReviewTestPage({ onComplete }: ReviewTestPageProps) {
   // Get current group for display
   const currentGroupData = groups[currentGroupIndex];
 
+  // Expose helper for demo/testing
+  useEffect(() => {
+    // @ts-ignore
+    window.demoTest = () => {
+      console.log("Auto-filling answers and jumping to end...");
+
+      // 1. Fill random answers
+      const mockAnswers: Record<number, number> = {};
+      questions.forEach((q, index) => {
+        mockAnswers[index] = Math.floor(Math.random() * 4); // Random 0-3
+      });
+      setAnswers(mockAnswers);
+
+      // 2. Jump to last group
+      if (groups.length > 0) {
+        setCurrentGroupIndex(groups.length - 1);
+      }
+
+      console.log("Ready to submit!");
+    };
+
+    return () => {
+      // @ts-ignore
+      delete window.demoTest;
+    };
+  }, [questions, groups]);
+
   // Loading Screen Component
   const LoadingScreen = () => {
     const [loadingProgress, setLoadingProgress] = useState(0);

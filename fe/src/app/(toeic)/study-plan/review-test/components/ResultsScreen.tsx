@@ -159,7 +159,7 @@ export function ResultsScreen({ onRetake }: ResultsScreenProps) {
         </motion.div>
 
         {/* Skills Proficiency Section */}
-        {reviewData?.updatedSkills && (
+        {/* {reviewData?.updatedSkills && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -213,10 +213,10 @@ export function ResultsScreen({ onRetake }: ResultsScreenProps) {
               </div>
             )}
           </motion.div>
-        )}
+        )} */}
 
         {/* Review specific content */}
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
@@ -241,7 +241,7 @@ export function ResultsScreen({ onRetake }: ResultsScreenProps) {
               <div className="text-sm text-gray-600">Điểm tổng</div>
             </div>
           </div>
-        </motion.div>
+        </motion.div> */}
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
