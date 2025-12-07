@@ -31,7 +31,7 @@ export default function VocabularyCard({
                 {vocabulary.pronunciation}
               </span>
               <Badge className={getWeaknessColor(vocabulary.weaknessLevel)}>
-                {getWeaknessLabel(vocabulary?.strength)}
+                {getWeaknessLabel(vocabulary?.strength, vocabulary?.timesReviewed)}
               </Badge>
               {vocabulary.timesReviewed > 0 && (
                 <Badge className="bg-green-50 text-green-600 border-green-200">
@@ -71,19 +71,18 @@ export default function VocabularyCard({
             </Button>
 
             <Button
-              variant={vocabulary.isMarkedForReview ? "default" : "outline"}
+              variant={vocabulary.isBookmarked ? "default" : "outline"}
               size="sm"
               onClick={() => onToggleMarkForReview(vocabulary.id)}
               className={
-                vocabulary.isMarkedForReview
+                vocabulary.isBookmarked
                   ? "bg-blue-600 hover:bg-blue-700"
                   : ""
               }
             >
               <Star
-                className={`h-4 w-4 ${
-                  vocabulary.isMarkedForReview ? "fill-current" : ""
-                }`}
+                className={`h-4 w-4 ${vocabulary.isBookmarked ? "fill-current" : ""
+                  }`}
               />
             </Button>
           </div>

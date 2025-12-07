@@ -12,7 +12,7 @@ export const mockWeakVocabularies: WeakVocabulary[] = [
     weaknessLevel: "critical",
     mistakeCount: 8,
     lastReviewDate: "2024-01-15",
-    isMarkedForReview: true,
+    isBookmarked: true,
     audioUrl: "/audio/deteriorate.mp3",
   },
   {
@@ -26,7 +26,7 @@ export const mockWeakVocabularies: WeakVocabulary[] = [
     weaknessLevel: "moderate",
     mistakeCount: 5,
     lastReviewDate: "2024-01-20",
-    isMarkedForReview: false,
+    isBookmarked: false,
     audioUrl: "/audio/ambiguous.mp3",
   },
   {
@@ -40,7 +40,7 @@ export const mockWeakVocabularies: WeakVocabulary[] = [
     weaknessLevel: "mild",
     mistakeCount: 3,
     lastReviewDate: "2024-01-25",
-    isMarkedForReview: true,
+    isBookmarked: true,
     audioUrl: "/audio/conscientious.mp3",
   },
   {
@@ -54,7 +54,7 @@ export const mockWeakVocabularies: WeakVocabulary[] = [
     weaknessLevel: "critical",
     mistakeCount: 7,
     lastReviewDate: "2024-01-10",
-    isMarkedForReview: false,
+    isBookmarked: false,
     audioUrl: "/audio/ubiquitous.mp3",
   },
   {
@@ -68,7 +68,7 @@ export const mockWeakVocabularies: WeakVocabulary[] = [
     weaknessLevel: "moderate",
     mistakeCount: 4,
     lastReviewDate: "2024-01-18",
-    isMarkedForReview: true,
+    isBookmarked: true,
     audioUrl: "/audio/meticulous.mp3",
   },
 ];

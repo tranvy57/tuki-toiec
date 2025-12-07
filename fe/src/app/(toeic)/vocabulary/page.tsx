@@ -84,7 +84,7 @@ export default function VocabularyPage() {
   });
 
   const markedForReview = vocabularies.filter(
-    (v) => v.isMarkedForReview
+    (v) => v.isBookmarked
   ).length;
 
   console.log("reviewSession", reviewSession);

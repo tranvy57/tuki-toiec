@@ -9,7 +9,7 @@ export interface WeakVocabulary {
   weaknessLevel: "critical" | "moderate" | "mild";
   mistakeCount: number;
   lastReviewDate: string;
-  isMarkedForReview: boolean;
+  isBookmarked: boolean;
   audioUrl?: string;
 }
 

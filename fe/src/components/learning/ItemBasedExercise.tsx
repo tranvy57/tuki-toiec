@@ -22,7 +22,8 @@ import {
     Clock
 } from "lucide-react";
 import { Item } from "@/types/implements/item";
-import DictationPracticePage from "@/components/listening/exercises/DictationPracticePage";
+// Changed: Use the new dedicated component for Study Plan
+import DictationExercise from "@/components/toeic/detail-plan/DictationExercise";
 
 // Animation variants
 const containerVariants = {
@@ -82,7 +83,7 @@ const MODALITY_CONFIG = {
         description: "Nghe và viết lại những gì bạn nghe được",
         icon: MessageSquare,
         color: "red" as const,
-        component: DictationPracticePage,
+        component: DictationExercise, 
     },
     "multiple-choice": {
         name: "Multiple Choice",
@@ -153,7 +154,6 @@ export default function ItemBasedExercise({
             </div>
         );
     }
-    console.log(selectedItem)
 
     const modalityConfig = MODALITY_CONFIG[modality as keyof typeof MODALITY_CONFIG] || {
         name: modality,
@@ -295,12 +295,7 @@ export default function ItemBasedExercise({
                     <div className="flex justify-center mb-4">
                         <div className={`
               w-20 h-20 rounded-full flex items-center justify-center
-              ${modalityConfig.color === "blue" ? "bg-blue-100 text-blue-600" : ""}
-              ${modalityConfig.color === "red" ? "bg-red-100 text-red-600" : ""}
-              ${modalityConfig.color === "green" ? "bg-green-100 text-green-600" : ""}
-              ${modalityConfig.color === "purple" ? "bg-purple-100 text-purple-600" : ""}
-              ${modalityConfig.color === "orange" ? "bg-orange-100 text-orange-600" : ""}
-              ${modalityConfig.color === "indigo" ? "bg-indigo-100 text-indigo-600" : ""}
+              bg-${modalityConfig.color}-100 text-${modalityConfig.color}-600
             `}>
                             <modalityConfig.icon className="w-10 h-10" />
                         </div>
@@ -358,43 +353,10 @@ export default function ItemBasedExercise({
                                     Bạn sẽ được thực hiện {items.length} bài tập {modalityConfig.name.toLowerCase()}.
                                     Hệ thống sẽ theo dõi tiến độ và cung cấp phản hồi ngay lập tức.
                                 </p>
-
-                                {/* Difficulty preview */}
-                                {items.length > 0 && (
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-                                        {["Dễ", "Trung bình", "Khó", "Rất khó"].map((level, index) => {
-                                            const count = items.filter(item => {
-                                                const difficulty = item.difficulty?.toLowerCase();
-                                                return (
-                                                    (index === 0 && (difficulty === "easy" || difficulty === "dễ")) ||
-                                                    (index === 1 && (difficulty === "medium" || difficulty === "trung bình")) ||
-                                                    (index === 2 && (difficulty === "hard" || difficulty === "khó")) ||
-                                                    (index === 3 && (difficulty === "very hard" || difficulty === "rất khó"))
-                                                );
-                                            }).length;
-
-                                            return (
-                                                <div key={level} className="bg-slate-50 p-2 rounded text-center">
-                                                    <div className="font-medium text-slate-900">{count}</div>
-                                                    <div className="text-slate-600">{level}</div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-
                                 <Button
                                     onClick={startExercise}
                                     size="lg"
-                                    className={`
-                    w-full font-medium
-                    ${modalityConfig.color === "blue" ? "bg-blue-600 hover:bg-blue-700" : ""}
-                    ${modalityConfig.color === "red" ? "bg-red-600 hover:bg-red-700" : ""}
-                    ${modalityConfig.color === "green" ? "bg-green-600 hover:bg-green-700" : ""}
-                    ${modalityConfig.color === "purple" ? "bg-purple-600 hover:bg-purple-700" : ""}
-                    ${modalityConfig.color === "orange" ? "bg-orange-600 hover:bg-orange-700" : ""}
-                    ${modalityConfig.color === "indigo" ? "bg-indigo-600 hover:bg-indigo-700" : ""}
-                  `}
+                                    className="w-full font-medium bg-indigo-600 hover:bg-indigo-700"
                                 >
                                     <PlayCircle className="w-5 h-5 mr-2" />
                                     Bắt đầu luyện tập
@@ -409,19 +371,17 @@ export default function ItemBasedExercise({
 
     // Exercise screen
     if (currentView === "exercise" && session) {
-        // For dictation exercises
+        // For dictation exercises - Use the new DictationExercise component
         if (modality === "dictation" && selectedItem) {
             return (
-                <DictationPracticePage
+                <DictationExercise
                     item={selectedItem}
                     onBack={resetExercise}
                     onNext={handleNext}
-                // showProgress={{
-                //     current: session.currentIndex + 1,
-                //     total: session.totalItems,
-                //     correct: session.correctAnswers,
-                //     incorrect: session.incorrectAnswers
-                // }}
+                    progress={{
+                        current: session.currentIndex + 1,
+                        total: session.totalItems
+                    }}
                 />
             );
         }

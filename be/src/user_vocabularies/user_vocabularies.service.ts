@@ -186,11 +186,23 @@ export class UserVocabulariesService {
   async updateAfterReview(userId: string, vocabId: string, isCorrect: boolean) {
     const repo = this.dataSource.getRepository(UserVocabulary);
 
-    const record = await repo.findOne({
+    let record = await repo.findOne({
       where: { user: { id: userId }, vocabulary: { id: vocabId } },
     });
 
-    if (!record) throw new Error('UserVocabulary not found');
+    if (!record) {
+      record = repo.create({
+        user: { id: userId } as User,
+        vocabulary: { id: vocabId } as Vocabulary,
+        source: 'lesson',
+        strength: 0,
+        learningStage: 'new',
+        timesReviewed: 0,
+        correctCount: 0,
+        wrongCount: 0,
+        lastReviewedAt: new Date(),
+      });
+    }
 
     record.timesReviewed += 1;
     if (isCorrect) record.correctCount += 1;
@@ -296,8 +308,8 @@ export class UserVocabulariesService {
       vocabId: vocab.id,
       content: {
         question: `What is the meaning of "${vocab.word}"?`,
-        choices, 
-        correctKey, 
+        choices,
+        correctKey,
         audioUrl: vocab.audioUrl,
       },
     };
@@ -312,7 +324,7 @@ export class UserVocabulariesService {
     return {
       type: 'cloze',
       vocabId: vocab.id,
-      content: { text, answer: vocab.word, ...vocab  },
+      content: { text, answer: vocab.word, ...vocab },
     };
   }
 

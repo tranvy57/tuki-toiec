@@ -98,16 +98,16 @@ export class UserVocabulariesController {
   @Post('update')
   async updateReviewResult(
     @CurrentUser() user: User,
-    @Body() body: { vocabId: string; isCorrect: boolean },
+    @Body() body: { vocabularyId: string; isCorrect: boolean },
   ) {
     const updated = await this.userVocabulariesService.updateAfterReview(
       user.id,
-      body.vocabId,
+      body.vocabularyId,
       body.isCorrect,
     );
 
     return {
-      vocabId: body.vocabId,
+      vocabularyId: body.vocabularyId,
       learningStage: updated.learningStage,
       strength: updated.strength,
       nextReviewAt: updated.nextReviewAt,

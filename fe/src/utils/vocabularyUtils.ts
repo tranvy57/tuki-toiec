@@ -14,8 +14,11 @@ export const getWeaknessColor = (level: string) => {
   }
 };
 
-export const getWeaknessLabel = (strength: number) => {
-  if (strength < 0.25) {
+export const getWeaknessLabel = (strength: number, timesReviewed: number) => {
+  if(timesReviewed < 10) {
+    return "Từ mới";
+  }
+  if (strength < 0.15) {
     return "Rất yếu";
   }
   if (strength < 0.5) {
@@ -49,7 +52,17 @@ export const generateQuizOptions = (
 
 export const playAudio = (audioUrl?: string) => {
   if (audioUrl) {
-    // Mock audio play - in real app, would use Web Audio API
-    toast.success("Đang phát âm thanh...");
+    try {
+      const audio = new Audio(audioUrl);
+      audio.play().catch((err) => {
+        console.error("Error playing audio:", err);
+        toast.error("Không thể phát âm thanh");
+      });
+    } catch (error) {
+      console.error("Audio playback error:", error);
+      toast.error("Lỗi phát âm thanh");
+    }
+  } else {
+    toast.error("Không có file âm thanh");
   }
 };

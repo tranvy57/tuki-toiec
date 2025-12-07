@@ -26,10 +26,10 @@ const defaultStats = {
 
 export default function StatsOverview({
   vocabularies,
-  totalCards = defaultStats.totalCards,
-  totalReviews = defaultStats.totalReviews,
-  dueCount = defaultStats.dueCount,
-  accuracy = defaultStats.accuracy,
+  totalCards = vocabularies.length || defaultStats.totalCards,
+  totalReviews = vocabularies.filter((v) => v.isBookmarked).length || defaultStats.totalReviews,
+  dueCount = vocabularies.filter((v) => v.nextReviewAt === null || v.nextReviewAt < new Date()).length || defaultStats.dueCount,
+  accuracy = vocabularies.reduce((acc, v) => acc + v.correctCount / (v.correctCount + v.wrongCount), 0) * 100 / vocabularies.length || defaultStats.accuracy,
 }: StatsOverviewProps) {
   const criticalWords = vocabularies.filter(
     (v) => v.weaknessLevel === "critical"
@@ -41,7 +41,7 @@ export default function StatsOverview({
     (v) => v.weaknessLevel === "mild"
   ).length;
   const markedForReview = vocabularies.filter(
-    (v) => v.isMarkedForReview
+    (v) => v.isBookmarked
   ).length;
 
   return (
@@ -59,7 +59,7 @@ export default function StatsOverview({
           />
           <StatRow
             icon={<BookOpen className="text-indigo-600 w-5 h-5" />}
-            label="Tổng số Lần Ôn tập"
+            label="Số từ được đánh dấu"
             value={totalReviews}
           />
           <StatRow
@@ -84,22 +84,22 @@ export default function StatsOverview({
           <StatRow
             icon={<Star className="text-blue-600 w-5 h-5" />}
             label="Từ mới"
-            value={50}
+            value={vocabularies.filter((v) => v.timesReviewed < 10).length}
           />
           <StatRow
             icon={<Target className="text-orange-600 w-5 h-5" />}
             label="Trung bình"
-            value={moderateWords}
+            value={vocabularies.filter((v) => v.strength >= 0.15).length}
           />
           <StatRow
             icon={<Clock className="text-yellow-600 w-5 h-5" />}
             label="Hơi yếu"
-            value={mildWords}
+            value={vocabularies.filter((v) => v.strength < 0.15 && v.strength >= 0.1).length}
           />
           <StatRow
             icon={<TrendingDown className="text-red-600 w-5 h-5" />}
             label="Rất yếu"
-            value={criticalWords}
+            value={vocabularies.filter((v) => v.strength < 0.1).length}
           />
         </div>
       </div>

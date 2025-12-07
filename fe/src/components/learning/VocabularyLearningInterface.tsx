@@ -29,6 +29,7 @@ import {
 } from "@/components/vocabulary";
 import { useVocabularyReview } from "@/hooks/use-vocabulary";
 import { playAudio, generateQuizOptions } from "@/utils/vocabularyUtils";
+import { getWordAudioUrl, usePatchVocabulary } from "@/api/useVocabulary";
 
 // Animation variants
 const slideVariants = {
@@ -91,6 +92,7 @@ export default function VocabularyLearningInterface({
   );
   const [session, setSession] = useState<LearningSession | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { mutate: updateVocabStatus } = usePatchVocabulary();
 
   // Early return if no vocabularies
   if (!vocabularies || vocabularies.length === 0) {
@@ -124,26 +126,54 @@ export default function VocabularyLearningInterface({
   const [quizOptions, setQuizOptions] = useState<string[]>([]);
 
   // Convert Vocabulary to WeakVocabulary format for compatibility
-  const weakVocabularies: WeakVocabulary[] = vocabularies.map((vocab) => ({
-    id: vocab.id,
-    word: vocab.word,
-    meaning: vocab.meaning,
-    pronunciation: vocab.pronunciation || "/pronunciation/",
-    partOfSpeech: vocab.partOfSpeech || "noun",
-    exampleEn: vocab.exampleEn || "",
-    exampleVn: vocab.exampleVn || "",
-    audioUrl: vocab.audioUrl || "",
-    wrongCount: 0,
-    correctCount: 0,
-    weaknessLevel: "critical",
-    lastPracticedAt: new Date().toISOString(),
-    isMarkedForReview: true,
-    mistakeCount: 2,
-    lastReviewDate: "2025-10-25T09:00:00Z",
-  }));
+  const [weakVocabularies, setWeakVocabularies] = useState<WeakVocabulary[]>(
+    () =>
+      vocabularies.map((vocab) => ({
+        id: vocab.id,
+        word: vocab.word,
+        meaning: vocab.meaning,
+        pronunciation: vocab.pronunciation || "/pronunciation/",
+        partOfSpeech: vocab.partOfSpeech || "noun",
+        exampleEn: vocab.exampleEn || "",
+        exampleVn: vocab.exampleVn || "",
+        audioUrl: vocab.audioUrl || "",
+        wrongCount: 0,
+        correctCount: 0,
+        weaknessLevel: "critical",
+        lastPracticedAt: new Date().toISOString(),
+        isBookmarked: true,
+        mistakeCount: 2,
+        lastReviewDate: "2025-10-25T09:00:00Z",
+      }))
+  );
+
+  // Fetch missing audio URLs
+  React.useEffect(() => {
+    const fetchAudios = async () => {
+      let hasUpdates = false;
+      const updatedVocabs = await Promise.all(
+        weakVocabularies.map(async (vocab) => {
+          if (!vocab.audioUrl) {
+            const audio = await getWordAudioUrl(vocab.word);
+            if (audio) {
+              hasUpdates = true;
+              return { ...vocab, audioUrl: audio };
+            }
+          }
+          return vocab;
+        })
+      );
+
+      if (hasUpdates) {
+        setWeakVocabularies(updatedVocabs);
+      }
+    };
+
+    fetchAudios();
+  }, [vocabularies]);
 
   // Smart quiz type selection based on available data
-  const getOptimalQuizType = (vocab: Vocabulary): QuizType => {
+  const getOptimalQuizType = (vocab: WeakVocabulary | Vocabulary): QuizType => {
     const availableTypes: QuizType[] = [];
 
     // Always include multiple choice if we have meaning
@@ -198,7 +228,7 @@ export default function VocabularyLearningInterface({
     setIsLoading(true);
     setTimeout(() => {
       // Use smart quiz type selection for the first vocabulary
-      const optimalType = getOptimalQuizType(vocabularies[0]);
+      const optimalType = getOptimalQuizType(weakVocabularies[0]);
 
       setCurrentQuizType(optimalType);
       setSession({
@@ -270,6 +300,9 @@ export default function VocabularyLearningInterface({
       correctAnswers: session.correctAnswers + (isCorrect ? 1 : 0),
       incorrectAnswers: session.incorrectAnswers + (isCorrect ? 0 : 1),
     });
+
+    // Update vocabulary status
+    updateVocabStatus({ id: currentWord.id, isCorrect });
   }, [
     session,
     currentWord,
@@ -291,7 +324,7 @@ export default function VocabularyLearningInterface({
       const nextWord = weakVocabularies[nextIndex];
 
       // Use smart quiz type selection for next vocabulary
-      const optimalType = getOptimalQuizType(nextVocab);
+      const optimalType = getOptimalQuizType(weakVocabularies[nextIndex]);
 
       setCurrentQuizType(optimalType);
 
@@ -553,7 +586,7 @@ export default function VocabularyLearningInterface({
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="max-w-4xl mx-auto p-6"
+        className="max-w-4xl mx-auto p-4 md:p-6 h-[calc(100vh-80px)] overflow-y-auto"
       >
         {/* Header with progress */}
         <div className="flex items-center justify-between mb-6">
@@ -612,10 +645,10 @@ export default function VocabularyLearningInterface({
                 <div className="text-lg font-bold text-slate-900">
                   {session.correctAnswers + session.incorrectAnswers > 0
                     ? Math.round(
-                        (session.correctAnswers /
-                          (session.correctAnswers + session.incorrectAnswers)) *
-                          100
-                      )
+                      (session.correctAnswers /
+                        (session.correctAnswers + session.incorrectAnswers)) *
+                      100
+                    )
                     : 0}
                   %
                 </div>
@@ -635,8 +668,8 @@ export default function VocabularyLearningInterface({
             exit="exit"
             transition={{ duration: 0.3, ease: "easeInOut" }}
           >
-            <Card className="mb-6">
-              <CardContent className="p-8">
+            <Card className="mb-6 h-full">
+              <CardContent className="p-4 md:p-6 h-[calc(100%-2rem)] overflow-y-auto custom-scrollbar">
                 {session.sessionType === "flashcard" ? (
                   <FlashcardSession
                     currentWord={currentWord}
@@ -692,11 +725,10 @@ export default function VocabularyLearningInterface({
                       <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className={`p-4 rounded-lg border ${
-                          isAnswerCorrect
+                        className={`p-4 rounded-lg border ${isAnswerCorrect
                             ? "bg-green-50 border-green-200 text-green-800"
                             : "bg-red-50 border-red-200 text-red-800"
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center gap-2 mb-2">
                           {isAnswerCorrect ? (
@@ -731,9 +763,7 @@ export default function VocabularyLearningInterface({
                           disabled={
                             (currentQuizType === "mcq" && !selectedOption) ||
                             (currentQuizType === "cloze" &&
-                              !quizAnswer.trim()) ||
-                            (currentQuizType === "pronunciation" &&
-                              !selectedOption)
+                              !quizAnswer.trim())
                           }
                           className="flex-1 bg-blue-600 hover:bg-blue-700"
                         >

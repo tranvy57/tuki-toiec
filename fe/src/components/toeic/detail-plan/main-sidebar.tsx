@@ -76,6 +76,11 @@ export function MainSidebar({
     new Set()
   );
 
+  // State để track interactive learning completion (vocabulary/quiz)
+  const [interactiveLearningCompleted, setInteractiveLearningCompleted] = useState<Set<string>>(
+    new Set()
+  );
+
   // State cho premium upgrade dialog
   const [showPremiumDialog, setShowPremiumDialog] = useState(false);
   const [premiumContentType, setPremiumContentType] = useState<string>("");
@@ -89,10 +94,10 @@ export function MainSidebar({
 
   const hasLessons = !!activePhase?.phaseLessons?.length;
   const activeLesson = activePhase?.phaseLessons?.find(
-    (pl) => pl.lesson.id === activeLessonId
+    (pl) => String(pl.lesson.id) === String(activeLessonId)
   )?.lesson;
   const selectedContent = activeLesson?.contents?.find(
-    (c) => c.id === selectedContentId
+    (c) => String(c.id) === String(selectedContentId)
   );
 
   const toggleLessonExpansion = (lessonId: string) => {
@@ -140,11 +145,13 @@ export function MainSidebar({
         toast.success("Đã hoàn thành bài học!");
         console.log("Task completed:", response);
         // Refresh course data to update status
-        refetch();
+        refetch().then(() => {
+          console.log("Refetch completed. ActiveLessonId:", activeLessonId);
+        });
 
-        // Reset UI state
+        // Only reset selected content, keep lesson selected
         setSelectedContentId(null);
-        setActiveLessonId(null);
+        // Don't reset activeLessonId - keep it so lesson overview displays
       },
       onError: (error: any) => {
         toast.error("Có lỗi xảy ra: " + (error.message || "Không thể hoàn thành bài học"));
@@ -158,7 +165,15 @@ export function MainSidebar({
     setActiveLessonId(null);
     setSelectedContentId(null);
     setExpandedLessons(new Set());
+    setInteractiveLearningCompleted(new Set());
   }, [activeUnitId, setActiveLessonId]);
+
+  console.log("Main Sidebar Render: ", {
+    activeUnitId,
+    activeLessonId,
+    hasLessons,
+    interactiveCompleted: Array.from(interactiveLearningCompleted)
+  });
 
   const lessonList = hasLessons ? (
     <UnitLessons
@@ -266,10 +281,14 @@ export function MainSidebar({
           {selectedContent ? (
             <ContentDetailPanel
               content={selectedContent}
-              
               isPremiumUser={isPremiumUser}
               onCompleteTask={handleCompleteTask}
               isCompleting={isCompleting}
+              interactiveLearningCompleted={interactiveLearningCompleted}
+              onInteractiveLearningComplete={(contentId) => {
+                console.log("Marking interactive complete for:", contentId);
+                setInteractiveLearningCompleted(prev => new Set(prev).add(String(contentId)));
+              }}
             />
           ) : activeLesson ? (
             <LessonOverviewPanel lesson={activeLesson} />
@@ -297,11 +316,15 @@ function ContentDetailPanel({
   isPremiumUser = false,
   onCompleteTask,
   isCompleting = false,
+  interactiveLearningCompleted,
+  onInteractiveLearningComplete,
 }: {
   content: any;
   isPremiumUser?: boolean;
   onCompleteTask?: (studyTaskId: string) => void;
   isCompleting?: boolean;
+  interactiveLearningCompleted?: Set<string>;
+  onInteractiveLearningComplete?: (contentId: string) => void;
 }) {
   const [showLearningInterface, setShowLearningInterface] = useState(false);
   console.log(content)
@@ -324,8 +347,25 @@ function ContentDetailPanel({
   // Check if content has interactive learning elements
   const hasVocabularies = content.vocabularies && content.vocabularies.length > 0;
   const hasItems = content.lessonContentItems && content.lessonContentItems.length > 0;
+  // Log content info for debugging
+  console.log("ContentDetailPanel Info:", {
+    id: content.id,
+    type: content.type,
+    hasVocab: hasVocabularies,
+    hasItems: hasItems,
+    completed: interactiveLearningCompleted?.has(String(content.id))
+  });
+
   const isInteractiveContent = hasVocabularies || (hasItems && content.type === "quiz");
-  const isCompleted = content.studyTaskStatus === "completed";  
+  const isCompleted = content.studyTaskStatus === "completed";
+
+  // Check if interactive learning has been completed for this content
+  // Normalize to string to ensure matching works
+  const hasCompletedInteractiveLearning = interactiveLearningCompleted?.has(String(content.id)) || false;
+
+  // Determine if completion button should be shown
+  // Show button if: (1) not interactive content, OR (2) interactive content AND user completed the learning
+  const shouldShowCompletionButton = !isInteractiveContent || hasCompletedInteractiveLearning;
 
   // Show learning interface if requested
   if (showLearningInterface && isInteractiveContent) {
@@ -346,9 +386,9 @@ function ContentDetailPanel({
           console.log("Learning completed:", stats);
           setShowLearningInterface(false);
 
-          // Auto complete task when interactive learning is finished
-          if (onCompleteTask && content.studyTaskId) {
-            onCompleteTask(content.studyTaskId);
+          // Mark this content as having completed interactive learning
+          if (onInteractiveLearningComplete) {
+            onInteractiveLearningComplete(content.id);
           }
         }}
       />
@@ -445,12 +485,15 @@ function ContentDetailPanel({
             </div>
           ) : null}
           {
-            content.type !== "video" && content.type !== "quiz" && (
-              <p className="text-slate-700 whitespace-pre-wrap">
-                {content.content}
-              </p>
+            content.type !== "video" &&
+            content.type !== "quiz" && (
+              <div
+                className="text-slate-700 "
+                dangerouslySetInnerHTML={{ __html: content.content }}
+              />
             )
           }
+
 
 
           {/* Interactive Learning Button */}
@@ -477,8 +520,8 @@ function ContentDetailPanel({
             </div>
           )}
 
-          {/* Complete Task Button - Only show for pending lessons */}
-          {onCompleteTask && content.id && (
+          {/* Complete Task Button - Only show after interactive learning is done */}
+          {onCompleteTask && content.id && shouldShowCompletionButton && (
             <div className="mt-6 pt-6 border-t border-slate-200">
               <div className="bg-green-50 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-3">
@@ -496,24 +539,24 @@ function ContentDetailPanel({
                   </p>
                 ) : (
                   <Button
-                  onClick={() => {
-                    onCompleteTask(content.studyTaskId)
-                  }}
-                  disabled={isCompleting}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
-                >
-                  {isCompleting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Đang xử lý...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-4 h-4 mr-2" />
-                      Hoàn thành bài học
-                    </>
-                  )}
-                </Button>
+                    onClick={() => {
+                      onCompleteTask(content.studyTaskId)
+                    }}
+                    disabled={isCompleting}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
+                  >
+                    {isCompleting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Đang xử lý...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4 mr-2" />
+                        Hoàn thành bài học
+                      </>
+                    )}
+                  </Button>
                 )}
               </div>
             </div>

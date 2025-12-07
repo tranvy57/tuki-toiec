@@ -7,7 +7,7 @@ import {
   QuizType,
 } from "@/types/implements/vocabulary";
 import { generateQuizOptions } from "@/utils/vocabularyUtils";
-import { patchVocabulary } from "@/api/useVocabulary";
+import { patchVocabulary, useMarkUserVocab } from "@/api/useVocabulary";
 
 export function useVocabularyReview(
   vocabularies: any[],
@@ -31,6 +31,7 @@ export function useVocabularyReview(
   >([]);
   const [selectedOption, setSelectedOption] = useState("");
   const [quizCompleted, setQuizCompleted] = useState(false);
+  const { mutate: markUserVocab } = useMarkUserVocab();
 
   const quizTypes: ("multiple-choice" | "fill-blank" | "audio")[] = [
     "multiple-choice",
@@ -38,11 +39,11 @@ export function useVocabularyReview(
     "audio",
   ];
 
-  const reviewWords = vocabularies.filter((v) => v.isMarkedForReview);
+  const reviewWords = vocabularies.filter((v) => v.isBookmarked);
   const currentReviewWord = vocabularyReviews?.items?.[currentReviewIndex];
 
   const startFlashcardSession = useCallback(() => {
-    const reviewWords = vocabularies.filter((v) => v.isMarkedForReview);
+    const reviewWords = vocabularies.filter((v) => v.isBookmarked);
     if (reviewWords.length === 0) {
       toast.error("Không có từ nào được đánh dấu để ôn tập!");
       return;
@@ -63,7 +64,7 @@ export function useVocabularyReview(
   }, [vocabularies]);
 
   const startQuizSession = useCallback(() => {
-    // const reviewWords = vocabularies.filter((v) => v.isMarkedForReview);
+    // const reviewWords = vocabularies.filter((v) => v.isBookmarked);
 
     console.log("reviewWords", reviewWords);
 
@@ -200,7 +201,7 @@ export function useVocabularyReview(
   }, []);
 
   const handleFlashcardNext = useCallback(() => {
-    const reviewWords = vocabularies.filter((v) => v.isMarkedForReview);
+    const reviewWords = vocabularies.filter((v) => v.isBookmarked);
     if (currentReviewIndex < reviewWords.length - 1) {
       setCurrentReviewIndex(currentReviewIndex + 1);
       setShowAnswer(false);
@@ -211,10 +212,12 @@ export function useVocabularyReview(
 
   const toggleMarkForReview = useCallback(
     (vocabId: string) => {
+      markUserVocab({ id: vocabId, status: !vocabularies.find((v) => v.id === vocabId)?.isBookmarked });
+
       setVocabularies((prev) =>
         prev.map((v) =>
           v.id === vocabId
-            ? { ...v, isMarkedForReview: !v.isMarkedForReview }
+            ? { ...v, isBookmarked: !v.isBookmarked }
             : v
         )
       );
