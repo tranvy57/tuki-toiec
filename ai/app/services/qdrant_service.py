@@ -17,7 +17,7 @@ class QdrantService:
     """
 
     def __init__(self):
-        self.url = "http://http://34.87.152.106/:6333"
+        self.url = "http://34.87.152.106:6333"
         self.collection_name = "toeic_speaking_knowledge"
         self.dimension = 1024
         self.client = QdrantClient(url=self.url)
@@ -212,7 +212,7 @@ def refine_query_with_tfidf_mmr(query: str, corpus: list[str] = None, top_n=10, 
 # --------------------------------------------------------------------------
 if __name__ == "__main__":
     service = QdrantService(
-        url="http://http://34.87.152.106/:6333",
+        url="http://34.87.152.106:6333",
         collection_name="toeic_speaking_knowledge"
     )
 
