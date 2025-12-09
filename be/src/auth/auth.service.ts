@@ -5,6 +5,7 @@ import { User } from 'src/user/entities/user.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { authResponse } from './dto/auth-response.dto';
+import { BlacklistedToken } from 'src/blacklisted_tokens/entities/blacklisted_token.entity';
 
 @Injectable()
 export class AuthService {
@@ -12,6 +13,8 @@ export class AuthService {
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
     private readonly jwtService: JwtService,
+    @InjectRepository(BlacklistedToken)
+    private readonly blacklistedRepo: Repository<BlacklistedToken>,
   ) {}
 
   async validateUser(username: string, pass: string): Promise<any> {
@@ -41,13 +44,33 @@ export class AuthService {
     };
   }
 
+  async logout(token: string) {
+    try {
+      const decoded: any = this.jwtService.decode(token);
+      if (!decoded || !decoded.exp) return { success: false };
+
+      const expiresAt = decoded.exp;
+
+      const blacklisted = this.blacklistedRepo.create({ token, expiresAt });
+      await this.blacklistedRepo.save(blacklisted);
+
+      return { success: true };
+    } catch (error) {
+      return { success: false };
+    }
+  }
+
   async introspect(token: string) {
+    // Kiểm tra xem token có bị blacklist chưa
+    const blacklisted = await this.blacklistedRepo.findOne({
+      where: { token },
+    });
+    if (blacklisted) return { valid: false };
+
     try {
       await this.jwtService.verifyAsync(token);
-      return {
-        valid: true,
-      };
-    } catch (error) {
+      return { valid: true };
+    } catch {
       return { valid: false };
     }
   }
