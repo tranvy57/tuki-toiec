@@ -23,7 +23,6 @@ export const AuthResponseWrapped = BaseResponseSchema(AuthResponseSchema);
 
 export type AuthResponse = z.infer<typeof AuthResponseWrapped>;
 
-
 // API Types
 export interface LogoutRequest {
   token: string;

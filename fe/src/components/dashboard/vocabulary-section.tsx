@@ -44,8 +44,6 @@ const vocabFeatures = [
   },
 ];
 
-
-
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -296,7 +294,7 @@ export default function VocabularySection() {
           transition={{ delay: 1, duration: 0.8 }}
           className="mt-16 text-center"
         >
-          <motion.button
+          {/* <motion.button
             whileHover={{
               scale: 1.05,
               boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
@@ -319,7 +317,7 @@ export default function VocabularySection() {
                 →
               </motion.span>
             </span>
-          </motion.button>
+          </motion.button> */}
         </motion.div>
       </div>
 

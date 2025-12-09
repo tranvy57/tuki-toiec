@@ -93,21 +93,6 @@ export default function TestListPage() {
 
       <div className="container mx-auto px-4 py-4 relative z-10">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="flex items-center justify-start gap-3 mb-4">
-            <div className="p-3  rounded-md ">
-              <Edit3 className="w-4 h-4 " />
-            </div>
-            <h1 className="text-2xl md:text-2xl font-bold text-[#23085A]">
-              Writting
-            </h1>
-          </div>
-          {/* Mô tả chính */}
-        </motion.div>
 
         {/* Search and Filters */}
         <motion.div
@@ -116,7 +101,7 @@ export default function TestListPage() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mb-8 flex flex-col md:flex-row gap-2 max-w-4xl "
         >
-          <div className="relative flex-1">
+          {/* <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
             <Input
               placeholder="Tìm kiếm đề thi..."
@@ -124,8 +109,8 @@ export default function TestListPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 bg-white/80 backdrop-blur-sm border-gray-200"
             />
-          </div>
-          <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
+          </div> */}
+          {/* <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
             <SelectTrigger className="w-full md:w-[180px] bg-white/80 backdrop-blur-sm border-gray-200">
               <SelectValue placeholder="Độ khó" />
             </SelectTrigger>
@@ -145,7 +130,7 @@ export default function TestListPage() {
               <SelectItem value="ETS">ETS</SelectItem>
               <SelectItem value="New Economy">New Economy</SelectItem>
             </SelectContent>
-          </Select>
+          </Select> */}
         </motion.div>
 
         {/* Loading state with spinner */}

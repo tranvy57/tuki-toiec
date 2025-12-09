@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -142,7 +141,7 @@ export default function TestDetailPage() {
           </div>
         </motion.div>
 
-        <div className="overflow-x-auto mb-5 border border-gray-300">
+        {/* <div className="overflow-x-auto mb-5 border border-gray-300">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
@@ -255,7 +254,7 @@ export default function TestDetailPage() {
               </tr>
             </tbody>
           </table>
-        </div>
+        </div> */}
         {/* Tabs Section */}
         <motion.div
           initial="hidden"
@@ -263,11 +262,11 @@ export default function TestDetailPage() {
           variants={fadeInUp}
           transition={{ delay: 0.2 }}
         >
-          <Tabs defaultValue="practice" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6 bg-white/80 backdrop-blur-sm p-1 rounded-xl shadow-md">
+          <Tabs defaultValue="practice" className="w-full ">
+            <TabsList className="grid w-full grid-cols-2 mb-6 bg-white/80 backdrop-blur-sm p-1 rounded-xl shadow-md h">
               <TabsTrigger
                 value="practice"
-                className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:bg-primary data-[state=active]:text-white"
+                className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:bg-primary data-[state=active]:text-white "
               >
                 Chế độ Luyện tập
               </TabsTrigger>
@@ -277,7 +276,6 @@ export default function TestDetailPage() {
               >
                 Chế độ Thi đầy đủ
               </TabsTrigger>
-
             </TabsList>
 
             <TabsContent value="practice" className="space-y-6">
@@ -287,14 +285,14 @@ export default function TestDetailPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4 }}
               >
-                <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 shadow-lg rounded-xl">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-green-800">
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 shadow-lg rounded-xl p-4">
+                  <div>
+                    <div className="flex items-center gap-2 text-green-800">
                       <Lightbulb className="w-5 h-5" />
                       Mẹo Học tập
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                    </div>
+                  </div>
+                  <div>
                     <p className="text-green-700 leading-relaxed">
                       <strong>Chế độ Luyện tập</strong> cho phép bạn chọn các
                       phần cụ thể để tập trung luyện tập. Hoàn hảo cho việc
@@ -303,8 +301,8 @@ export default function TestDetailPage() {
                       <strong>Chế độ Thi đầy đủ</strong> mô phỏng trải nghiệm
                       thi thật với đầy đủ 7 phần và thời gian nghiêm ngặt.
                     </p>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </motion.div>
 
               {/* Parts Checklist */}
@@ -315,7 +313,7 @@ export default function TestDetailPage() {
                 className="space-y-4"
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-2xl font-bold text-gray-900">
+                  <h2 className="text-lg font-bold text-gray-900">
                     Chọn Phần Thi
                   </h2>
                   <div className="flex gap-2">
@@ -344,9 +342,9 @@ export default function TestDetailPage() {
                       open={openParts.includes(part.id)}
                       onOpenChange={() => toggleOpen(part.id)}
                     >
-                      <Card className="bg-white/80 backdrop-blur-sm border-gray-200 shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl overflow-hidden">
+                      <div className="bg-white/80 backdrop-blur-sm border-gray-200 border hover:shadow-lg transition-shadow duration-300 rounded-xl overflow-hidden p-3">
                         <CollapsibleTrigger className="w-full" asChild>
-                          <CardHeader className="hover:bg-gray-50/50 transition-colors">
+                          <div className="hover:bg-gray-50/50 transition-colors">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-4">
                                 <Checkbox
@@ -356,9 +354,9 @@ export default function TestDetailPage() {
                                   className="border-2"
                                 />
                                 <div className="text-left">
-                                  <CardTitle className="text-lg font-bold text-gray-900">
+                                  <div className="text-lg font-bold text-gray-900">
                                     Part {part.partNumber}
-                                  </CardTitle>
+                                  </div>
                                   <p className="text-sm text-muted-foreground mt-1">
                                     {part.groups
                                       .map((group) => group.questions.length)
@@ -373,10 +371,10 @@ export default function TestDetailPage() {
                                 <ChevronDown className="w-5 h-5 text-gray-500" />
                               )}
                             </div>
-                          </CardHeader>
+                          </div>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
-                          <CardContent className="pt-0 pb-4">
+                          <div className="pt-0 pb-4">
                             <AnimatePresence>
                               <motion.div
                                 initial={{ opacity: 0, height: 0 }}
@@ -402,9 +400,9 @@ export default function TestDetailPage() {
                                 ))}
                               </motion.div>
                             </AnimatePresence>
-                          </CardContent>
+                          </div>
                         </CollapsibleContent>
-                      </Card>
+                      </div>
                     </Collapsible>
                   </motion.div>
                 ))}
@@ -415,18 +413,8 @@ export default function TestDetailPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="sticky bottom-6 pt-6"
               >
-                <motion.div
-                  animate={{
-                    scale: [1, 1.02, 1],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Number.POSITIVE_INFINITY,
-                    ease: "easeInOut",
-                  }}
-                >
+                <div>
                   <Button
                     onClick={() => {
                       if (testData?.id) {
@@ -435,22 +423,27 @@ export default function TestDetailPage() {
                         } catch (e) {
                           console.warn("Error clearing state:", e);
                         }
-                        router.push(`/tests/${params.id}/start?mode=practice&parts=${selectedParts.join(',')}`);
+                        router.push(
+                          `/tests/${
+                            params.id
+                          }/start?mode=practice&parts=${selectedParts.join(
+                            ","
+                          )}`
+                        );
                       }
                     }}
                     disabled={selectedParts.length === 0 || !testData}
-                    className="w-full py-6 text-lg font-bold bg-primary hover:bg-primary/80 text-white shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                    className=" py-4 text-md  bg-primary hover:bg-primary/80 text-white shadow-xl hover:shadow-2xl transition-all duration-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Bắt đầu Phần đã chọn ({selectedParts.length})
                   </Button>
-                </motion.div>
+                </div>
               </motion.div>
             </TabsContent>
 
             <TabsContent value="fulltest" className="space-y-6">
               <div className="">
                 <div className="space-y-4">
-
                   <Alert className="border-blue-200 bg-blue-50">
                     <Info className="h-4 w-4 text-blue-600" />
                     <AlertDescription className="text-blue-700">
@@ -459,13 +452,8 @@ export default function TestDetailPage() {
                     </AlertDescription>
                   </Alert>
                   <motion.div
-                    animate={{
-                      scale: [1, 1.02, 1],
-                    }}
                     transition={{
                       duration: 2,
-                      repeat: Number.POSITIVE_INFINITY,
-                      ease: "easeInOut",
                     }}
                   >
                     <Button
@@ -480,7 +468,7 @@ export default function TestDetailPage() {
                         }
                         router.push(`/tests/${params.id}/start`);
                       }}
-                      className="w-full py-6 text-lg font-bold bg-primary hover:bg-primary/80 text-white shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                      className=" py-4 text-md  bg-primary hover:bg-primary/80 text-white shadow-xl hover:shadow-2xl transition-all duration-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Bắt đầu Bài thi đầy đủ (120 phút)
                     </Button>
@@ -491,6 +479,6 @@ export default function TestDetailPage() {
           </Tabs>
         </motion.div>
       </div>
-    </div >
+    </div>
   );
 }

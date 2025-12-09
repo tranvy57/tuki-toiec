@@ -47,7 +47,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Order } from './order/entities/order.entity';
 import { UserVocabularySessionModule } from './user_vocabulary_session/user_vocabulary_session.module';
 import { ChatModule } from './chat/chat.module';
-
+import { BlacklistedTokensModule } from './blacklisted_tokens/blacklisted_tokens.module';
 
 @Module({
   imports: [
@@ -91,6 +91,7 @@ import { ChatModule } from './chat/chat.module';
     TypeOrmModule.forFeature([Order]),
     UserVocabularySessionModule,
     ChatModule,
+    BlacklistedTokensModule,
   ],
   controllers: [AppController],
   providers: [

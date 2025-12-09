@@ -7,10 +7,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { JwtStrategy } from './strategy/jwt.strategy';
 import { LocalStrategy } from './strategy/local.strategy';
+import { BlacklistedToken } from 'src/blacklisted_tokens/entities/blacklisted_token.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, BlacklistedToken]),
     ConfigModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
