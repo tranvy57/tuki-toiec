@@ -8,7 +8,7 @@ export interface NavigationItem {
 }
 // constants/navigation.ts
 export const TOEIC_NAVIGATION = [
-  { name: "Trang chủ", href: "" },
+  { name: "Trang chủ", href: "/" },
   {
     name: "Học tập",
     sub: [
