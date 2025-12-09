@@ -59,4 +59,10 @@ export class AuthController {
     const token = authHeader.split(' ')[1];
     return this.authService.introspect(token);
   }
+
+  @Post('logout')
+  @Public()
+  async logout(@Body('token') token: string) {
+    return this.authService.logout(token);
+  }
 }
