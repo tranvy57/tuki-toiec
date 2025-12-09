@@ -1,5 +1,5 @@
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // API hooks
 import {
@@ -124,45 +124,51 @@ export const useTestLogic = () => {
   const [highlightContent, setHighlightContent] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [attemptId, setAttemptId] = useState<string | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
   const [open, setOpen] = useState(false);
+  const [isLoadingTest, setIsLoadingTest] = useState(true);
   const { setResultTest } = usePracticeTest();
   const { mutateAsync: submitTest, isError, error } = useSubmitTestResult();
 
-  // Start test attempt when component mounts
+  const hasStartedTest = useRef(false);
+
   useEffect(() => {
-    if (
-      !isInitialized &&
-      !attemptId &&
-      !startTestMutation.isPending &&
-      !fullTest
-    ) {
-      setIsInitialized(true);
-      startTestMutation.mutate(
-        {
-          testId: testId,
-        },
-        {
-          onSuccess: (data) => {
-            setFullTest(data);
-            setAttemptId(data.id);
-            // Set timer from test duration if available
-            const startTime = new Date(data.startedAt);
-            const now = new Date();
-            const elapsed = Math.floor(
-              (now.getTime() - startTime.getTime()) / 1000
-            );
-            const remaining = Math.max(0, TEST_DURATION - elapsed);
-            setTimeRemaining(remaining);
-          },
-          onError: (error) => {
-            console.error("Failed to start test:", error);
-            setIsInitialized(false); // Reset on error
-            router.push(`/tests/${testId}`);
-          },
-        }
-      );
+    if (hasStartedTest.current) return;
+    if (attemptId) return;
+    if (fullTest) {
+      setIsLoadingTest(false); 
+      return;
     }
+
+    hasStartedTest.current = true;
+    setIsLoadingTest(true);
+
+    const startTest = async () => {
+      try {
+        const data = await startTestMutation.mutateAsync({
+          testId: testId,
+        });
+
+        setFullTest(data);
+        setAttemptId(data.id);
+
+        const startTime = new Date(data.startedAt);
+        const now = new Date();
+        const elapsed = Math.floor(
+          (now.getTime() - startTime.getTime()) / 1000
+        );
+        const remaining = Math.max(0, TEST_DURATION - elapsed);
+        setTimeRemaining(remaining);
+
+        setIsLoadingTest(false); 
+      } catch (error) {
+        console.error("Failed to start test:", error);
+        hasStartedTest.current = false; 
+        setIsLoadingTest(false);
+        router.push(`/tests/${testId}`);
+      }
+    };
+
+    startTest();
   }, []);
 
   // Submit test
@@ -396,9 +402,19 @@ export const useTestLogic = () => {
       const nextPart = partTabs.find(
         (p) => p.partNumber === currentPart.partNumber + 1
       );
-      if (nextPart && nextPart.groups.length > 0 && nextPart.groups[0].questions.length > 0) {
-        const firstQuestionOfNextPart = nextPart.groups[0].questions[0].numberLabel;
-        console.log("Navigating to next part:", nextPart.partNumber, "Question:", firstQuestionOfNextPart);
+      if (
+        nextPart &&
+        nextPart.groups.length > 0 &&
+        nextPart.groups[0].questions.length > 0
+      ) {
+        const firstQuestionOfNextPart =
+          nextPart.groups[0].questions[0].numberLabel;
+        console.log(
+          "Navigating to next part:",
+          nextPart.partNumber,
+          "Question:",
+          firstQuestionOfNextPart
+        );
         handleQuestionChange(firstQuestionOfNextPart);
       }
     }
@@ -426,7 +442,9 @@ export const useTestLogic = () => {
           handleAnswerChange(question.id, answerToSelect.id);
           count++;
 
-          console.log(`Filled question ${question.numberLabel} (${count}/${allQuestions.length})`);
+          console.log(
+            `Filled question ${question.numberLabel} (${count}/${allQuestions.length})`
+          );
 
           // Small delay to prevent overwhelming the API/browser
           if (delay > 0) {
@@ -455,6 +473,7 @@ export const useTestLogic = () => {
     isTransitioning,
     open,
     startTestMutation,
+    isLoadingTest,
 
     // Data
     partTabs,
@@ -464,7 +483,7 @@ export const useTestLogic = () => {
     isLastPart:
       currentPart && fullTest
         ? currentPart.partNumber ===
-        fullTest.parts[fullTest.parts.length - 1].partNumber
+          fullTest.parts[fullTest.parts.length - 1].partNumber
         : false,
 
     // Handlers

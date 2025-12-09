@@ -25,6 +25,7 @@ export default function TestStartPage() {
     isTransitioning,
     open,
     startTestMutation,
+    isLoadingTest,
 
     // Data
     partTabs,
@@ -61,7 +62,7 @@ export default function TestStartPage() {
     [handleQuestionChange, scrollToTop]
   );
 
-  if (startTestMutation.isPending || !fullTest) {
+  if (isLoadingTest || !fullTest) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -72,7 +73,6 @@ export default function TestStartPage() {
     );
   }
 
-  // Error state
   if (startTestMutation.isError) {
     return (
       <div className="min-h-screen flex items-center justify-center">
