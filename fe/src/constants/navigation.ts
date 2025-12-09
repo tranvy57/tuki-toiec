@@ -12,7 +12,7 @@ export const TOEIC_NAVIGATION = [
   {
     name: "Học tập",
     sub: [
-      { name: "Khóa học", href: "/courses" },
+      // { name: "Khóa học", href: "/courses" },
       { name: "Lộ trình học", href: "/study-plan" },
       { name: "Từ vựng", href: "/vocabulary" },
     ],

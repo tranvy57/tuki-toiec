@@ -1,15 +1,22 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogOut, Clock } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { TOEIC_NAVIGATION } from "@/constants/navigation";
+import { logout } from "@/api";
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Change this based on auth state
+
+  // new: avatar dropdown state + ref
+  const [isAvatarOpen, setIsAvatarOpen] = useState(false);
+  const avatarRef = useRef<HTMLDivElement | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -23,6 +30,31 @@ export default function Header() {
     const user = localStorage.getItem("user");
     setIsLoggedIn(!!user);
   }, []);
+
+  // close avatar dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (avatarRef.current && !avatarRef.current.contains(e.target as Node)) {
+        setIsAvatarOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleLogout = async () => {
+    localStorage.removeItem("auth-storage");
+    localStorage.removeItem("accessToken");
+    await logout({ token: localStorage.getItem("accessToken") || "" });
+    setIsLoggedIn(false);
+    setIsAvatarOpen(false);
+    router.push("/login");
+  };
+
+  const goToHistory = () => {
+    setIsAvatarOpen(false);
+    router.push("/history");
+  };
 
   return (
     <motion.header
@@ -96,33 +128,72 @@ export default function Header() {
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
             {isLoggedIn ? (
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-orange-500 flex items-center justify-center cursor-pointer">
-                <span className="text-white font-semibold">U</span>
+              // avatar with dropdown
+              <div className="relative" ref={avatarRef}>
+                <div
+                  onClick={() => setIsAvatarOpen((s) => !s)}
+                  className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-orange-500 flex items-center justify-center cursor-pointer select-none"
+                  role="button"
+                  aria-haspopup="menu"
+                  aria-expanded={isAvatarOpen}
+                >
+                  <span className="text-white font-semibold">U</span>
+                </div>
+
+                <AnimatePresence>
+                  {isAvatarOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border border-gray-100 z-50"
+                    >
+                      <div className="py-2">
+                        <button
+                          onClick={goToHistory}
+                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          <Clock className="w-4 h-4" />
+                          <span>Lịch sử làm bài</span>
+                        </button>
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          <span>Đăng xuất</span>
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
-                >
-                  Đăng nhập
-                </Link>
-                <Link href="/register">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="relative px-6 py-2.5 bg-gradient-to-r from-[var(--color-7)] to-[var(--primary)] text-white rounded-lg font-medium overflow-hidden group"
-                  >
-                    <span className="relative z-10">Đăng ký</span>
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-[var(--color-7)] to-[var(--primary)] opacity-0 group-hover:opacity-100 transition-opacity"
-                      initial={{ x: "-100%" }}
-                      whileHover={{ x: 0 }}
-                      transition={{ duration: 0.3 }}
-                    />
-                  </motion.button>
-                </Link>
-              </>
+              // <>
+              //   <Link
+              //     href="/login"
+              //     className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
+              //   >
+              //     Đăng nhập
+              //   </Link>
+              //   <Link href="/register">
+              //     <motion.button
+              //       whileHover={{ scale: 1.05 }}
+              //       whileTap={{ scale: 0.95 }}
+              //       className="relative px-6 py-2.5 bg-gradient-to-r from-[var(--color-7)] to-[var(--primary)] text-white rounded-lg font-medium overflow-hidden group"
+              //     >
+              //       <span className="relative z-10">Đăng ký</span>
+              //       <motion.div
+              //         className="absolute inset-0 bg-gradient-to-r from-[var(--color-7)] to-[var(--primary)] opacity-0 group-hover:opacity-100 transition-opacity"
+              //         initial={{ x: "-100%" }}
+              //         whileHover={{ x: 0 }}
+              //         transition={{ duration: 0.3 }}
+              //       />
+              //     </motion.button>
+              //   </Link>
+              // </>
+              <></>
             )}
           </div>
 
