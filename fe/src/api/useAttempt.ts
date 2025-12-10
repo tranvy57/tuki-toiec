@@ -109,3 +109,15 @@ export const useSubmitTestResult = () => {
     mutationFn: (attemptId: string) => submitTest(attemptId),
   });
 };
+
+async function getAttemptHistory() {
+  const res = await api.get(`/attempts/history`);
+  return res;
+}
+
+export function useGetAttemptHistory() {
+  return useQuery({
+    queryKey: ["attempt-history"],
+    queryFn: () => getAttemptHistory(),
+  });
+}
