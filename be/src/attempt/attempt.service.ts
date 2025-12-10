@@ -31,7 +31,10 @@ import { AttemptDto } from './dto/attempt.dto';
 import { AttemptResultDto } from './dto/submit-attempt-response.dto';
 import { StudyTasksService } from 'src/study_tasks/study_tasks.service';
 import { Course } from 'src/courses/entities/course.entity';
-import { UserCourse, UserCourseStatus } from 'src/user_courses/entities/user_course.entity';
+import {
+  UserCourse,
+  UserCourseStatus,
+} from 'src/user_courses/entities/user_course.entity';
 import { CourseBand } from 'src/courses/consts';
 
 @Injectable()
@@ -715,7 +718,7 @@ export class AttemptService {
 
   async historyAttempt(user: User) {
     const attempts = await this.attemptRepo.find({
-      // where: { user: { id: user.id } },
+      where: { user: { id: user.id } },
       relations: {
         user: true,
         test: true,

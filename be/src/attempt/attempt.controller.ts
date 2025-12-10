@@ -66,6 +66,8 @@ export class AttemptController {
     @CurrentUser() user: User,
     @Param('attemptId') attemptId: string,
   ) {
+    console.log('user', user);
+
     return this.attemptService.historyAttempt(user);
   }
   @Get()
