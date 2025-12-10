@@ -264,12 +264,12 @@ export default function TestDetailPage() {
         >
           <Tabs defaultValue="practice" className="w-full ">
             <TabsList className="grid w-full grid-cols-2 mb-6 bg-white/80 backdrop-blur-sm p-1 rounded-xl shadow-md h">
-              <TabsTrigger
+              {/* <TabsTrigger
                 value="practice"
                 className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:bg-primary data-[state=active]:text-white "
               >
                 Chế độ Luyện tập
-              </TabsTrigger>
+              </TabsTrigger> */}
               <TabsTrigger
                 value="fulltest"
                 className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:bg-primary data-[state=active]:text-white"
