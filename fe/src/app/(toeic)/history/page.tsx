@@ -2,10 +2,24 @@
 
 import React from "react";
 import Link from "next/link";
-import { useGetAttemptHistory } from "@/api";
+import { useGetAttemptHistory, useStartTestPractice } from "@/api";
+import { usePracticeTest } from "@/hooks";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { log } from "util";
 
 export default function HistoryPage() {
   const { data, isLoading, isError } = useGetAttemptHistory();
+  const startTestMutation = useStartTestPractice();
+
+  const router = useRouter();
+  const {
+    setFullTest,
+    setAttemptId,
+    setCurrentPart,
+    setCurrentGroup,
+    setAnswer,
+  } = usePracticeTest();
 
   // normalize possible shapes: data.data, data.items, or direct array
   const attempts = React.useMemo(() => {
@@ -13,7 +27,61 @@ export default function HistoryPage() {
     return data.data?.data ?? [];
   }, [data]);
 
-  console.log("attempts:", attempts);
+  async function handleContinue(attempt) {
+    // 1. Attempt ID
+    setAttemptId(attempt.id);
+
+    console.log("attempt", attempt);
+
+    // 2. Load fullTest from API (normalize possible shapes)
+    // const raw = await startTestMutation.mutateAsync({
+    //   testId: attempt.test?.id,
+    // });
+    // Normalize response that may either be the payload itself or an object with a `data` key.
+    // Use `in` type guard to avoid TS error when `data` isn't a property.
+    // const fullTestPayload = raw && ("data" in raw ? (raw as any).data : raw);
+    // setFullTest(attempt);
+
+    // 3. Restore answers
+    // support nested shape: parts -> groups -> questions -> userAnswer.answer.answerKey
+    // if (Array.isArray(attempt?.parts) && attempt?.parts?.length > 0) {
+    //   console.log("runthis", attempt?.parts);
+
+    //   attempt?.parts?.forEach((part: any) => {
+    //     console.log("part", part);
+
+    //     // part.groups?.forEach((group: any) => {
+    //     //   // group.questions?.forEach((q: any) => {
+    //     //   //   const answerKey =
+    //     //   //     q?.userAnswer?.answer?.answerKey ??
+    //     //   //     q?.userAnswer?.answerKey ??
+    //     //   //     q?.userAnswer?.answer?.content ??
+    //     //   //     null;
+    //     //   //   if (answerKey) {
+    //     //   //     setAnswer(q.id, String(answerKey));
+    //     //   //   }
+    //     //   // });
+    //     // });
+    //   });
+    // } else if (attempt.selectedAnswers) {
+    //   // fallback: old mapping shape { questionId: "A" }
+    //   // Object.entries(attempt.selectedAnswers).forEach(([qId, key]) => {
+    //   //   const answerKey = typeof key === "string" ? key : String(key);
+    //   //   setAnswer(qId, answerKey);
+    //   // });
+    // }
+
+    // // 4. Restore Test State (nếu có)
+    // if (attempt.currentPartNumber) {
+    //   setCurrentPart(attempt.currentPartNumber);
+    // }
+    // if (attempt.currentGroupId) {
+    //   setCurrentGroup(attempt.currentGroupId);
+    // }
+
+    // 5. Redirect vào lại trang đang làm
+    router.push(`/tests/${attempt?.test?.id}/start`);
+  }
 
   if (isLoading) {
     return (
@@ -67,7 +135,7 @@ export default function HistoryPage() {
                     Đúng
                   </th>
                   <th className="px-4 py-3 text-center text-sm font-medium text-gray-600">
-                    Thời gian
+                    Trạng thái
                   </th>
                   <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">
                     Hành động
@@ -113,22 +181,27 @@ export default function HistoryPage() {
                         {mode}
                       </td>
                       <td className="px-4 py-3 text-sm text-center text-gray-800 font-medium">
-                        {score}
+                        {a.listeningScore + a.readingScore}
                       </td>
                       <td className="px-4 py-3 text-sm text-center text-gray-700">
                         {correct}/{total}
                       </td>
                       <td className="px-4 py-3 text-sm text-center text-gray-700">
-                        {duration}
+                        {a.status}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Link
-                            href={`/history/${id}`}
-                            className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded"
-                          >
-                            Xem
-                          </Link>
+                          {a.status === "in_progress" && (
+                            <Button
+                              onClick={() => {
+                                console.log("aaa", a);
+                                handleContinue(a);
+                              }}
+                              className="px-3 py-1.5 rounded"
+                            >
+                              Tiếp tục
+                            </Button>
+                          )}
                           <Link
                             href={`/tests/${
                               a.testId ?? a.test?.id ?? ""
