@@ -112,9 +112,12 @@ export const useTestLogic = () => {
     fullTest,
     currentPart,
     selectedAnswers,
+    attemptId,
     setFullTest,
     setCurrentPart,
     setAnswer,
+    setAttemptId,
+    partCache,
     nextPart,
   } = usePracticeTest();
 
@@ -123,19 +126,55 @@ export const useTestLogic = () => {
   const [timeRemaining, setTimeRemaining] = useState(TEST_DURATION);
   const [highlightContent, setHighlightContent] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [attemptId, setAttemptId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [isLoadingTest, setIsLoadingTest] = useState(true);
+  const [isHydrated, setIsHydrated] = useState(false);
   const { setResultTest } = usePracticeTest();
   const { mutateAsync: submitTest, isError, error } = useSubmitTestResult();
 
   const hasStartedTest = useRef(false);
 
+  // Wait for Zustand persist hydration to avoid starting a new attempt too early
   useEffect(() => {
+    const hasHydratedFn = usePracticeTest.persist?.hasHydrated;
+    const onFinishHydration = usePracticeTest.persist?.onFinishHydration;
+
+    if (hasHydratedFn && hasHydratedFn()) {
+      setIsHydrated(true);
+    }
+
+    const unsub = onFinishHydration?.(() => setIsHydrated(true));
+    return () => {
+      unsub?.();
+    };
+  }, []);
+
+  // If we already have attempt/test data from storage, stop loading indicator
+  useEffect(() => {
+    if (!isHydrated) return;
+    if (fullTest || attemptId) {
+      setIsLoadingTest(false);
+    }
+  }, [isHydrated, fullTest, attemptId]);
+
+  // Recalculate remaining time after refresh using persisted startedAt
+  useEffect(() => {
+    if (!isHydrated) return;
+    if (!fullTest?.startedAt) return;
+
+    const startTimeMs = new Date(fullTest.startedAt).getTime();
+    const nowMs = Date.now();
+    const elapsed = Math.floor((nowMs - startTimeMs) / 1000);
+    const remaining = Math.max(0, TEST_DURATION - elapsed);
+    setTimeRemaining(remaining);
+  }, [isHydrated, fullTest?.startedAt]);
+
+  useEffect(() => {
+    if (!isHydrated) return; // Wait until persisted state restored
     if (hasStartedTest.current) return;
     if (attemptId) return;
     if (fullTest) {
-      setIsLoadingTest(false); 
+      setIsLoadingTest(false);
       return;
     }
 
@@ -159,17 +198,24 @@ export const useTestLogic = () => {
         const remaining = Math.max(0, TEST_DURATION - elapsed);
         setTimeRemaining(remaining);
 
-        setIsLoadingTest(false); 
+        setIsLoadingTest(false);
       } catch (error) {
         console.error("Failed to start test:", error);
-        hasStartedTest.current = false; 
+        hasStartedTest.current = false;
         setIsLoadingTest(false);
         router.push(`/tests/${testId}`);
       }
     };
 
     startTest();
-  }, []);
+  }, [isHydrated, attemptId, fullTest, startTestMutation, testId, setFullTest]);
+
+  // Rebuild caches when hydrated from persisted fullTest
+  useEffect(() => {
+    if (fullTest && partCache.size === 0) {
+      setFullTest(fullTest);
+    }
+  }, [fullTest, partCache, setFullTest]);
 
   // Submit test
   const handleSubmit = useCallback(

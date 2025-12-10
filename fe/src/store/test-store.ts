@@ -14,6 +14,7 @@ interface PracticeTestState {
   fullTest: PracticeTestResponse | null;
   resultTest: ResultTestResponse | null;
   test: Test | null;
+  attemptId: string | null;
   currentPart: Part | null;
   currentGroup: Group | null;
   currentGroupQuestion: Question[] | null;
@@ -27,16 +28,17 @@ interface PracticeTestState {
   setTest: (test: Test) => void;
   setFullTest: (fullTest: PracticeTestResponse) => void;
   setResultTest: (resultTest: ResultTestResponse) => void;
+  setAttemptId: (attemptId: string | null) => void;
   setCurrentPart: (partNumber: number) => void;
   setCurrentGroup: (groupId: string) => void;
   setAnswer: (questionId: string, answerKey: string) => void;
   findGroupByQuestionId: (questionId: string) => Group | null;
-  
+
   // Navigation
   nextPart: () => void;
   nextGroup: () => void;
   previousGroup: () => void;
-  
+
   // Utilities
   reset: () => void;
   clearPersistedState: () => void;
@@ -53,6 +55,7 @@ export const usePracticeTest = create<PracticeTestState>()(
       fullTest: null,
       resultTest: null,
       test: null,
+      attemptId: null,
       currentPart: null,
       currentGroup: null,
       currentGroupQuestion: null,
@@ -101,6 +104,8 @@ export const usePracticeTest = create<PracticeTestState>()(
       setTest: (test) => set({ test }),
 
       setResultTest: (resultTest) => set({ resultTest }),
+
+      setAttemptId: (attemptId) => set({ attemptId }),
 
       setCurrentPart: (partNumber) => {
         const { partCache } = get();
@@ -235,6 +240,7 @@ export const usePracticeTest = create<PracticeTestState>()(
           fullTest: null,
           resultTest: null,
           test: null,
+          attemptId: null,
           currentPart: null,
           currentGroup: null,
           currentGroupQuestion: null,
@@ -252,8 +258,8 @@ export const usePracticeTest = create<PracticeTestState>()(
       name: STORAGE_KEY,
       partialize: (state) => ({
         selectedAnswers: state.selectedAnswers,
-        currentPart: state.currentPart,
-        currentGroup: state.currentGroup,
+        fullTest: state.fullTest,
+        attemptId: state.attemptId,
       }),
     }
   )
