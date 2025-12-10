@@ -51,7 +51,7 @@ export const OptimizedQuestionScreen: React.FC = () => {
 
           translateX.value = withTiming(0, { duration: 250 });
           opacity.value = withTiming(1, { duration: 250 }, () => {
-            runOnJS(setIsLoading)(false); // tắt loading khi xong
+            runOnJS(setIsLoading)(false); 
           });
         }
       });

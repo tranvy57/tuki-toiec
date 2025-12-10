@@ -24,8 +24,6 @@ export const StudyPlanModal: React.FC<StudyPlanModalProps> = ({ visible, onClose
   // Use myPlan if available, otherwise fallback to latestCourse
   const apiStudyPlan = latestCourse;
 
-  console.log(studyPlan)
-
   const getContentTypeIcon = (type: string) => {
     switch (type) {
       case 'video':

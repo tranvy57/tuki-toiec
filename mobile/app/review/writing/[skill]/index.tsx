@@ -28,7 +28,6 @@ const WritingPracticeScreen = () => {
     { key: 'response', title: 'Your Response' },
   ]);
 
-  console.log(skill, lessonId)
 
   // Get lesson data from Zustand store
   const {
@@ -45,8 +44,6 @@ const WritingPracticeScreen = () => {
     !currentLesson // only load if no current lesson
   );
 
-  console.log('Current lesson from store:', currentLesson);
-  console.log('MenuData (fallback):', menuData);
 
   // If no current lesson but we have lessonId, find it in menuData
   React.useEffect(() => {

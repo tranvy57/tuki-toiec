@@ -1,6 +1,7 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { api } from '~/libs/axios';
 import { ResultTestResponse, ResultTestResponseSchema } from '~/types/response/TestResponse';
+import { useCurrentTest } from '~/hooks/useCurrentTest';
 
 // Interfaces for result data
 export interface QuestionResult {
@@ -10,6 +11,15 @@ export interface QuestionResult {
   selectedAnswer: string | null;
   correctAnswer: string;
   content: string;
+  explanation: string | null;
+  answers: { id: string; answerKey: string; content: string; isCorrect: boolean }[];
+  // Group context
+  groupContext?: {
+    paragraphEn: string | null;
+    paragraphVn: string | null;
+    imageUrl: string | null;
+    audioUrl: string | null;
+  };
 }
 
 export interface PartResult {
@@ -41,97 +51,52 @@ export interface TestResult {
   parts: PartResult[];
 }
 
-// API Response interface
-interface AttemptResultResponse {
-  attempt: {
-    id: string;
-    startedAt: string;
-    finishAt: string | null;
-    totalScore: number | null;
-    score: number | null;
-    status: 'in_progress' | 'submitted';
-    mode: 'practice' | 'test';
-    test: {
-      id: string;
-      title: string;
-      parts: Array<{
-        id: string;
-        partNumber: number;
-        groups: Array<{
-          id: string;
-          questions: Array<{
-            id: string;
-            numberLabel: number;
-            content: string;
-            answers: Array<{
-              id: string;
-              content: string;
-              answerKey: string;
-              isCorrect: boolean;
-            }>;
-          }>;
-        }>;
-      }>;
-    };
-    attemptAnswers: Array<{
-      question: {
-        id: string;
-        numberLabel: number;
-        content: string;
-      };
-      answer: {
-        id: string;
-        answerKey: string;
-        isCorrect: boolean;
-      } | null;
-      isCorrect: boolean | null;
-    }>;
-  };
-}
+// ResultTestResponse has all needed data - no separate interface needed
 
-async function fetchAttemptResult(attemptId: string): Promise<TestResult> {
-  const response = await api.get<{ data: AttemptResultResponse }>(`/attempts/${attemptId}/result`);
-  const data = response.data.data;
-
-  const attempt = data.attempt;
-  const test = attempt.test;
+// Convert ResultTestResponse (from submitTest) to TestResult for display
+export function convertResultToTestResult(result: ResultTestResponse): TestResult {
+  const parts = result.parts || [];
 
   // Calculate duration
-  const startTime = new Date(attempt.startedAt);
-  const endTime = attempt.finishAt ? new Date(attempt.finishAt) : new Date();
+  const startTime = new Date(result.startedAt);
+  const endTime = result.finishAt ? new Date(result.finishAt) : new Date();
   const durationMs = endTime.getTime() - startTime.getTime();
   const hours = Math.floor(durationMs / (1000 * 60 * 60));
   const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
   const duration = `${hours}h ${minutes}m`;
 
-  // Group questions by part
-  const partQuestions: { [partNumber: number]: QuestionResult[] } = {};
-  const answerMap = new Map(attempt.attemptAnswers.map((aa) => [aa.question.id, aa]));
+  // Build part results from the API response
+  const partResults: PartResult[] = parts.map((part: any) => {
+    const questions: QuestionResult[] = [];
 
-  // Initialize parts
-  test.parts.forEach((part) => {
-    partQuestions[part.partNumber] = [];
+    part.groups?.forEach((group: any) => {
+      group.questions?.forEach((question: any) => {
+        // Backend returns isCorrect + userAnswerId directly on question
+        const isCorrect = question.isCorrect ?? null;
+        const correctAnswer = question.answers?.find((a: any) => a.isCorrect)?.answerKey || 'A';
+        const selectedAnswer = question.userAnswerId
+          ? (question.answers?.find((a: any) => a.id === question.userAnswerId)?.answerKey ?? null)
+          : null;
 
-    part.groups.forEach((group) => {
-      group.questions.forEach((question) => {
-        const attemptAnswer = answerMap.get(question.id);
-        const correctAnswer = question.answers.find((a) => a.isCorrect)?.answerKey || 'A';
-
-        partQuestions[part.partNumber].push({
+        questions.push({
           id: question.id,
           numberLabel: question.numberLabel,
           content: question.content,
-          isCorrect: attemptAnswer?.isCorrect ?? null,
-          selectedAnswer: attemptAnswer?.answer?.answerKey ?? null,
+          isCorrect: isCorrect,
+          selectedAnswer,
           correctAnswer,
+          explanation: question.explanation || null,
+          answers: question.answers || [],
+          groupContext: {
+            paragraphEn: group.paragraphEn || null,
+            paragraphVn: group.paragraphVn || null,
+            imageUrl: group.imageUrl || null,
+            audioUrl: group.audioUrl || null,
+          },
         });
       });
     });
-  });
 
-  // Calculate part results
-  const parts: PartResult[] = test.parts.map((part) => {
-    const questions = partQuestions[part.partNumber];
     const correctAnswers = questions.filter((q) => q.isCorrect === true).length;
     const incorrectAnswers = questions.filter((q) => q.isCorrect === false).length;
     const skippedQuestions = questions.filter((q) => q.isCorrect === null).length;
@@ -148,34 +113,39 @@ async function fetchAttemptResult(attemptId: string): Promise<TestResult> {
     };
   });
 
-  // Calculate totals
-  const totalQuestions = parts.reduce((sum, part) => sum + part.totalQuestions, 0);
-  const totalCorrect = parts.reduce((sum, part) => sum + part.correctAnswers, 0);
-  const totalIncorrect = parts.reduce((sum, part) => sum + part.incorrectAnswers, 0);
-  const totalSkipped = parts.reduce((sum, part) => sum + part.skippedQuestions, 0);
+  // Calculate totals from parts
+  const totalQuestions = partResults.reduce((sum, part) => sum + part.totalQuestions, 0);
+  const totalCorrect = partResults.reduce((sum, part) => sum + part.correctAnswers, 0);
+  const totalIncorrect = partResults.reduce((sum, part) => sum + part.incorrectAnswers, 0);
+  const totalSkipped = partResults.reduce((sum, part) => sum + part.skippedQuestions, 0);
   const accuracy = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
 
-  // Calculate listening and reading scores (Parts 1-4 = Listening, Parts 5-7 = Reading)
-  const listeningParts = parts.filter((p) => p.partNumber <= 4);
-  const readingParts = parts.filter((p) => p.partNumber >= 5);
+  // Calculate listening and reading scores from parts
+  const listeningParts = partResults.filter((p) => p.partNumber <= 4);
+  const readingParts = partResults.filter((p) => p.partNumber >= 5);
 
   const listeningCorrect = listeningParts.reduce((sum, part) => sum + part.correctAnswers, 0);
   const listeningTotal = listeningParts.reduce((sum, part) => sum + part.totalQuestions, 0);
   const readingCorrect = readingParts.reduce((sum, part) => sum + part.correctAnswers, 0);
   const readingTotal = readingParts.reduce((sum, part) => sum + part.totalQuestions, 0);
 
-  // TOEIC scoring approximation (simplified)
   const listeningScore =
     listeningTotal > 0 ? Math.round((listeningCorrect / listeningTotal) * 495) : null;
   const readingScore = readingTotal > 0 ? Math.round((readingCorrect / readingTotal) * 495) : null;
 
+  // Calculate total score from listening and reading scores (not from backend which might be 0)
+  let totalScore: number | null = null;
+  if (listeningScore !== null && readingScore !== null) {
+    totalScore = listeningScore + readingScore;
+  }
+
   return {
-    attemptId: attempt.id,
-    testTitle: test.title,
-    mode: attempt.mode,
-    startedAt: attempt.startedAt,
-    finishedAt: attempt.finishAt,
-    totalScore: attempt.totalScore,
+    attemptId: result.id,
+    testTitle: `Test Attempt`,
+    mode: result.mode,
+    startedAt: result.startedAt,
+    finishedAt: result.finishAt,
+    totalScore: totalScore,
     listeningScore: listeningScore,
     readingScore: readingScore,
     totalQuestions,
@@ -184,33 +154,59 @@ async function fetchAttemptResult(attemptId: string): Promise<TestResult> {
     totalSkipped,
     accuracy,
     duration,
-    status: attempt.status,
-    parts,
+    status: result.status,
+    parts: partResults,
   };
-}
-
-export function useTestResult(attemptId: string) {
-  return useQuery({
-    queryKey: ['test-result', attemptId],
-    queryFn: () => fetchAttemptResult(attemptId),
-    enabled: !!attemptId,
-  });
 }
 
 export const submitTest = async (attemptId: string): Promise<ResultTestResponse> => {
   try {
     const response = await api.patch(`/attempts/${attemptId}/submit`);
     const parsed = ResultTestResponseSchema.parse(response.data.data);
+    console.log(parsed);
     return parsed;
   } catch (error) {
-    console.error('Error submitting test:', error);
+    console.error('[submitTest] Error submitting test:', error);
     throw error;
   }
-}
+};
 
+export const useSubmitTestResult = () => {
+  const { setResultTest } = useCurrentTest();
 
-export const useSubmitTestResult =  () => {
   return useMutation({
-    mutationFn: (attemptId: string) => submitTest(attemptId),
+    mutationFn: async (attemptId: string) => {
+      const result = await submitTest(attemptId);
+      // Save to store to avoid refetching
+      setResultTest(result);
+      // Convert to TestResult format for display
+      const converted = convertResultToTestResult(result);
+      return converted;
+    },
+    onError: (error) => {
+      console.error('[useSubmitTestResult] Mutation failed:', error);
+    },
   });
+};
+
+// Hook to get test result - lấy từ store hoặc return null nếu chưa submit
+export function useTestResult(attemptId: string) {
+  // Get result from store
+  const { resultTest } = useCurrentTest();
+
+  if (!resultTest) {
+    return {
+      data: null,
+      isLoading: false,
+      error: null,
+    };
+  }
+
+  // Convert and return cached result
+  const testResult = convertResultToTestResult(resultTest);
+  return {
+    data: testResult,
+    isLoading: false,
+    error: null,
+  };
 }

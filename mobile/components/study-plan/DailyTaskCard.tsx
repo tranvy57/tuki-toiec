@@ -26,7 +26,6 @@ export const DailyTaskCard: React.FC<DailyTaskCardProps> = ({
 }) => {
   const { setCurrentTask } = useCurrentTask();
 
-  console.log("XXXXX", task)
   const getModeInfo = (mode: string) => {
     switch (mode) {
       case 'learn':

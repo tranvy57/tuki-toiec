@@ -20,7 +20,6 @@ async function startTestPractice(
 
 async function addAttemptAnswer(attemptAnswer: CreateAttemptAnswerReq) {
   const res = await api.patch(`/attempts/${attemptAnswer.attemptId}/answers`, attemptAnswer);
-
   return res;
 }
 

@@ -1,6 +1,13 @@
 // stores/usePracticeTestStore.ts
 import { create } from 'zustand';
-import { Group, Part, PracticeTestResponse, Question, ResultTestResponse, Test } from '~/types/response/TestResponse';
+import {
+  Group,
+  Part,
+  PracticeTestResponse,
+  Question,
+  ResultTestResponse,
+  Test,
+} from '~/types/response/TestResponse';
 
 interface PracticeTestState {
   fullTest: PracticeTestResponse | null;
@@ -10,7 +17,7 @@ interface PracticeTestState {
   currentGroup: Group | null;
   currentGroupQuestion: Question[] | null;
   selectedAnswers: Record<string, string>;
-  
+
   // Cache for better performance
   partCache: Map<number, Part>;
   groupCache: Map<string, Group>;
@@ -18,13 +25,14 @@ interface PracticeTestState {
   // actions
   setTest: (test: Test) => void;
   setFullTest: (fullTest: PracticeTestResponse) => void;
-  setResultTest: (resultTest: ResultTestResponse) => void;  
+  setResultTest: (resultTest: ResultTestResponse) => void;
   setCurrentPart: (partNumber: number) => void;
   setCurrentGroup: (groupId: string) => void;
   nextPart: () => void;
   nextGroup: () => void;
   beforeGroup: () => void;
   setAnswer: (questionId: string, answerKey: string) => void;
+  clearAnswers: () => void;
   reset: () => void;
 }
 
@@ -38,7 +46,7 @@ export const useCurrentTest = create<PracticeTestState>((set, get) => ({
   selectedAnswers: {},
   partCache: new Map(),
   groupCache: new Map(),
-  
+
   setAnswer: (questionId, answerKey) =>
     set((state) => ({
       selectedAnswers: {
@@ -46,15 +54,15 @@ export const useCurrentTest = create<PracticeTestState>((set, get) => ({
         [questionId]: answerKey,
       },
     })),
-    
+
   setFullTest: (fullTest) => {
     // Build cache when setting full test
     const partCache = new Map<number, Part>();
     const groupCache = new Map<string, Group>();
-    
-    fullTest.parts.forEach(part => {
+
+    fullTest.parts.forEach((part) => {
       partCache.set(part.partNumber, part);
-      part.groups.forEach(group => {
+      part.groups.forEach((group) => {
         groupCache.set(group.id, group);
       });
     });
@@ -66,6 +74,7 @@ export const useCurrentTest = create<PracticeTestState>((set, get) => ({
       currentPart: fullTest.parts[0] || null,
       currentGroup: fullTest.parts[0]?.groups[0] || null,
       currentGroupQuestion: fullTest.parts[0]?.groups[0]?.questions || null,
+      selectedAnswers: {}, // Reset answers when starting new test
     });
   },
   setTest: (test) =>
@@ -87,8 +96,8 @@ export const useCurrentTest = create<PracticeTestState>((set, get) => ({
     if (!currentPart) return;
 
     const nextPart = partCache.get(currentPart.partNumber + 1) || null;
-    set({ 
-      currentPart: nextPart, 
+    set({
+      currentPart: nextPart,
       currentGroup: nextPart?.groups[0] || null,
       currentGroupQuestion: nextPart?.groups[0]?.questions || null,
     });
@@ -99,7 +108,7 @@ export const useCurrentTest = create<PracticeTestState>((set, get) => ({
     if (!currentPart || !currentGroup) return;
 
     // Find next group in current part (using cached array index)
-    const currentGroupIndex = currentPart.groups.findIndex(g => g.id === currentGroup.id);
+    const currentGroupIndex = currentPart.groups.findIndex((g) => g.id === currentGroup.id);
     const nextGroup = currentPart.groups[currentGroupIndex + 1];
 
     if (nextGroup) {
@@ -133,7 +142,7 @@ export const useCurrentTest = create<PracticeTestState>((set, get) => ({
     if (!currentPart || !currentGroup) return;
 
     // Find previous group in current part (using cached array index)
-    const currentGroupIndex = currentPart.groups.findIndex(g => g.id === currentGroup.id);
+    const currentGroupIndex = currentPart.groups.findIndex((g) => g.id === currentGroup.id);
     const prevGroup = currentPart.groups[currentGroupIndex - 1];
 
     if (prevGroup) {
@@ -166,5 +175,10 @@ export const useCurrentTest = create<PracticeTestState>((set, get) => ({
       selectedAnswers: {},
       partCache: new Map(),
       groupCache: new Map(),
+    }),
+
+  clearAnswers: () =>
+    set({
+      selectedAnswers: {},
     }),
 }));

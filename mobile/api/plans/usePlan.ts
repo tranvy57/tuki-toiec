@@ -82,7 +82,6 @@ async function fetchMyPlan(): Promise<StudyPlan | null> {
 async function fetchLatestCourse(): Promise<StudyPlan> {
   const res = await api.get('/courses/latest');
   if (!res.data) throw new Error('Failed to fetch latest course');
-  console.log("xxxxx", res.data.data.phases)
   return res.data.data;
 }
 

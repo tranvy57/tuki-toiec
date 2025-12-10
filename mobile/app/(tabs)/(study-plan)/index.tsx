@@ -84,8 +84,6 @@ export default function StudyPlanScreen() {
         );
     }
 
-    console.log("Study Plan Phases:", studyPlan?.phases);
-
     // Transform plan data to match existing interface
     const transformedStudyPlan: StudyPlanType = {
         plan_id: studyPlan?.id || '',

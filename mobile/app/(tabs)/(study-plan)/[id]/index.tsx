@@ -346,33 +346,33 @@ export default function LessonDetail() {
                     sections: explanationSections,
                 };
 
-            case 'vocabulary':
-                // Use real vocabulary data from planContent.vocabularies
-                const vocabularies = planContent.vocabularies || [];
-                const words = vocabularies.map((vocab: any) => ({
-                    id: vocab.id,
-                    word: vocab.word,
-                    pronunciation: vocab.pronunciation,
-                    definition: vocab.meaning,
-                    partOfSpeech: vocab.partOfSpeech,
-                    difficulty: 'medium' as const, // You can map this based on vocab.type or other fields
-                    examples: vocab.exampleEn && vocab.exampleVn ? [
-                        {
-                            sentence: vocab.exampleEn,
-                            translation: vocab.exampleVn,
-                        }
-                    ] : [],
-                    synonyms: [], // Add if available in your data
-                    audioUrl: vocab.audioUrl,
-                }));
+            // case 'vocabulary':
+            //     // Use real vocabulary data from planContent.vocabularies
+            //     const vocabularies = planContent.vocabularies || [];
+            //     const words = vocabularies.map((vocab: any) => ({
+            //         id: vocab.id,
+            //         word: vocab.word,
+            //         pronunciation: vocab.pronunciation,
+            //         definition: vocab.meaning,
+            //         partOfSpeech: vocab.partOfSpeech,
+            //         difficulty: 'medium' as const, // You can map this based on vocab.type or other fields
+            //         examples: vocab.exampleEn && vocab.exampleVn ? [
+            //             {
+            //                 sentence: vocab.exampleEn,
+            //                 translation: vocab.exampleVn,
+            //             }
+            //         ] : [],
+            //         synonyms: [], // Add if available in your data
+            //         audioUrl: vocab.audioUrl,
+            //     }));
 
-                return {
-                    ...baseContent,
-                    category: 'general',
-                    level: 'intermediate' as const,
-                    practiceMode: ['flashcards', 'quiz'],
-                    words: words,
-                };
+            //     return {
+            //         ...baseContent,
+            //         category: 'general',
+            //         level: 'intermediate' as const,
+            //         practiceMode: ['flashcards', 'quiz'],
+            //         words: words,
+            //     };
 
             default:
                 return baseContent;

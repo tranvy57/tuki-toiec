@@ -12,25 +12,20 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AntDesign, Feather } from '@expo/vector-icons';
 import { colors } from '~/constants/Color';
-import { useTestResult, TestResult } from '~/api/attempts/useTestResult';
-import { useCurrentTest } from '~/hooks/useCurrentTest';
-import { mapResult } from '~/types/response/ResultResponse';
-
-// Mock data for demonstration
+import { useTestResult, QuestionResult } from '~/api/attempts/useTestResult';
+import { QuestionDetailModal } from '~/components/test/QuestionDetailModal';
 
 export default function TestResultPage() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const attemptId = params.id as string;
-  const resultTest = useCurrentTest(state => state.resultTest);
-  const result = resultTest ? mapResult(resultTest) : null;
 
-  // Sử dụng fake data thay vì API call
-  const isLoading = false;
-  const error = null;
+  // Fetch result data from API
+  const { data: apiResult, isLoading, error } = useTestResult(attemptId);
+  const result = apiResult || null;
 
-  // const { data: result, isLoading, error } = useTestResult(attemptId);
   const [expandedParts, setExpandedParts] = useState<number[]>([]);
+  const [selectedQuestion, setSelectedQuestion] = useState<QuestionResult | null>(null);
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(50));
 
@@ -38,6 +33,14 @@ export default function TestResultPage() {
     setExpandedParts((prev) =>
       prev.includes(partNumber) ? prev.filter((p) => p !== partNumber) : [...prev, partNumber]
     );
+  };
+
+  const openQuestionDetail = (question: QuestionResult) => {
+    setSelectedQuestion(question);
+  };
+
+  const closeQuestionDetail = () => {
+    setSelectedQuestion(null);
   };
 
   const getPartTitle = (partNumber: number) => {
@@ -121,7 +124,9 @@ export default function TestResultPage() {
             Unable to load results
           </Text>
           <Text className="mt-2 text-center" style={{ color: colors.mutedForeground }}>
-            Please try again later
+            {error instanceof Error
+              ? error.message
+              : 'Failed to fetch test results. Please try again later.'}
           </Text>
           <TouchableOpacity
             onPress={handleGoHome}
@@ -168,19 +173,23 @@ export default function TestResultPage() {
 
           {/* Score Summary */}
           <View className="items-center">
-            <Text className="mb-2 text-3xl font-bold text-white">{result.totalScore || 'N/A'}</Text>
+            <Text className="mb-2 text-3xl font-bold text-white">
+              {result.totalScore !== null ? result.totalScore : 'N/A'}
+            </Text>
             <Text className="mb-4 text-white opacity-90">Total Score</Text>
 
             <View className="flex-row space-x-8">
               <View className="items-center">
                 <Text className="text-xl font-bold text-white">
-                  {result.listeningScore || 'N/A'}
+                  {result.listeningScore !== null ? result.listeningScore : 'N/A'}
                 </Text>
                 <Text className="text-sm text-white opacity-80">Listening</Text>
               </View>
 
               <View className="items-center">
-                <Text className="text-xl font-bold text-white">{result.readingScore || 'N/A'}</Text>
+                <Text className="text-xl font-bold text-white">
+                  {result.readingScore !== null ? result.readingScore : 'N/A'}
+                </Text>
                 <Text className="text-sm text-white opacity-80">Reading</Text>
               </View>
             </View>
@@ -315,7 +324,7 @@ export default function TestResultPage() {
                     <View
                       className="mt-4 pt-4"
                       style={{ borderTopWidth: 1, borderTopColor: colors.border }}>
-                      <View className="mb-2 flex-row items-center justify-between">
+                      <View className="mb-3 flex-row items-center justify-between">
                         <View className="flex-row items-center">
                           <View
                             className="mr-2 h-3 w-3 rounded-full"
@@ -346,6 +355,63 @@ export default function TestResultPage() {
                           </Text>
                         </View>
                       </View>
+
+                      {/* Questions List */}
+                      <View className="mt-2">
+                        {part.questions.map((question) => {
+                          const statusColor =
+                            question.isCorrect === true
+                              ? colors.success
+                              : question.isCorrect === false
+                                ? colors.destructive
+                                : colors.warning;
+
+                          return (
+                            <TouchableOpacity
+                              key={question.id}
+                              onPress={() => openQuestionDetail(question)}
+                              className="mb-2 rounded-lg p-3"
+                              style={{ backgroundColor: colors.muted }}
+                              activeOpacity={0.7}>
+                              <View className="flex-row items-center justify-between">
+                                <View className="flex-1 flex-row items-center">
+                                  <View
+                                    className="mr-3 h-7 w-7 items-center justify-center rounded-full"
+                                    style={{ backgroundColor: statusColor }}>
+                                    <Text className="text-xs font-bold text-white">
+                                      {question.numberLabel}
+                                    </Text>
+                                  </View>
+                                  <Text
+                                    className="flex-1 text-sm font-medium"
+                                    style={{ color: colors.foreground }}>
+                                    Question {question.numberLabel}
+                                  </Text>
+                                  <View
+                                    className="rounded px-2 py-1"
+                                    style={{ backgroundColor: statusColor + '20' }}>
+                                    <Text
+                                      className="text-xs font-semibold"
+                                      style={{ color: statusColor }}>
+                                      {question.isCorrect === true
+                                        ? 'Correct'
+                                        : question.isCorrect === false
+                                          ? 'Wrong'
+                                          : 'Skipped'}
+                                    </Text>
+                                  </View>
+                                </View>
+                                <Feather
+                                  name="eye"
+                                  size={16}
+                                  color={colors.mutedForeground}
+                                  style={{ marginLeft: 8 }}
+                                />
+                              </View>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </View>
                     </View>
                   )}
                 </TouchableOpacity>
@@ -366,20 +432,6 @@ export default function TestResultPage() {
           }}>
           <View className="flex-row space-x-3">
             <TouchableOpacity
-              onPress={handleReviewTest}
-              className="flex-1 rounded-xl py-4"
-              style={{
-                backgroundColor: colors.secondary,
-                borderWidth: 1,
-                borderColor: colors.border,
-              }}
-              activeOpacity={0.8}>
-              <Text className="text-center font-semibold" style={{ color: colors.foreground }}>
-                Review Answers
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
               onPress={handleGoHome}
               className="flex-1 rounded-xl py-4"
               style={{ backgroundColor: colors.primary }}
@@ -388,6 +440,13 @@ export default function TestResultPage() {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Question Detail Modal */}
+        <QuestionDetailModal
+          visible={selectedQuestion !== null}
+          question={selectedQuestion}
+          onClose={closeQuestionDetail}
+        />
       </Animated.View>
     </SafeAreaView>
   );

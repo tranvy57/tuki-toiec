@@ -72,7 +72,6 @@ export const addSampleSpeakingData = () => {
   failedAttempt.attemptDate = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
   addAttempt(failedAttempt);
 
-  console.log('Sample speaking history data added!');
 };
 
 // Helper functions for realistic sample data
@@ -125,5 +124,4 @@ function getRandomFeedback(score: number): string {
 export const clearAllSpeakingData = () => {
   const { clearHistory } = useSpeakingHistory.getState();
   clearHistory();
-  console.log('All speaking history cleared!');
 };

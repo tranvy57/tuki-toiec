@@ -31,7 +31,6 @@ export const useSpeechToText = (options: UseSpeechToTextOptions = {}): UseSpeech
 
   useEffect(() => {
     // Check if speech recognition is available
-    console.log(Voice)
     Voice.isAvailable().then((available) => {
       setIsSupported(Boolean(available));
     });

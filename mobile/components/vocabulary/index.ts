@@ -4,3 +4,7 @@ export { VocabularyDetail } from './VocabularyDetail';
 export { VocabularySearch } from './VocabularySearch';
 export { VocabularyCategories } from './VocabularyCategories';
 export { VocabularyStats } from './VocabularyStats';
+export { StatsOverview } from './StatsOverview';
+export { FlashcardSession } from './FlashcardSession';
+export { QuizSession } from './QuizSession';
+export { ReviewSession } from './ReviewSession';

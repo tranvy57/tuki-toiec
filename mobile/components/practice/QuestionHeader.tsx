@@ -27,19 +27,23 @@ export const QuestionHeader = memo<QuestionHeaderProps>(
     hasNext,
   }) => {
     const fullTest = useCurrentTest((state) => state.fullTest);
-    const { setResultTest } = useCurrentTest();
-    const { mutateAsync: submitTest, isError, error } = useSubmitTestResult();
+    const { mutateAsync: submitTest, isError } = useSubmitTestResult();
 
     const onSubmit = async () => {
-      const result = await submitTest(fullTest?.id || "");
-      if (isError) {
-        console.error("Error submitting test:", error);
-        alert("There was an error submitting your test. Please try again.");
-        return;
-      }
+      const attemptId = fullTest?.id || '';
 
-      setResultTest(result);
-      router.replace('/(tabs)/(tests)/[id]/result');
+      try {
+        await submitTest(attemptId);
+
+        if (isError) {
+          alert('There was an error submitting your test. Please try again.');
+          return;
+        }
+
+        router.replace('/(tabs)/(tests)/[id]/result');
+      } catch (err) {
+        console.error('[QuestionHeader] Exception in onSubmit:', err);
+      }
     };
 
     return (

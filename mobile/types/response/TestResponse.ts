@@ -12,11 +12,9 @@ export const QuestionSchema = z.object({
   id: z.string(),
   numberLabel: z.number(), // số câu
   content: z.string(), // nội dung câu hỏi
-  explanation: z.string().nullable().optional(), 
+  explanation: z.string().nullable().optional(),
   answers: z.array(AnswerSchema), // các đáp án
 });
-
-
 
 export const GroupSchema = z.object({
   id: z.string(),
@@ -25,9 +23,8 @@ export const GroupSchema = z.object({
   paragraphVn: z.string().nullable(),
   imageUrl: z.string().nullable(),
   audioUrl: z.string().nullable(),
-  questions: z.array(QuestionSchema), 
+  questions: z.array(QuestionSchema),
 });
-
 
 export const PartSchema = z.object({
   id: z.string(),
@@ -35,7 +32,6 @@ export const PartSchema = z.object({
   directions: z.string().optional(),
   groups: z.array(GroupSchema),
 });
-
 
 export const TestSchema = z.object({
   id: z.string(),
@@ -58,7 +54,6 @@ export const PracticeTestResponseSchema = z.object({
   status: z.enum(['in_progress', 'submitted']),
 });
 
-
 export const ResultQuestionSchema = z.object({
   id: z.string(),
   numberLabel: z.number(), // số câu
@@ -80,6 +75,9 @@ export const SubmitQuestionSchema = z.object({
   explanation: z.string().nullable().optional(),
   answers: z.array(AnswerSchema), // các đáp án
   userAnswer: UserAnswerSchema.optional().nullable(),
+  // Backend returns isCorrect + userAnswerId directly on question
+  isCorrect: z.boolean().nullable().optional(),
+  userAnswerId: z.string().nullable().optional(),
 });
 export const SubmitGroupSchema = z.object({
   id: z.string(),

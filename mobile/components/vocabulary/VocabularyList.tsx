@@ -26,23 +26,23 @@ export const VocabularyList: React.FC<VocabularyListProps> = ({
         <Text style={styles.headerTitle}>
           {vocabularies.length} vocabulary{vocabularies.length !== 1 ? ' words' : ' word'}
         </Text>
-        {searchQuery && (
+        {/* {searchQuery && (
           <Text style={styles.searchInfo}>
             Results for "{searchQuery}"
           </Text>
-        )}
+        )} */}
       </View>
 
       {/* Vocabulary Cards */}
       <View style={styles.listContainer}>
-        {vocabularies.map((vocabulary, index) => (
+        {/* {vocabularies.map((vocabulary, index) => (
           <VocabularyCard
             key={`vocab-${index}`}
             vocabulary={vocabulary}
             onPress={onVocabularyPress}
             variant="default"
           />
-        ))}
+        ))} */}
       </View>
     </View>
   );
