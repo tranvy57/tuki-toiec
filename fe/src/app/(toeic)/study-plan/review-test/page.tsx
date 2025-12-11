@@ -342,11 +342,11 @@ export default function ReviewTestPage({ onComplete }: ReviewTestPageProps) {
 
   // Expose helper for demo/testing
   useEffect(() => {
-    // SCRIPT 1: 80% Correct Answers (Strong Performance)
+    // SCRIPT 1: 80% Correct Answers (Strong Performance - 3-4 strong skills)
     // @ts-ignore
     window.demoFill80Percent = async (delay = 50) => {
       console.log(
-        "📊 DEMO SCRIPT 1: 80% Performance - Strong student with focus areas"
+        "📊 DEMO SCRIPT 1: 80% Performance - Strong in 3-4 specific skills"
       );
 
       if (questions.length === 0) {
@@ -357,31 +357,46 @@ export default function ReviewTestPage({ onComplete }: ReviewTestPageProps) {
       let count = 0;
       const incorrectIndices = new Set<number>();
 
-      // Strategically select 20% of questions to get wrong
-      // Focus on Part 6 (Text Completion) and Part 7 (Inference) - weak areas
+      // User giỏi 3-4 kỹ năng: Part 1 (Pictures), Part 3 (Conversations), Part 4 (Talks), Part 5 (Grammar)
+      // Yếu: Part 2, Part 6, Part 7
       for (let i = 0; i < questions.length; i++) {
         const q = questions[i];
-        // Make Part 6 & 7 questions harder (some wrong)
-        if ((q.part === 6 || q.part === 7) && Math.random() < 0.3) {
-          incorrectIndices.add(i);
+        
+        // ✅ STRONG SKILLS (get almost all correct)
+        if (q.part === 1) {
+          // Part 1: 100% correct (perfect skill)
+          // Keep all correct
+        } else if (q.part === 3) {
+          // Part 3: 90% correct (very strong)
+          if (Math.random() < 0.1) incorrectIndices.add(i);
+        } else if (q.part === 4) {
+          // Part 4: 85% correct (strong)
+          if (Math.random() < 0.15) incorrectIndices.add(i);
+        } else if (q.part === 5) {
+          // Part 5: 90% correct (very strong)
+          if (Math.random() < 0.1) incorrectIndices.add(i);
         }
-        // Make Part 2 slightly harder
-        else if (q.part === 2 && Math.random() < 0.15) {
-          incorrectIndices.add(i);
+        // ❌ WEAK SKILLS (get many wrong)
+        else if (q.part === 2) {
+          // Part 2: 50% correct (weak - unclear audio)
+          if (Math.random() < 0.5) incorrectIndices.add(i);
+        } else if (q.part === 6) {
+          // Part 6: 60% correct (weak - text completion)
+          if (Math.random() < 0.4) incorrectIndices.add(i);
+        } else if (q.part === 7) {
+          // Part 7: 65% correct (weak - inference questions)
+          if (Math.random() < 0.35) incorrectIndices.add(i);
         }
       }
 
       for (let i = 0; i < questions.length; i++) {
         const q = questions[i];
         if (q.answerIds && q.answerIds.length > 0) {
-          // Determine answer index
           let optionIndex;
           if (incorrectIndices.has(i)) {
-            // Select wrong answer for this question
             optionIndex = (q.correctAnswer + 1) % q.answerIds.length;
-            console.log(`❌ Q${i + 1} (Part ${q.part}): Wrong answer selected`);
+            console.log(`❌ Q${i + 1} (Part ${q.part}): Wrong answer`);
           } else {
-            // Select correct answer
             optionIndex = q.correctAnswer;
             console.log(`✅ Q${i + 1} (Part ${q.part}): Correct`);
           }
@@ -414,19 +429,21 @@ export default function ReviewTestPage({ onComplete }: ReviewTestPageProps) {
       }
 
       console.log("✅ Script 1 completed! Result: ~80% (Advanced level)");
-      console.log(
-        "Weak areas: Part 6 Word Choice, Part 7 Inference, Part 2 Accents"
-      );
+      console.log("💪 Strong skills: Part 1 (100%), Part 3 (90%), Part 4 (85%), Part 5 (90%)");
+      console.log("⚠️ Weak skills: Part 2 (50%), Part 6 (60%), Part 7 (65%)");
       alert(
-        "✅ DEMO SCRIPT 1: Filled with 80% accuracy!\n\nProfil: Advanced student\nWeak areas: Reading inference, Part 2 unclear audio"
+        "✅ DEMO SCRIPT 1: Filled with ~80% accuracy!\n\n" +
+        "Profile: Advanced student\n" +
+        "💪 Strong: Pictures, Conversations, Talks, Grammar\n" +
+        "⚠️ Weak: Q-Response, Text Completion, Reading Inference"
       );
     };
 
-    // SCRIPT 2: 20% Correct Answers (Weak Performance)
+    // SCRIPT 2: 20% Correct Answers (Weak Performance - only 1 strong skill)
     // @ts-ignore
     window.demoFill20Percent = async (delay = 50) => {
       console.log(
-        "📊 DEMO SCRIPT 2: 20% Performance - Beginner student needs foundation"
+        "📊 DEMO SCRIPT 2: 20% Performance - Only strong in Part 1 (Pictures)"
       );
 
       if (questions.length === 0) {
@@ -437,36 +454,53 @@ export default function ReviewTestPage({ onComplete }: ReviewTestPageProps) {
       let count = 0;
       const correctIndices = new Set<number>();
 
-      // Only select 20% of questions to get right
-      // Get Part 1 & 5 mostly correct (simpler content)
+      // Chỉ giỏi 1 kỹ năng: Part 1 (Pictures) - 15% tổng điểm
+      // Tất cả parts khác đều yếu
       for (let i = 0; i < questions.length; i++) {
         const q = questions[i];
-        // Part 1 has highest success rate
-        if (q.part === 1 && Math.random() < 0.8) {
-          correctIndices.add(i);
+        
+        // ✅ ONLY STRONG SKILL: Part 1 (Pictures)
+        if (q.part === 1) {
+          // Part 1: 95% correct (only strong area)
+          if (Math.random() < 0.95) {
+            correctIndices.add(i);
+          }
         }
-        // Part 5 some success
-        else if (q.part === 5 && Math.random() < 0.3) {
-          correctIndices.add(i);
+        // ❌ ALL OTHER PARTS: Very weak
+        else if (q.part === 2) {
+          // Part 2: 5% correct (very weak)
+          if (Math.random() < 0.05) correctIndices.add(i);
+        } else if (q.part === 3) {
+          // Part 3: 10% correct (very weak)
+          if (Math.random() < 0.1) correctIndices.add(i);
+        } else if (q.part === 4) {
+          // Part 4: 8% correct (very weak)
+          if (Math.random() < 0.08) correctIndices.add(i);
+        } else if (q.part === 5) {
+          // Part 5: 15% correct (weak)
+          if (Math.random() < 0.15) correctIndices.add(i);
+        } else if (q.part === 6) {
+          // Part 6: 5% correct (very weak)
+          if (Math.random() < 0.05) correctIndices.add(i);
+        } else if (q.part === 7) {
+          // Part 7: 10% correct (very weak)
+          if (Math.random() < 0.1) correctIndices.add(i);
         }
       }
 
       for (let i = 0; i < questions.length; i++) {
         const q = questions[i];
         if (q.answerIds && q.answerIds.length > 0) {
-          // Determine answer index
           let optionIndex;
           if (correctIndices.has(i)) {
-            // Select correct answer
             optionIndex = q.correctAnswer;
             console.log(`✅ Q${i + 1} (Part ${q.part}): Correct`);
           } else {
-            // Select wrong answer randomly
             optionIndex = Math.floor(Math.random() * q.answerIds.length);
             if (optionIndex === q.correctAnswer) {
               optionIndex = (q.correctAnswer + 1) % q.answerIds.length;
             }
-            console.log(`❌ Q${i + 1} (Part ${q.part}): Wrong (needs study)`);
+            console.log(`❌ Q${i + 1} (Part ${q.part}): Wrong (needs foundation)`);
           }
 
           const answerId = q.answerIds[optionIndex];
@@ -497,11 +531,13 @@ export default function ReviewTestPage({ onComplete }: ReviewTestPageProps) {
       }
 
       console.log("✅ Script 2 completed! Result: ~20% (Beginner level)");
-      console.log(
-        "Critical areas: Grammar, Listening comprehension, Vocabulary"
-      );
+      console.log("💪 Only strong: Part 1 Pictures (95%)");
+      console.log("❌ Critical weakness: All other parts (5-15%)");
       alert(
-        "✅ DEMO SCRIPT 2: Filled with 20% accuracy!\n\nProfil: Beginner student\nNeeds: Foundation grammar, vocabulary, listening basics"
+        "✅ DEMO SCRIPT 2: Filled with ~20% accuracy!\n\n" +
+        "Profile: Beginner student\n" +
+        "💪 Only strong: Part 1 (Pictures) 95%\n" +
+        "❌ Needs foundation: Grammar, Listening, Reading, Vocabulary"
       );
     };
 

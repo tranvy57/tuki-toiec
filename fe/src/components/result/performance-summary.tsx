@@ -31,15 +31,7 @@ export function PerformanceSummary({ data }: { data: ResultTestResponse }) {
       subtitle: "câu hỏi không trả lời",
       color: "text-gray-500",
       bg: "bg-gray-50",
-    },
-    {
-      icon: Flag,
-      label: "Tổng điểm",
-      value: data.totalScore,
-      subtitle: "điểm TOEIC",
-      color: "text-blue-600",
-      bg: "bg-blue-50",
-    },
+    }
   ];
 
   return (
