@@ -164,7 +164,7 @@ export class StudyTasksService {
     });
   }
 
-  async markSkippableStudyTasks(userId: string, threshold = 0.48) {
+  async markSkippableStudyTasks(userId: string, threshold = 0.52) {
     const studyTaskRepo = this.manager.getRepository(StudyTask);
     const userProgressRepo = this.manager.getRepository(UserProgress);
     const lessonSkillRepo = this.manager.getRepository(LessonSkill);

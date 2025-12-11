@@ -515,7 +515,7 @@ export class AttemptService {
 
       const skippedTasks = await this.studyTaskService.markSkippableStudyTasks(
         user.id,
-        0.48,
+        0.52,
       );
 
       await this.updateAttempt(manager, attempt, totalScore);
