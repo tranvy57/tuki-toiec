@@ -1,19 +1,17 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
 } from '@nestjs/common';
-import { AttemptService } from './attempt.service';
-import { CreateAttemptDto } from './dto/create-attempt.dto';
+import { CreateAttemptAnswerDto } from 'src/attempt_answers/dto/create-attempt_answer.dto';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { User } from 'src/user/entities/user.entity';
-import { Public } from 'src/common/decorator/public.decorator';
-import { userInfo } from 'os';
-import { CreateAttemptAnswerDto } from 'src/attempt_answers/dto/create-attempt_answer.dto';
+import { AttemptService } from './attempt.service';
+import { CreateAttemptDto } from './dto/create-attempt.dto';
 
 @Controller('attempts')
 export class AttemptController {
