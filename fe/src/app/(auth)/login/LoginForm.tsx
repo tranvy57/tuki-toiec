@@ -153,16 +153,16 @@ export default function LoginForm() {
               </Button>
             </div>
 
-            <div className={`relative ${isVisible ? "animate-slide-up stagger-4" : "opacity-0"}`}>
+            {/* <div className={`relative ${isVisible ? "animate-slide-up stagger-4" : "opacity-0"}`}>
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-border/50" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-card px-4 text-muted-foreground font-medium">hoặc tiếp tục với</span>
               </div>
-            </div>
+            </div> */}
 
-            <div className={`space-y-3 ${isVisible ? "animate-slide-up stagger-5" : "opacity-0"}`}>
+            {/* <div className={`space-y-3 ${isVisible ? "animate-slide-up stagger-5" : "opacity-0"}`}>
               <div className="transform transition-all duration-200 hover:scale-[1.02]">
                 <GoogleLogin
                   onSuccess={async (credentialResponse) => {
@@ -185,7 +185,7 @@ export default function LoginForm() {
               <div className="transform transition-all duration-200 hover:scale-[1.02]">
                 <FacebookLoginButton />
               </div>
-            </div>
+            </div> */}
           </form>
 
           <div className={`text-center mt-8 ${isVisible ? "animate-slide-up stagger-5" : "opacity-0"}`}>

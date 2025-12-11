@@ -202,14 +202,7 @@ export default function HistoryPage() {
                               Tiếp tục
                             </Button>
                           )}
-                          <Link
-                            href={`/tests/${
-                              a.testId ?? a.test?.id ?? ""
-                            }/review?attemptId=${id}`}
-                            className="px-3 py-1.5 text-sm bg-gradient-to-r from-blue-600 to-primary text-white rounded"
-                          >
-                            Xem kết quả
-                          </Link>
+                          
                         </div>
                       </td>
                     </tr>
