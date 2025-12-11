@@ -724,7 +724,9 @@ export class AttemptService {
         test: true,
         parts: {
           groups: {
-            questions: true,
+            questions: {
+              answers: true,
+            },
           },
         },
       },

@@ -40,36 +40,36 @@ export default function HistoryPage() {
     // Normalize response that may either be the payload itself or an object with a `data` key.
     // Use `in` type guard to avoid TS error when `data` isn't a property.
     // const fullTestPayload = raw && ("data" in raw ? (raw as any).data : raw);
-    // setFullTest(attempt);
+    setFullTest(attempt);
 
     // 3. Restore answers
     // support nested shape: parts -> groups -> questions -> userAnswer.answer.answerKey
-    // if (Array.isArray(attempt?.parts) && attempt?.parts?.length > 0) {
-    //   console.log("runthis", attempt?.parts);
+    if (Array.isArray(attempt?.parts) && attempt?.parts?.length > 0) {
+      console.log("runthis", attempt?.parts);
 
-    //   attempt?.parts?.forEach((part: any) => {
-    //     console.log("part", part);
+      attempt?.parts?.forEach((part: any) => {
+        console.log("part", part);
 
-    //     // part.groups?.forEach((group: any) => {
-    //     //   // group.questions?.forEach((q: any) => {
-    //     //   //   const answerKey =
-    //     //   //     q?.userAnswer?.answer?.answerKey ??
-    //     //   //     q?.userAnswer?.answerKey ??
-    //     //   //     q?.userAnswer?.answer?.content ??
-    //     //   //     null;
-    //     //   //   if (answerKey) {
-    //     //   //     setAnswer(q.id, String(answerKey));
-    //     //   //   }
-    //     //   // });
-    //     // });
-    //   });
-    // } else if (attempt.selectedAnswers) {
-    //   // fallback: old mapping shape { questionId: "A" }
-    //   // Object.entries(attempt.selectedAnswers).forEach(([qId, key]) => {
-    //   //   const answerKey = typeof key === "string" ? key : String(key);
-    //   //   setAnswer(qId, answerKey);
-    //   // });
-    // }
+        part.groups?.forEach((group: any) => {
+          group.questions?.forEach((q: any) => {
+            const answerKey =
+              q?.userAnswer?.answer?.answerKey ??
+              q?.userAnswer?.answerKey ??
+              q?.userAnswer?.answer?.content ??
+              null;
+            if (answerKey) {
+              setAnswer(q.id, String(answerKey));
+            }
+          });
+        });
+      });
+    } else if (attempt.selectedAnswers) {
+      // fallback: old mapping shape { questionId: "A" }
+      // Object.entries(attempt.selectedAnswers).forEach(([qId, key]) => {
+      //   const answerKey = typeof key === "string" ? key : String(key);
+      //   setAnswer(qId, answerKey);
+      // });
+    }
 
     // // 4. Restore Test State (nếu có)
     // if (attempt.currentPartNumber) {

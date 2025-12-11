@@ -16,6 +16,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { Search, Users, Clock, FileText, Sparkles, Edit3 } from "lucide-react";
 import Link from "next/link";
 import { useTest } from "@/api/useTest";
+import { usePracticeTest } from "@/hooks";
+import { useRouter } from "next/navigation";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -43,6 +45,8 @@ export default function TestListPage() {
   const [difficultyFilter, setDifficultyFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
   const { data, isLoading, isError } = useTest();
+  const { clearPersistedState } = usePracticeTest();
+  const router = useRouter();
 
   const filteredTests = data?.filter((test) => {
     const matchesSearch = test.title
@@ -210,11 +214,15 @@ export default function TestListPage() {
                         </div>
                       </div>
                       <div>
-                        <Link href={`/tests/${test.id}`} className="w-full">
-                          <Button className="w-full  text-white font-semibold shadow-md hover:shadow-lg transition-all duration-300">
-                            Bắt đầu luyện tập
-                          </Button>
-                        </Link>
+                        <Button
+                          className="w-full  text-white font-semibold shadow-md hover:shadow-lg transition-all duration-300"
+                          onClick={() => {
+                            clearPersistedState();
+                            router.push(`/tests/${test.id}/start`);
+                          }}
+                        >
+                          Bắt đầu luyện tập
+                        </Button>
                       </div>
                     </div>
                   </motion.div>
