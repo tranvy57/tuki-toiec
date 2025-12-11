@@ -121,14 +121,14 @@ export default function VocabularyPage() {
 
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex gap-2">
-          <Button
+          {/* <Button
             onClick={startFlashcardSession}
             className="bg-blue-600 hover:bg-blue-700"
             disabled={markedForReview === 0}
           >
             <BookOpen className="h-4 w-4 mr-2" />
             Flashcard ({markedForReview} từ)
-          </Button>
+          </Button> */}
 
           <Button
             onClick={startQuizSession}

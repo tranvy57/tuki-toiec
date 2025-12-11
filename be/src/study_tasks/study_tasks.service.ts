@@ -22,7 +22,7 @@ export class StudyTasksService {
     private readonly dataSrc: DataSource,
     @Inject()
     private readonly userCoursesService: UserCoursesService,
-  ) { }
+  ) {}
 
   create(createStudyTaskDto: CreateStudyTaskDto) {
     return 'This action adds a new studyTask';
@@ -76,7 +76,9 @@ export class StudyTasksService {
       const currentIdx = allTasks.findIndex((t) => t.id === current.id);
 
       // Check if user is premium
-      const isPremium = await this.userCoursesService.isPremiumUser(plan.user.id);
+      const isPremium = await this.userCoursesService.isPremiumUser(
+        plan.user.id,
+      );
 
       const tasksToOpen: (typeof allTasks)[number][] = [];
 
@@ -116,9 +118,12 @@ export class StudyTasksService {
       }
 
       // Lock all other pending tasks except the ones we want to open
-      const idsToOpen = new Set(tasksToOpen.map(t => t.id));
+      const idsToOpen = new Set(tasksToOpen.map((t) => t.id));
       for (let i = currentIdx + 1; i < allTasks.length; i++) {
-        if (allTasks[i].status === 'pending' && !idsToOpen.has(allTasks[i].id)) {
+        if (
+          allTasks[i].status === 'pending' &&
+          !idsToOpen.has(allTasks[i].id)
+        ) {
           allTasks[i].status = 'locked';
           await taskRepo.save(allTasks[i]);
         }
@@ -127,7 +132,12 @@ export class StudyTasksService {
       // Open the selected tasks
       for (const task of tasksToOpen) {
         task.status = 'pending';
-        console.log('Opening task:', task.id, 'isPremium:', task.lessonContent?.isPremium);
+        console.log(
+          'Opening task:',
+          task.id,
+          'isPremium:',
+          task.lessonContent?.isPremium,
+        );
         await taskRepo.save(task);
       }
 
@@ -148,13 +158,13 @@ export class StudyTasksService {
 
       return {
         currentId: current.id,
-        openedNextIds: tasksToOpen.map(t => t.id),
+        openedNextIds: tasksToOpen.map((t) => t.id),
         isPlanCompleted,
       };
     });
   }
 
-  async markSkippableStudyTasks(userId: string, threshold = 0.4) {
+  async markSkippableStudyTasks(userId: string, threshold = 0.48) {
     const studyTaskRepo = this.manager.getRepository(StudyTask);
     const userProgressRepo = this.manager.getRepository(UserProgress);
     const lessonSkillRepo = this.manager.getRepository(LessonSkill);
