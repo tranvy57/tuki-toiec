@@ -181,8 +181,9 @@ export class StudyTasksService {
       };
     }
 
+    // FIX 1: Bỏ điều kiện isActive, chỉ lấy tasks chưa completed
     const tasks = await studyTaskRepo.find({
-      where: { isActive: true, plan: { user: { id: userId } } },
+      where: { plan: { user: { id: userId } } },
       relations: { lesson: true },
     });
 
@@ -190,16 +191,20 @@ export class StudyTasksService {
 
     const PROF_THRESHOLD = threshold;
     const LOGIT = (x: number) => 1 / (1 + Math.exp(-x));
-    const COEFF = { alpha: 2.0, beta: 1.5, gamma: 1.0, bias: -2.0 };
+    // FIX 2: Giảm bias để dễ skip hơn (từ -2.0 -> -1.0)
+    const COEFF = { alpha: 2.0, beta: 1.5, gamma: 1.0, bias: -1.0 };
     const RECENCY_TAU_DAYS = 30;
     const recencyScore = (d?: Date) => {
-      if (!d) return 0.2;
+      // FIX: Lần đầu (updatedAt = null) coi như mới cập nhật → recency = 1.0
+      if (!d) return 1.0;
       const now = Date.now();
       const ageDays = Math.max(0, (now - d.getTime()) / (1000 * 60 * 60 * 24));
       return Math.exp(-ageDays / RECENCY_TAU_DAYS);
     };
 
     for (const task of tasks) {
+      // FIX 3: Skip tasks đã completed hoặc đã skipped
+      if (task.status === 'completed' || task.status === 'skipped') continue;
       if (!task.lesson?.id) continue;
 
       const lessonSkills = await lessonSkillRepo.find({
@@ -236,13 +241,17 @@ export class StudyTasksService {
         COEFF.bias;
       const pSkip = LOGIT(z);
 
-      const COVERAGE_MIN = 0.6;
-      const PSKIP_MIN = 0.5;
+      // FIX 4: Giảm ngưỡng để dễ skip hơn (coverage 0.6->0.5, pSkip 0.5->0.4)
+      const COVERAGE_MIN = 0.5;
+      const PSKIP_MIN = 0.4;
 
       if (coverage >= COVERAGE_MIN && pSkip >= PSKIP_MIN) {
         task.status = 'skipped';
         await studyTaskRepo.save(task);
         skippedTaskIds.push(task.id);
+        console.log(
+          `✅ Skipped task ${task.id} (lesson: ${task.lesson.id}) - avgProf: ${avgProf.toFixed(2)}, coverage: ${coverage.toFixed(2)}, pSkip: ${pSkip.toFixed(2)}`,
+        );
       }
     }
 
