@@ -76,10 +76,18 @@ export class UserVocabulariesService {
       relations: ['user'],
     });
 
-    if (!record) throw new NotFoundException('UserVocabulary not found');
+    console.log('record', record);
 
-    record.isBookmarked = status;
-    return await this.userVocabRepo.save(record);
+    if (!record) {
+      const saved = await this.track(userId, vocabId, { source: 'lesson' });
+
+      saved.isBookmarked = status;
+      return await this.userVocabRepo.save(saved);
+    }
+
+    console.log('delete', record);
+
+    this.userVocabRepo.delete(record.id);
   }
 
   async track(userId: string, vocabId: string, options: TrackingOptions = {}) {
@@ -317,10 +325,7 @@ export class UserVocabulariesService {
 
   createCloze(vocab: Vocabulary) {
     const text_base = vocab.exampleEn?.split('b.')[0].trim();
-    const text = text_base.replace(
-      new RegExp(vocab.word, 'gi'),
-      '_____',
-    );
+    const text = text_base.replace(new RegExp(vocab.word, 'gi'), '_____');
     return {
       type: 'cloze',
       vocabId: vocab.id,
