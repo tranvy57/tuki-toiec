@@ -18,10 +18,10 @@ export class Vocabulary extends BaseEntity {
   @Column({ name: 'part_of_speech' })
   partOfSpeech: string;
 
-  @Column({ name: 'example_en' })
+  @Column({ name: 'example_en', nullable: true })
   exampleEn: string;
 
-  @Column({ name: 'example_vn' })
+  @Column({ name: 'example_vn', nullable: true })
   exampleVn: string;
 
   @Column({ name: 'audio_url', nullable: true })
