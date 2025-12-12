@@ -31,6 +31,12 @@ export class UserController {
     return user;
   }
 
+  @Get()
+  @ApiResponseWrapper(UserResponseDto, true)
+  async findAll() {
+    return this.userService.findAll();
+  }
+
   @Post('/vocabularies/:id')
   async saveUserVocab(@CurrentUser() user: User, @Param('id') id: string) {
     return this.userService.saveUserVocab(id, user);

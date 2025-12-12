@@ -171,4 +171,12 @@ export class UserService {
     if (!found) throw new NotFoundException('User not found');
     return this.toResponseDto(found);
   }
+
+  async findAll() {
+    const users = await this.userRepository.find({
+      relations: { roles: true },
+      order: { createdAt: 'DESC' },
+    });
+    return users.map(user => this.toResponseDto(user));
+  }
 }
