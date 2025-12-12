@@ -21,11 +21,14 @@ interface QuizSessionProps {
   onAnswerChange: (answer: string) => void;
   // Common props
   isCompleted: boolean;
+  isLastReviewWord?: boolean;
   onSubmit: () => void;
   onSkip: () => void;
+  onEndSession?: () => void;
 }
 
 export default function QuizSession({
+  isLastReviewWord,
   currentWord,
   currentQuizType,
   allVocabularies,
@@ -37,6 +40,7 @@ export default function QuizSession({
   isCompleted,
   onSubmit,
   onSkip,
+  onEndSession,
 }: QuizSessionProps) {
   console.log("currentWord", currentWord);
 
@@ -68,16 +72,16 @@ export default function QuizSession({
 
   const renderQuiz = () => {
     switch (currentQuizType) {
-      case "mcq":
-        return (
-          <MultipleChoiceQuiz
-            word={currentWord}
-            options={quizOptions}
-            selectedOption={selectedOption}
-            onSelectOption={onSelectOption}
-            isCompleted={isCompleted}
-          />
-        );
+      // case "mcq":
+      //   return (
+      //     <MultipleChoiceQuiz
+      //       word={currentWord}
+      //       options={quizOptions}
+      //       selectedOption={selectedOption}
+      //       onSelectOption={onSelectOption}
+      //       isCompleted={isCompleted}
+      //     />
+      //   );
       case "cloze":
         return (
           <FillBlankQuiz
@@ -162,9 +166,12 @@ export default function QuizSession({
           </div>
 
           <div className="text-center">
-            <Button variant="default" onClick={onSkip}>
+            <Button
+              variant="default"
+              onClick={isLastReviewWord ? onEndSession : onSkip}
+            >
               <ArrowRight className="h-4 w-4 mr-2" />
-              Tiếp tục
+              {isLastReviewWord ? "Kết thúc" : "Tiếp tục"}
             </Button>
           </div>
         </div>

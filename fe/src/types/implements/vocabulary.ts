@@ -11,6 +11,11 @@ export interface WeakVocabulary {
   lastReviewDate: string;
   isBookmarked: boolean;
   audioUrl?: string;
+  timesReviewed: number;
+  correctCount: number;
+  wrongCount: number;
+  nextReviewAt: Date | null;
+  strength: number;
 }
 
 export interface ReviewSession {

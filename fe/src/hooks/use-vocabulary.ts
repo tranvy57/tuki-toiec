@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import {
   WeakVocabulary,
@@ -14,6 +14,9 @@ export function useVocabularyReview(
   setVocabularies: React.Dispatch<React.SetStateAction<any[]>>,
   vocabularyReviews?: any
 ) {
+  // state to indicate current item is the last one in the review set
+  const [isLastReviewWord, setIsLastReviewWord] = useState(false);
+
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
   const [isReviewMode, setIsReviewMode] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
@@ -41,6 +44,14 @@ export function useVocabularyReview(
 
   const reviewWords = vocabularies.filter((v) => v.isBookmarked);
   const currentReviewWord = vocabularyReviews?.items?.[currentReviewIndex];
+
+  useEffect(() => {
+    const total =
+      vocabularyReviews?.totalItems ??
+      vocabularies.filter((v) => v.isBookmarked).length ??
+      0;
+    setIsLastReviewWord(total > 0 ? currentReviewIndex >= total - 1 : false);
+  }, [currentReviewIndex, vocabularyReviews, vocabularies]);
 
   const startFlashcardSession = useCallback(() => {
     const reviewWords = vocabularies.filter((v) => v.isBookmarked);
@@ -212,13 +223,14 @@ export function useVocabularyReview(
 
   const toggleMarkForReview = useCallback(
     (vocabId: string) => {
-      markUserVocab({ id: vocabId, status: !vocabularies.find((v) => v.id === vocabId)?.isBookmarked });
+      markUserVocab({
+        id: vocabId,
+        status: !vocabularies.find((v) => v.id === vocabId)?.isBookmarked,
+      });
 
       setVocabularies((prev) =>
         prev.map((v) =>
-          v.id === vocabId
-            ? { ...v, isBookmarked: !v.isBookmarked }
-            : v
+          v.id === vocabId ? { ...v, isBookmarked: !v.isBookmarked } : v
         )
       );
     },
@@ -228,6 +240,7 @@ export function useVocabularyReview(
   return {
     // State
     currentReviewIndex,
+    isLastReviewWord,
     isReviewMode,
     showAnswer,
     reviewSession,

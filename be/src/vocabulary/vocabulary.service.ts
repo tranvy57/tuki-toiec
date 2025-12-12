@@ -14,12 +14,15 @@ import { VocabularyMapper } from './utils/vocabulary.mapper';
 import axios from 'axios';
 import { UserVocabulariesService } from 'src/user_vocabularies/user_vocabularies.service';
 import { User } from 'src/user/entities/user.entity';
+import { UserVocabulary } from 'src/user_vocabularies/entities/user_vocabulary.entity';
 
 @Injectable()
 export class VocabularyService {
   constructor(
     @InjectRepository(Vocabulary)
     private vocabularyRepo: Repository<Vocabulary>,
+    @InjectRepository(UserVocabulary)
+    private userVocabularyRepo: Repository<UserVocabulary>,
     @Inject()
     private readonly userVocabService: UserVocabulariesService,
   ) {}
@@ -155,12 +158,23 @@ export class VocabularyService {
     word = word.trim().toLowerCase();
 
     let vocab = await this.vocabularyRepo.findOne({ where: { word } });
+    console.log('vocab', vocab);
+
+    let isSaved;
+
     if (vocab) {
-      const userVocab = await this.userVocabService.track(user.id, vocab.id, {
-        source: 'search',
-        incrementStrength: true,
+      // const userVocab = await this.userVocabService.track(user.id, vocab.id, {
+      //   source: 'search',
+      //   incrementStrength: true,
+      // });
+
+      isSaved = await this.userVocabularyRepo.findOne({
+        where: {
+          user: { id: user.id },
+          vocabulary: { id: vocab.id },
+        },
       });
-      return { ...vocab, isMarked: userVocab.isBookmarked };
+      return { ...vocab, isMarked: isSaved ? true : false };
     }
 
     let res;
@@ -198,16 +212,18 @@ export class VocabularyService {
     });
     const vocabSaved = await this.vocabularyRepo.save(vocab);
 
-    const userVocab = await this.userVocabService.track(
-      user.id,
-      vocabSaved.id,
-      {
-        source: 'search',
-        incrementStrength: true,
-      },
-    );
+    // const userVocab = await this.userVocabService.track(
+    //   user.id,
+    //   vocabSaved.id,
+    //   {
+    //     source: 'search',
+    //     incrementStrength: true,
+    //   },
+    // );
 
-    return { ...vocabSaved, isMarked: userVocab.isBookmarked };
+    //Kiểm tra xem lưu vào user_vocabularies hay chưa
+
+    return { ...vocabSaved, isMarked: isSaved ? true : false };
   }
 
   /**

@@ -57,6 +57,7 @@ export default function VocabularyPage() {
     selectedOption,
     quizCompleted,
     currentReviewWord,
+    isLastReviewWord,
     startFlashcardSession,
     startQuizSession,
     endReviewSession,
@@ -73,6 +74,16 @@ export default function VocabularyPage() {
     dataReview?.data?.data || {}
   );
 
+  // ensure we refetch vocab list when review ends
+  const handleEndSession = () => {
+    try {
+      endReviewSession?.();
+    } finally {
+      // react-query's useQuery returns refetch; call it if available
+      data?.refetch?.();
+    }
+  };
+
   const filteredVocabularies = vocabularies.filter((vocab) => {
     console.log("vocab", vocab);
     const matchesSearch =
@@ -83,11 +94,7 @@ export default function VocabularyPage() {
     return matchesSearch && matchesFilter;
   });
 
-  const markedForReview = vocabularies.filter(
-    (v) => v.isBookmarked
-  ).length;
-
-  console.log("reviewSession", reviewSession);
+  const markedForReview = vocabularies.filter((v) => v.isBookmarked).length;
 
   if (isReviewMode && currentReviewWord) {
     return (
@@ -97,7 +104,7 @@ export default function VocabularyPage() {
         reviewSession={reviewSession}
         currentReviewIndex={currentReviewIndex}
         allVocabularies={vocabularies}
-        onEndSession={endReviewSession}
+        onEndSession={handleEndSession}
         showAnswer={showAnswer}
         onShowAnswer={handleShowAnswer}
         onFlashcardNext={handleFlashcardNext}
@@ -111,6 +118,7 @@ export default function VocabularyPage() {
         quizCompleted={quizCompleted}
         onQuizSubmit={handleQuizSubmit}
         onProceedToNext={proceedToNextWord}
+        isLastReviewWord={isLastReviewWord}
       />
     );
   }
