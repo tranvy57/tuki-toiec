@@ -132,7 +132,6 @@ export default function HistoryPage() {
   return (
     <div className="min-h-screen py-8 bg-gray-50">
       <div className="container mx-auto px-4">
-        <h2 className="text-2xl font-semibold mb-6">Lịch sử làm bài</h2>
 
         {attempts.length === 0 ? (
           <div className="rounded-lg bg-white shadow p-6 text-center text-gray-600">
