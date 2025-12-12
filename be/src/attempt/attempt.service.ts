@@ -513,10 +513,12 @@ export class AttemptService {
         user.id,
       );
 
-      const skippedTasks = await this.studyTaskService.markSkippableStudyTasks(
-        user.id,
-        0.52,
-      );
+      const skippedTasks =
+        await this.studyTaskService.markSkippableStudyTasksTx(
+          manager,
+          user.id,
+          0.6,
+        );
 
       await this.updateAttempt(manager, attempt, totalScore);
 

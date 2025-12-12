@@ -165,14 +165,29 @@ export class StudyTasksService {
   }
 
   async markSkippableStudyTasks(userId: string, threshold = 0.52) {
-    const studyTaskRepo = this.manager.getRepository(StudyTask);
-    const userProgressRepo = this.manager.getRepository(UserProgress);
-    const lessonSkillRepo = this.manager.getRepository(LessonSkill);
+    return this.markSkippableStudyTasksTx(this.manager, userId, threshold);
+  }
 
-    const progresses = await userProgressRepo.find({
-      where: { user: { id: userId } },
-      relations: ['skill'],
-    });
+  async markSkippableStudyTasksTx(
+    manager: EntityManager,
+    userId: string,
+    threshold = 0.52,
+  ) {
+    const studyTaskRepo = manager.getRepository(StudyTask);
+    const userProgressRepo = manager.getRepository(UserProgress);
+    const lessonSkillRepo = manager.getRepository(LessonSkill);
+
+    // Fetch user progresses via explicit FK to avoid relation where quirks
+    const progresses = await userProgressRepo
+      .createQueryBuilder('up')
+      .leftJoinAndSelect('up.skill', 'skill')
+      .where('up.user_id = :userId', { userId })
+      .getMany();
+    // Debug: show a compact snapshot of progresses found
+    console.log(
+      '[Skip] fetched progresses:',
+      progresses.map((p) => ({ skillId: p.skill?.id, prof: p.proficiency })),
+    );
     const profMap: Record<string, { prof: number; updatedAt?: Date }> = {};
     for (const p of progresses) {
       profMap[p.skill.id] = {
@@ -184,17 +199,21 @@ export class StudyTasksService {
     // Detect first review:
     // Case A: updatedAt is null (legacy)
     // Case B: updatedAt was set on creation (createdAt ~= updatedAt)
-    const isFirstReview =
+    const timestampFirstRun =
       progresses.length > 0 &&
       progresses.every((p) => {
         if (!p.updatedAt) return true;
         if (!p.createdAt) return false;
-        // Consider first-run if updatedAt equals createdAt (or within 10 minutes)
         const created = new Date(p.createdAt).getTime();
         const updated = new Date(p.updatedAt).getTime();
         const DIFF_MS = Math.abs(updated - created);
         return DIFF_MS <= 10 * 60 * 1000;
       });
+    // Also treat as first-review if all skill proficiencies are already above threshold
+    const proficiencyFirstRun =
+      progresses.length > 0 &&
+      progresses.every((p) => (p.proficiency ?? 0) >= threshold);
+    const isFirstReview = timestampFirstRun || proficiencyFirstRun;
     console.log(
       `[Skip] isFirstReview=${isFirstReview} progresses=${progresses.length}`,
     );
@@ -230,9 +249,43 @@ export class StudyTasksService {
         relations: ['skill'],
       });
       if (!lessonSkills.length) {
-        console.log(
-          `[Skip] task ${task.id} lesson ${task.lesson.id} has no lessonSkills → cannot evaluate`,
-        );
+        // Fallback: if lesson has no skill mapping, use global user proficiency snapshot
+        const globalTotal = progresses.length;
+        const globalAvgProf =
+          globalTotal > 0
+            ? progresses.reduce((s, p) => s + (p.proficiency ?? 0), 0) /
+              globalTotal
+            : 0;
+        const globalAboveCount = progresses.filter(
+          (p) => (p.proficiency ?? 0) >= PROF_THRESHOLD,
+        ).length;
+        const globalCoverage =
+          globalTotal > 0 ? globalAboveCount / globalTotal : 0;
+
+        // Apply first-review fast-path on global snapshot
+        if (isFirstReview) {
+          const COVERAGE_MIN_FIRST = 0.7;
+          if (globalCoverage >= COVERAGE_MIN_FIRST) {
+            task.status = 'skipped';
+            await studyTaskRepo.save(task);
+            skippedTaskIds.push(task.id);
+            continue;
+          }
+        }
+        // Otherwise, evaluate normal gating on global snapshot
+        const zGlobal =
+          COEFF.alpha * globalAvgProf +
+          COEFF.beta * globalCoverage +
+          COEFF.gamma * 1.0 +
+          COEFF.bias;
+        const pSkipGlobal = LOGIT(zGlobal);
+        const COVERAGE_MIN = 0.5;
+        const PSKIP_MIN = 0.4;
+        if (globalCoverage >= COVERAGE_MIN && pSkipGlobal >= PSKIP_MIN) {
+          task.status = 'skipped';
+          await studyTaskRepo.save(task);
+          skippedTaskIds.push(task.id);
+        }
         continue;
       }
 
