@@ -150,13 +150,13 @@ export function ResultsScreen({ onRetake }: ResultsScreenProps) {
           </div>
         </div>
 
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
         >
           <DetailedPartAnalysis data={testData} />
-        </motion.div>
+        </motion.div> */}
 
         {/* Skills Proficiency Section */}
         {/* {reviewData?.updatedSkills && (
@@ -243,7 +243,7 @@ export function ResultsScreen({ onRetake }: ResultsScreenProps) {
           </div>
         </motion.div> */}
 
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
@@ -256,14 +256,13 @@ export function ResultsScreen({ onRetake }: ResultsScreenProps) {
             {loading ? "Đang phân tích..." : "Phân tích bằng AI"}
           </button>
 
-          {/* Khi có kết quả AI, hiển thị component */}
           {analysis && (
             <div className="mt-8">
               <AIAnalysis analysis={analysis} />
             </div>
           )}
-        </motion.div>
-
+        </motion.div> */}
+{/* 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -276,7 +275,7 @@ export function ResultsScreen({ onRetake }: ResultsScreenProps) {
               description: "Gợi ý học tập dựa trên kết quả của bạn"
             }
           ]} />
-        </motion.div>
+        </motion.div> */}
 
         {/* Action buttons */}
         <motion.div

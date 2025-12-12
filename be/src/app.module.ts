@@ -48,6 +48,7 @@ import { Order } from './order/entities/order.entity';
 import { UserVocabularySessionModule } from './user_vocabulary_session/user_vocabulary_session.module';
 import { ChatModule } from './chat/chat.module';
 import { BlacklistedTokensModule } from './blacklisted_tokens/blacklisted_tokens.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -92,6 +93,7 @@ import { BlacklistedTokensModule } from './blacklisted_tokens/blacklisted_tokens
     UserVocabularySessionModule,
     ChatModule,
     BlacklistedTokensModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [
