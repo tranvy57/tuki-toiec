@@ -50,7 +50,7 @@ export default function TestStartPage() {
     TEST_DURATION,
   } = useTestLogic();
 
-  const [showDetails] = useState(true);
+  const showDetails = isReviewMode;
 
   const contentRef = useRef<HTMLDivElement>(null);
 

@@ -507,10 +507,27 @@ export const useTestLogic = () => {
       }
 
       let count = 0;
+      let correctCount = 0;
+
       for (const question of allQuestions) {
         if (question.answers && question.answers.length > 0) {
-          // Select the first answer choice (usually 'A')
-          const answerToSelect = question.answers[0];
+          // Randomly decide: 80% chance to pick correct answer
+          const shouldPickCorrect = Math.random() < 0.8;
+
+          let answerToSelect;
+          if (shouldPickCorrect) {
+            // Find correct answer
+            answerToSelect =
+              question.answers.find((a) => a.isCorrect) || question.answers[0];
+            if (answerToSelect.isCorrect) correctCount++;
+          } else {
+            // Pick a random wrong answer
+            const wrongAnswers = question.answers.filter((a) => !a.isCorrect);
+            answerToSelect =
+              wrongAnswers.length > 0
+                ? wrongAnswers[Math.floor(Math.random() * wrongAnswers.length)]
+                : question.answers[0];
+          }
 
           // Call the existing handler which updates state + calls API
           handleAnswerChange(question.id, answerToSelect.id);
@@ -526,8 +543,16 @@ export const useTestLogic = () => {
           }
         }
       }
-      console.log("✅ Auto-fill completed! You can now submit the test.");
-      alert("Đã điền xong tất cả đáp án! Bạn có thể nộp bài ngay bây giờ.");
+      console.log(
+        `✅ Auto-fill completed! ${correctCount}/${
+          allQuestions.length
+        } correct (~${Math.round((correctCount / allQuestions.length) * 100)}%)`
+      );
+      alert(
+        `Đã điền xong ${count} đáp án! Đúng ${correctCount}/${
+          allQuestions.length
+        } (~${Math.round((correctCount / allQuestions.length) * 100)}%)`
+      );
     };
 
     // Cleanup
