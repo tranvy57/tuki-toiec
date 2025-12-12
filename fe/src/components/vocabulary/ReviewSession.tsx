@@ -10,6 +10,7 @@ import {
 } from "@/types/implements/vocabulary";
 import FlashcardSession from "./FlashcardSession";
 import QuizSession from "./quiz/QuizSession";
+import { is } from "zod/v4/locales";
 
 interface ReviewSessionProps {
   reviewMode: ReviewMode;
@@ -17,6 +18,9 @@ interface ReviewSessionProps {
   reviewSession: ReviewSessionType;
   currentReviewIndex: number;
   allVocabularies: WeakVocabulary[];
+
+  isLastReviewWord?: boolean;
+
   onEndSession: () => void;
 
   // Flashcard props
@@ -43,6 +47,7 @@ export default function ReviewSession({
   reviewSession,
   currentReviewIndex,
   allVocabularies,
+  isLastReviewWord,
   onEndSession,
   showAnswer,
   onShowAnswer,
@@ -94,7 +99,6 @@ export default function ReviewSession({
                 Tiến độ: {currentReviewIndex + 1}/{reviewSession.total}
               </span>
               {reviewMode === "quiz" && (
-                // hong hieu gi?
                 <span>
                   Điểm: {reviewSession.correct}/{quizCompleted}
                   {currentReviewIndex + (showQuiz && quizCompleted ? 1 : 0)}
@@ -131,6 +135,8 @@ export default function ReviewSession({
               isCompleted={quizCompleted}
               onSubmit={onQuizSubmit}
               onSkip={onProceedToNext}
+              isLastReviewWord={isLastReviewWord}
+              onEndSession={onEndSession}
             />
           )}
         </div>
