@@ -181,9 +181,20 @@ export class StudyTasksService {
       };
     }
 
-    // Detect first review: all progress entries have no updatedAt
+    // Detect first review:
+    // Case A: updatedAt is null (legacy)
+    // Case B: updatedAt was set on creation (createdAt ~= updatedAt)
     const isFirstReview =
-      progresses.length > 0 && progresses.every((p) => !p.updatedAt);
+      progresses.length > 0 &&
+      progresses.every((p) => {
+        if (!p.updatedAt) return true;
+        if (!p.createdAt) return false;
+        // Consider first-run if updatedAt equals createdAt (or within 2 minutes)
+        const created = new Date(p.createdAt).getTime();
+        const updated = new Date(p.updatedAt).getTime();
+        const DIFF_MS = Math.abs(updated - created);
+        return DIFF_MS <= 2 * 60 * 1000;
+      });
 
     // FIX 1: Bỏ điều kiện isActive, chỉ lấy tasks chưa completed
     const tasks = await studyTaskRepo.find({
