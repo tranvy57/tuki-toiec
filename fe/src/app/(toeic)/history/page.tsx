@@ -235,7 +235,7 @@ export default function HistoryPage() {
                                 e.preventDefault();
                                 handleReview(a);
                               }}
-                              className="px-3 py-1.5 text-sm bg-gradient-to-r from-blue-600 to-primary text-white rounded"
+                              className="px-3 py-1.5 text-sm bg-primary text-white rounded"
                             >
                               Xem kết quả
                             </Link>
