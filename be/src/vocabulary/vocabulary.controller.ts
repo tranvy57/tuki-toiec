@@ -84,5 +84,4 @@ export class VocabularyController {
     if (!file) throw new Error('File not found!');
     return await this.vocabularyService.importFromExcel(file);
   }
-
 }
