@@ -181,6 +181,10 @@ export class StudyTasksService {
       };
     }
 
+    // Detect first review: all progress entries have no updatedAt
+    const isFirstReview =
+      progresses.length > 0 && progresses.every((p) => !p.updatedAt);
+
     // FIX 1: Bỏ điều kiện isActive, chỉ lấy tasks chưa completed
     const tasks = await studyTaskRepo.find({
       where: { plan: { user: { id: userId } } },
@@ -234,6 +238,24 @@ export class StudyTasksService {
       const avgRecency = totalWeight > 0 ? weightedRecencySum / totalWeight : 0;
       const coverage = totalWeight > 0 ? coveredWeightSum / totalWeight : 0;
 
+      // First review fast-path: skip aggressively based on proficiency only
+      if (isFirstReview) {
+        const COVERAGE_MIN_FIRST = 0.8; // require 80% of lesson skills above threshold
+        const ALL_SKILLS_ABOVE = lessonSkills.every(
+          (ls) => (profMap[ls.skill.id]?.prof ?? 0) >= PROF_THRESHOLD,
+        );
+        if (ALL_SKILLS_ABOVE || coverage >= COVERAGE_MIN_FIRST) {
+          task.status = 'skipped';
+          await studyTaskRepo.save(task);
+          skippedTaskIds.push(task.id);
+          console.log(
+            `✅ [FirstReview] Skipped task ${task.id} (lesson: ${task.lesson.id}) - avgProf: ${avgProf.toFixed(2)}, coverage: ${coverage.toFixed(2)}`,
+          );
+          continue;
+        }
+      }
+
+      // Normal path: logistic gating with relaxed thresholds
       const z =
         COEFF.alpha * avgProf +
         COEFF.beta * coverage +
@@ -241,7 +263,6 @@ export class StudyTasksService {
         COEFF.bias;
       const pSkip = LOGIT(z);
 
-      // FIX 4: Giảm ngưỡng để dễ skip hơn (coverage 0.6->0.5, pSkip 0.5->0.4)
       const COVERAGE_MIN = 0.5;
       const PSKIP_MIN = 0.4;
 
