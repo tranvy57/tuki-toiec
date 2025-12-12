@@ -27,9 +27,17 @@ const defaultStats = {
 export default function StatsOverview({
   vocabularies,
   totalCards = vocabularies.length || defaultStats.totalCards,
-  totalReviews = vocabularies.filter((v) => v.isBookmarked).length || defaultStats.totalReviews,
-  dueCount = vocabularies.filter((v) => v.nextReviewAt === null || v.nextReviewAt < new Date()).length || defaultStats.dueCount,
-  accuracy = vocabularies.reduce((acc, v) => acc + v.correctCount / (v.correctCount + v.wrongCount), 0) * 100 / vocabularies.length || defaultStats.accuracy,
+  totalReviews = vocabularies.filter((v) => v.isBookmarked).length ||
+    defaultStats.totalReviews,
+  dueCount = vocabularies.filter(
+    (v) => v.nextReviewAt === null || v.nextReviewAt < new Date()
+  ).length || defaultStats.dueCount,
+  accuracy = (vocabularies.reduce(
+    (acc, v) => acc + v.correctCount / (v.correctCount + v.wrongCount),
+    0
+  ) *
+    100) /
+    vocabularies.length || defaultStats.accuracy,
 }: StatsOverviewProps) {
   const criticalWords = vocabularies.filter(
     (v) => v.weaknessLevel === "critical"
@@ -40,9 +48,7 @@ export default function StatsOverview({
   const mildWords = vocabularies.filter(
     (v) => v.weaknessLevel === "mild"
   ).length;
-  const markedForReview = vocabularies.filter(
-    (v) => v.isBookmarked
-  ).length;
+  const markedForReview = vocabularies.filter((v) => v.isBookmarked).length;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -70,7 +76,7 @@ export default function StatsOverview({
           <StatRow
             icon={<Trophy className="text-green-600 w-5 h-5" />}
             label="Độ Chính xác"
-            value={`${accuracy}%`}
+            value={`${accuracy.toFixed(2)}%`}
           />
         </div>
       </div>
@@ -94,7 +100,10 @@ export default function StatsOverview({
           <StatRow
             icon={<Clock className="text-yellow-600 w-5 h-5" />}
             label="Hơi yếu"
-            value={vocabularies.filter((v) => v.strength < 0.15 && v.strength >= 0.1).length}
+            value={
+              vocabularies.filter((v) => v.strength < 0.15 && v.strength >= 0.1)
+                .length
+            }
           />
           <StatRow
             icon={<TrendingDown className="text-red-600 w-5 h-5" />}
