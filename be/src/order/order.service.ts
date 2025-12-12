@@ -18,11 +18,17 @@ export class OrderService {
   }
 
   findAll() {
-    return this.orderRepo.find();
+    return this.orderRepo.find({
+      relations: ['user', 'course'],
+      order: { createdAt: 'DESC' },
+    });
   }
 
   async findOne(code: string) {
-    const order = await this.orderRepo.findOne({ where: { code } });
+    const order = await this.orderRepo.findOne({
+      where: { code },
+      relations: ['user', 'course'],
+    });
 
     if (!order) {
       throw new NotFoundException(`Order with code ${code} not found`);
