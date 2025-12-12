@@ -15,6 +15,8 @@ interface QuestionRendererProps {
   isTransitioning: boolean;
   mode?: "test" | "practice" | "review"; // Add mode prop
   currentQuestion?: number; // Add current question number
+  readOnly?: boolean;
+  showDetails?: boolean;
 }
 
 export function QuestionRenderer({
@@ -24,10 +26,11 @@ export function QuestionRenderer({
   isTransitioning,
   mode = "test", // Default to test mode
   currentQuestion, // Current question number
+  readOnly = false,
+  showDetails = false,
 }: QuestionRendererProps) {
   const { currentGroup, currentPart, currentGroupQuestion, fullTest } =
     usePracticeTest();
-
 
   const renderQuestionContent = (question: Question, group?: any) => {
     switch (currentPart?.partNumber) {
@@ -176,7 +179,7 @@ export function QuestionRenderer({
 
           {/* Reading parts (6-7) with passage layout */}
           {isReadingPart &&
-            (groupData.group?.paragraphEn || groupData.group?.paragraphVn) ? (
+          (groupData.group?.paragraphEn || groupData.group?.paragraphVn) ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Left: Passage */}
               <div className="space-y-4 col-span-2">
@@ -196,19 +199,73 @@ export function QuestionRenderer({
                     />
                   </div>
                 </div>
+                {/* Transcript under common passage (Reading Parts 6-7) */}
+                {readOnly &&
+                  showDetails &&
+                  (groupData.group?.paragraphEn ||
+                    groupData.group?.paragraphVn) && (
+                    <details className="rounded-lg border border-gray-200 bg-white">
+                      <summary className="cursor-pointer select-none px-4 py-2 text-gray-800 font-medium hover:bg-gray-50 rounded-t-lg">
+                        Transcript
+                      </summary>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
+                        {groupData.group?.paragraphEn && (
+                          <div className="rounded-md border border-gray-100 bg-gray-50 p-3">
+                            <h5 className="text-xs font-semibold text-gray-700 mb-2">
+                              EN
+                            </h5>
+                            <div
+                              className="prose prose-sm max-w-none text-gray-800"
+                              dangerouslySetInnerHTML={{
+                                __html: groupData.group.paragraphEn,
+                              }}
+                            />
+                          </div>
+                        )}
+                        {groupData.group?.paragraphVn && (
+                          <div className="rounded-md border border-gray-100 bg-gray-50 p-3">
+                            <h5 className="text-xs font-semibold text-gray-700 mb-2">
+                              VI
+                            </h5>
+                            <div
+                              className="prose prose-sm max-w-none text-gray-800"
+                              dangerouslySetInnerHTML={{
+                                __html: groupData.group.paragraphVn,
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </details>
+                  )}
               </div>
 
               {/* Right: Questions */}
               <div className="space-y-6">
                 {groupData.questions.map((question) => {
-                  const isCurrentQuestion = currentQuestion === question.numberLabel;
+                  const correctAnswerKey =
+                    question.answers.find((opt) => opt.isCorrect)?.answerKey ||
+                    "";
+                  const userAnswerFromResult = (question as any)?.userAnswer
+                    ?.answer?.answerKey;
+                  const userAnswer =
+                    userAnswerFromResult || answers[question.numberLabel];
+                  const isCorrectFromResult = (question as any)?.userAnswer
+                    ?.isCorrect;
+                  const isCorrect =
+                    typeof isCorrectFromResult === "boolean"
+                      ? isCorrectFromResult
+                      : userAnswer &&
+                        correctAnswerKey &&
+                        userAnswer === correctAnswerKey;
+                  const isCurrentQuestion =
+                    currentQuestion === question.numberLabel;
                   return (
                     <div
                       key={question.id}
                       id={`question-${question.numberLabel}`}
                       className={cn(
-                        "rounded-xl p-5 transition-all duration-200 bg-white border border-gray-200",
-                       
+                        "rounded-xl p-5 transition-all duration-200 bg-white border border-gray-200"
                       )}
                     >
                       <div className="flex items-start gap-4">
@@ -225,20 +282,47 @@ export function QuestionRenderer({
                             {question.content}
                           </p>
 
+                          {readOnly && (
+                            <div className="flex flex-wrap items-center gap-2 text-sm">
+                              <span
+                                className={cn(
+                                  "px-2 py-1 rounded-full font-semibold",
+                                  isCorrect
+                                    ? "bg-green-100 text-green-700"
+                                    : "bg-red-100 text-red-700"
+                                )}
+                              >
+                                {isCorrect ? "Đúng" : "Sai"}
+                              </span>
+                              <span className="text-gray-700">
+                                Bạn chọn: {userAnswer || "(không trả lời)"}
+                              </span>
+                              {correctAnswerKey && (
+                                <span className="text-gray-700">
+                                  Đáp án: {correctAnswerKey}
+                                </span>
+                              )}
+                            </div>
+                          )}
+
                           {/* Answer options */}
                           <RadioGroup
                             value={answers[question.numberLabel] || ""}
-                            onValueChange={(value) =>
-                              onAnswerChange(question.numberLabel, value)
+                            onValueChange={
+                              readOnly
+                                ? undefined
+                                : (value) =>
+                                    onAnswerChange(question.numberLabel, value)
                             }
-                            className="space-y-2"
+                            className={cn(
+                              "space-y-2",
+                              readOnly ? "pointer-events-none opacity-90" : ""
+                            )}
                           >
                             {question.answers.map((option) => {
-                              // const isChosen = userAnswer === option.answerKey;
-                              // const isRight =
-                              //   option.answerKey === correctAnswer;
-                              const isChosen = false;
-                              const isRight = false;
+                              const isChosen = userAnswer === option.answerKey;
+                              const isRight = option.isCorrect;
+                              const showFeedback = readOnly && showDetails;
 
                               return (
                                 <label
@@ -246,17 +330,19 @@ export function QuestionRenderer({
                                   htmlFor={`${question.id}-${option.id}`}
                                   className={cn(
                                     "flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors border border-transparent",
-                                    isChosen
-                                      ? isRight
-                                        ? "bg-green-50 border-green-300"
-                                        : "bg-red-50 border-red-300"
-                                      : "hover:bg-blue-50/40 hover:border-blue-200"
+                                    showFeedback && isRight
+                                      ? "bg-green-50 border-green-300"
+                                      : showFeedback && isChosen && !isRight
+                                      ? "bg-red-50 border-red-300"
+                                      : "hover:bg-blue-50/40 hover:border-blue-200",
+                                    readOnly ? "cursor-default" : ""
                                   )}
                                 >
                                   <RadioGroupItem
                                     value={option.answerKey}
                                     id={`${question.id}-${option.id}`}
                                     className="mt-0.5"
+                                    disabled={readOnly}
                                   />
                                   <span className="text-gray-700 font-semibold leading-relaxed">
                                     {option.answerKey}
@@ -268,6 +354,65 @@ export function QuestionRenderer({
                               );
                             })}
                           </RadioGroup>
+
+                          {showDetails && correctAnswerKey && (
+                            <div className="mt-2 text-sm text-gray-700">
+                              <div className="font-semibold text-green-600">
+                                Đáp án đúng: {correctAnswerKey}
+                              </div>
+                              {question.explanation && (
+                                <details className="mt-2 bg-slate-50 rounded-lg p-3 border border-slate-200">
+                                  <summary className="cursor-pointer select-none text-blue-700 font-medium">
+                                    Giải thích chi tiết
+                                  </summary>
+                                  <div className="mt-2 leading-relaxed text-gray-700">
+                                    {question.explanation}
+                                  </div>
+                                </details>
+                              )}
+                              {readOnly &&
+                                showDetails &&
+                                isListeningPart &&
+                                (groupData.group?.paragraphEn ||
+                                  groupData.group?.paragraphVn) && (
+                                  <details className="mt-2 rounded-lg border border-gray-200 bg-white">
+                                    <summary className="cursor-pointer select-none px-3 py-2 text-gray-800 font-medium hover:bg-gray-50 rounded-t-lg">
+                                      Transcript
+                                    </summary>
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-3">
+                                      {groupData.group?.paragraphEn && (
+                                        <div className="rounded-md border border-gray-100 bg-gray-50 p-3">
+                                          <h5 className="text-xs font-semibold text-gray-700 mb-2">
+                                            EN
+                                          </h5>
+                                          <div
+                                            className="prose prose-sm max-w-none text-gray-800"
+                                            dangerouslySetInnerHTML={{
+                                              __html:
+                                                groupData.group.paragraphEn,
+                                            }}
+                                          />
+                                        </div>
+                                      )}
+                                      {groupData.group?.paragraphVn && (
+                                        <div className="rounded-md border border-gray-100 bg-gray-50 p-3">
+                                          <h5 className="text-xs font-semibold text-gray-700 mb-2">
+                                            VI
+                                          </h5>
+                                          <div
+                                            className="prose prose-sm max-w-none text-gray-800"
+                                            dangerouslySetInnerHTML={{
+                                              __html:
+                                                groupData.group.paragraphVn,
+                                            }}
+                                          />
+                                        </div>
+                                      )}
+                                    </div>
+                                  </details>
+                                )}
+                            </div>
+                          )}
 
                           {/* Correct answer */}
                           {/* {correctAnswer && (
@@ -314,14 +459,29 @@ export function QuestionRenderer({
                   )}
                 </div>
                 {groupData.questions.map((question) => {
-                  const isCurrentQuestion = currentQuestion === question.numberLabel;
+                  const correctAnswerKey =
+                    question.answers.find((opt) => opt.isCorrect)?.answerKey ||
+                    "";
+                  const userAnswerFromResult = (question as any)?.userAnswer
+                    ?.answer?.answerKey;
+                  const userAnswer =
+                    userAnswerFromResult || answers[question.numberLabel];
+                  const isCorrectFromResult = (question as any)?.userAnswer
+                    ?.isCorrect;
+                  const isCorrect =
+                    typeof isCorrectFromResult === "boolean"
+                      ? isCorrectFromResult
+                      : userAnswer &&
+                        correctAnswerKey &&
+                        userAnswer === correctAnswerKey;
+                  const isCurrentQuestion =
+                    currentQuestion === question.numberLabel;
                   return (
                     <div
                       key={question.id}
                       id={`question-${question.numberLabel}`}
                       className={cn(
-                        "p-4 rounded-xl transition-all duration-200 bg-transparent",
-    
+                        "p-4 rounded-xl transition-all duration-200 bg-transparent"
                       )}
                     >
                       <div className="flex items-start ">
@@ -330,28 +490,56 @@ export function QuestionRenderer({
                         </div>
 
                         <div
-                          className={`flex-1 ${currentPart.partNumber > 2 ? "space-y-4" : "mt-1"
-                            }`}
+                          className={`flex-1 ${
+                            currentPart.partNumber > 2 ? "space-y-4" : "mt-1"
+                          }`}
                         >
                           {renderQuestionContent(question, groupData.group)}
+
+                          {readOnly && (
+                            <div className="flex flex-wrap items-center gap-2 text-sm">
+                              <span
+                                className={cn(
+                                  "px-2 py-1 rounded-full font-semibold",
+                                  isCorrect
+                                    ? "bg-green-100 text-green-700"
+                                    : "bg-red-100 text-red-700"
+                                )}
+                              >
+                                {isCorrect ? "Đúng" : "Sai"}
+                              </span>
+                              <span className="text-gray-700">
+                                Bạn chọn: {userAnswer || "(không trả lời)"}
+                              </span>
+                              {correctAnswerKey && (
+                                <span className="text-gray-700">
+                                  Đáp án: {correctAnswerKey}
+                                </span>
+                              )}
+                            </div>
+                          )}
 
                           {/* Answer options */}
                           <RadioGroup
                             value={answers[question.numberLabel] || ""}
-                            onValueChange={(value) =>
-                              onAnswerChange(question.numberLabel, value)
+                            onValueChange={
+                              readOnly
+                                ? undefined
+                                : (value) =>
+                                    onAnswerChange(question.numberLabel, value)
                             }
-                            className={`${currentPart.partNumber <= 2
-                              ? "pl-4 translate-y-1"
-                              : ""
-                              }`}
+                            className={`${
+                              currentPart.partNumber <= 2
+                                ? "pl-4 translate-y-1"
+                                : ""
+                            } ${
+                              readOnly ? "pointer-events-none opacity-90" : ""
+                            }`}
                           >
                             {question.answers.map((option) => {
-                              // const isChosen = userAnswer === option.answerKey;
-                              // const isRight =
-                              //   option.answerKey === correctAnswer;
-                              const isChosen = false;
-                              const isRight = false;
+                              const isChosen = userAnswer === option.answerKey;
+                              const isRight = option.isCorrect;
+                              const showFeedback = readOnly && showDetails;
 
                               return (
                                 <label
@@ -359,17 +547,19 @@ export function QuestionRenderer({
                                   htmlFor={`${question.id}-${option.id}`}
                                   className={cn(
                                     "flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors border border-transparent",
-                                    isChosen
-                                      ? isRight
-                                        ? "bg-green-50 border-green-300"
-                                        : "bg-red-50 border-red-300"
-                                      : "hover:bg-blue-50/40 hover:border-blue-200"
+                                    showFeedback && isRight
+                                      ? "bg-green-50 border-green-300"
+                                      : showFeedback && isChosen && !isRight
+                                      ? "bg-red-50 border-red-300"
+                                      : "hover:bg-blue-50/40 hover:border-blue-200",
+                                    readOnly ? "cursor-default" : ""
                                   )}
                                 >
                                   <RadioGroupItem
                                     value={option.answerKey}
                                     id={`${question.id}-${option.id}`}
                                     className="mt-0.5"
+                                    disabled={readOnly}
                                   />
                                   <span className="text-gray-700 font-semibold leading-relaxed">
                                     {option.answerKey}
@@ -381,6 +571,65 @@ export function QuestionRenderer({
                               );
                             })}
                           </RadioGroup>
+
+                          {showDetails && correctAnswerKey && (
+                            <div className="mt-2 text-sm text-gray-700">
+                              <div className="font-semibold text-green-600">
+                                Đáp án đúng: {correctAnswerKey}
+                              </div>
+                              {question.explanation && (
+                                <details className="mt-2 bg-slate-50 rounded-lg p-3 border border-slate-200">
+                                  <summary className="cursor-pointer select-none text-blue-700 font-medium">
+                                    Giải thích chi tiết
+                                  </summary>
+                                  <div className="mt-2 leading-relaxed text-gray-700">
+                                    {question.explanation}
+                                  </div>
+                                </details>
+                              )}
+                              {readOnly &&
+                                showDetails &&
+                                isListeningPart &&
+                                (groupData.group?.paragraphEn ||
+                                  groupData.group?.paragraphVn) && (
+                                  <details className="mt-2 rounded-lg border border-gray-200 bg-white">
+                                    <summary className="cursor-pointer select-none px-3 py-2 text-gray-800 font-medium hover:bg-gray-50 rounded-t-lg">
+                                      Transcript
+                                    </summary>
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-3">
+                                      {groupData.group?.paragraphEn && (
+                                        <div className="rounded-md border border-gray-100 bg-gray-50 p-3">
+                                          <h5 className="text-xs font-semibold text-gray-700 mb-2">
+                                            EN
+                                          </h5>
+                                          <div
+                                            className="prose prose-sm max-w-none text-gray-800"
+                                            dangerouslySetInnerHTML={{
+                                              __html:
+                                                groupData.group.paragraphEn,
+                                            }}
+                                          />
+                                        </div>
+                                      )}
+                                      {groupData.group?.paragraphVn && (
+                                        <div className="rounded-md border border-gray-100 bg-gray-50 p-3">
+                                          <h5 className="text-xs font-semibold text-gray-700 mb-2">
+                                            VI
+                                          </h5>
+                                          <div
+                                            className="prose prose-sm max-w-none text-gray-800"
+                                            dangerouslySetInnerHTML={{
+                                              __html:
+                                                groupData.group.paragraphVn,
+                                            }}
+                                          />
+                                        </div>
+                                      )}
+                                    </div>
+                                  </details>
+                                )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

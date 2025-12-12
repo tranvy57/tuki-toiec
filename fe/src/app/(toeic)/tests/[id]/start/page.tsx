@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/utils/libs";
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useState } from "react";
 
 // Components
 import { PartTabs } from "@/components/toeic/test/PartTabs";
@@ -26,6 +26,7 @@ export default function TestStartPage() {
     open,
     startTestMutation,
     isLoadingTest,
+    isReviewMode,
 
     // Data
     partTabs,
@@ -48,6 +49,8 @@ export default function TestStartPage() {
     // Constants
     TEST_DURATION,
   } = useTestLogic();
+
+  const [showDetails] = useState(true);
 
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -100,7 +103,7 @@ export default function TestStartPage() {
       <div className="flex relative">
         {/* Modal */}
         <ConfirmSubmitModal
-          open={open}
+          open={isReviewMode ? false : open}
           onClose={() => setOpen(false)}
           onConfirm={confirmSubmit}
         />
@@ -115,6 +118,7 @@ export default function TestStartPage() {
                   <AudioPlayer audioUrl={fullTest.test.audioUrl} />
                 )}
               </div>
+              {/* Always show details in review mode; no toggle button needed */}
             </div>
           </div>
           <PartTabs
@@ -136,6 +140,9 @@ export default function TestStartPage() {
               answers={mappedAnswers}
               onAnswerChange={handleQuestionAnswerChange}
               isTransitioning={isTransitioning}
+              mode={isReviewMode ? "review" : fullTest?.mode ?? "test"}
+              readOnly={isReviewMode}
+              showDetails={showDetails}
               currentQuestion={currentQuestion}
             />
 
@@ -173,6 +180,7 @@ export default function TestStartPage() {
           timeRemaining={timeRemaining}
           onQuestionChange={handleQuestionChangeWithScroll}
           onSubmitTest={() => handleSubmit()}
+          isReviewMode={isReviewMode}
         />
       </div>
     </div>

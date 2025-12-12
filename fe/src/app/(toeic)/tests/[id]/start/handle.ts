@@ -1,4 +1,4 @@
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // API hooks
@@ -103,6 +103,7 @@ export const useAnswerMapping = (
 export const useTestLogic = () => {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const testId = params.id as string;
 
   const startTestMutation = useStartTestPractice();
@@ -133,6 +134,13 @@ export const useTestLogic = () => {
   const { mutateAsync: submitTest, isError, error } = useSubmitTestResult();
 
   const hasStartedTest = useRef(false);
+  const isReviewModeParam =
+    searchParams?.get("mode") === "review" ||
+    searchParams?.get("reviewMode") === "1";
+  const isReviewMode =
+    isReviewModeParam ||
+    fullTest?.mode === "review" ||
+    fullTest?.status === "submitted";
 
   // Wait for Zustand persist hydration to avoid starting a new attempt too early
   useEffect(() => {
@@ -220,6 +228,10 @@ export const useTestLogic = () => {
   // Submit test
   const handleSubmit = useCallback(
     async (auto = false) => {
+      if (isReviewMode) {
+        router.push(`/tests/${testId}/review?attemptId=${attemptId}`);
+        return;
+      }
       if (auto) {
         router.push(`/tests/${testId}/result?attemptId=${attemptId}`);
         const result = await submitTest(attemptId || "");
@@ -235,10 +247,12 @@ export const useTestLogic = () => {
         setOpen(true); // mở modal
       }
     },
-    [router, testId, attemptId]
+    [router, testId, attemptId, isReviewMode]
   );
 
   const confirmSubmit = useCallback(async () => {
+    if (isReviewMode) return;
+
     const result = await submitTest(fullTest?.id || "");
     if (isError) {
       console.error("Error submitting test:", error);
@@ -248,10 +262,22 @@ export const useTestLogic = () => {
 
     setResultTest(result);
     router.replace(`/tests/${fullTest?.id}/result?attemptId=${attemptId}`);
-  }, [router, testId, attemptId]);
+  }, [
+    router,
+    testId,
+    attemptId,
+    isReviewMode,
+    submitTest,
+    fullTest?.id,
+    isError,
+    error,
+    setResultTest,
+  ]);
 
   // Countdown timer
   useEffect(() => {
+    if (isReviewMode) return;
+
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev <= 1) {
@@ -377,6 +403,8 @@ export const useTestLogic = () => {
   // Handle answer with API call
   const handleAnswerChange = useCallback(
     (questionId: string, answerId: string) => {
+      if (isReviewMode) return;
+
       setAnswer(questionId, answerId);
 
       // Save answer to backend
@@ -388,7 +416,7 @@ export const useTestLogic = () => {
         });
       }
     },
-    [setAnswer, attemptId, addAnswerMutation]
+    [setAnswer, attemptId, addAnswerMutation, isReviewMode]
   );
 
   // Exit
@@ -520,6 +548,7 @@ export const useTestLogic = () => {
     open,
     startTestMutation,
     isLoadingTest,
+    isReviewMode,
 
     // Data
     partTabs,

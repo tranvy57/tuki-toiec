@@ -83,6 +83,33 @@ export default function HistoryPage() {
     router.push(`/tests/${attempt?.test?.id}/start`);
   }
 
+  async function handleReview(attempt) {
+    // Ensure store has attempt context for read-only review mode
+    setAttemptId(attempt.id);
+    setFullTest({ ...attempt, mode: "review" });
+
+    if (Array.isArray(attempt?.parts) && attempt?.parts?.length > 0) {
+      attempt?.parts?.forEach((part: any) => {
+        part.groups?.forEach((group: any) => {
+          group.questions?.forEach((q: any) => {
+            const answerKey =
+              q?.userAnswer?.answer?.answerKey ??
+              q?.userAnswer?.answerKey ??
+              q?.userAnswer?.answer?.content ??
+              null;
+            if (answerKey) {
+              setAnswer(q.id, String(answerKey));
+            }
+          });
+        });
+      });
+    }
+
+    router.push(
+      `/tests/${attempt?.test?.id}/start?attemptId=${attempt.id}&mode=review`
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -202,7 +229,18 @@ export default function HistoryPage() {
                               Tiếp tục
                             </Button>
                           )}
-                          
+                          {a.status !== "in_progress" && (
+                            <Link
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleReview(a);
+                              }}
+                              className="px-3 py-1.5 text-sm bg-gradient-to-r from-blue-600 to-primary text-white rounded"
+                            >
+                              Xem kết quả
+                            </Link>
+                          )}
                         </div>
                       </td>
                     </tr>

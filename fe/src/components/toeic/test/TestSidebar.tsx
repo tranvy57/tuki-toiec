@@ -3,8 +3,6 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/utils/libs";
 import { CountdownTimer } from "./CountDown";
-import { useCallback } from "react";
-import { useRouter } from "next/router";
 
 interface Part {
   number: number;
@@ -17,6 +15,7 @@ interface TestSidebarProps {
   timeRemaining: number;
   onQuestionChange: (questionId: number) => void;
   onSubmitTest: () => void;
+  isReviewMode?: boolean;
 }
 
 const parts: Part[] = [
@@ -35,6 +34,7 @@ export function TestSidebar({
   timeRemaining,
   onQuestionChange,
   onSubmitTest,
+  isReviewMode = false,
 }: TestSidebarProps) {
   // Format time
 
@@ -57,21 +57,34 @@ export function TestSidebar({
         <div className="space-y-6">
           {/* Timer */}
           <div className="text-center sticky top-2 mb-6">
-            <div className="text-sm text-gray-600 mb-1">Thời gian còn lại:</div>
-            <div className="text-2xl font-bold">
-              <CountdownTimer initialSeconds={timeRemaining} tickInterval={1000} onExpire={onSubmitTest} />
-            </div>
-            <Button
-              size="sm"
-              className="mt-3 bg-primary hover:bg-primary-2 text-xs px-4"
-              onClick={onSubmitTest}
-            >
-              NỘP BÀI
-            </Button>
+            {isReviewMode ? (
+              <div className="text-gray-700 text-sm font-semibold py-2">
+                Đang xem lại kết quả
+              </div>
+            ) : (
+              <>
+                <div className="text-sm text-gray-600 mb-1">
+                  Thời gian còn lại:
+                </div>
+                <div className="text-2xl font-bold">
+                  <CountdownTimer
+                    initialSeconds={timeRemaining}
+                    tickInterval={1000}
+                    onExpire={onSubmitTest}
+                  />
+                </div>
+                <Button
+                  size="sm"
+                  className="mt-3 bg-primary hover:bg-primary-2 text-xs px-4"
+                  onClick={onSubmitTest}
+                >
+                  NỘP BÀI
+                </Button>
+              </>
+            )}
           </div>
           <hr className="border-gray-200" />
 
-          
           {/* <hr className="border-gray-200" /> */}
 
           {/* Part Navigation */}
