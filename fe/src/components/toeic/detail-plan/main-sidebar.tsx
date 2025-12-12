@@ -21,10 +21,7 @@ import { useState, useEffect } from "react";
 
 import { SidebarUnits } from "./sidebar-units";
 import { useSidebar } from "@/hooks/use-side-bar";
-import {
-  MOCK_LESSONS,
-  MOCK_UNITS,
-} from "@/app/(toeic)/study-plan/constants";
+import { MOCK_LESSONS, MOCK_UNITS } from "@/app/(toeic)/study-plan/constants";
 import { MobileDrawer, MobileMenuButton } from "./mobile-navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HeaderBreadcrumb } from "./header-breadcrumb";
@@ -64,9 +61,10 @@ export function MainSidebar({
   const { collapsed, setMobileOpen } = useSidebar();
   const { data: courseData, isLoading, error, refetch } = useLatestCourse();
   const { data: premiumData } = usePremiumStatus();
-  const { mutate: completeStudyTask, isPending: isCompleting } = useCompleteStudyTask();
+  const { mutate: completeStudyTask, isPending: isCompleting } =
+    useCompleteStudyTask();
 
-  console.log(premiumData?.isPremium)
+  console.log(premiumData?.isPremium);
 
   // State cho content panel
   const [selectedContentId, setSelectedContentId] = useState<string | null>(
@@ -77,9 +75,8 @@ export function MainSidebar({
   );
 
   // State để track interactive learning completion (vocabulary/quiz)
-  const [interactiveLearningCompleted, setInteractiveLearningCompleted] = useState<Set<string>>(
-    new Set()
-  );
+  const [interactiveLearningCompleted, setInteractiveLearningCompleted] =
+    useState<Set<string>>(new Set());
 
   // State cho premium upgrade dialog
   const [showPremiumDialog, setShowPremiumDialog] = useState(false);
@@ -130,7 +127,7 @@ export function MainSidebar({
       setShowPremiumDialog(true);
       return;
     }
-    console.log("aaaaaa", content)
+    console.log("aaaaaa", content);
 
     setSelectedContentId(contentId);
   };
@@ -157,9 +154,11 @@ export function MainSidebar({
         // Don't reset activeLessonId - keep it so lesson overview displays
       },
       onError: (error: any) => {
-        toast.error("Có lỗi xảy ra: " + (error.message || "Không thể hoàn thành bài học"));
+        toast.error(
+          "Có lỗi xảy ra: " + (error.message || "Không thể hoàn thành bài học")
+        );
         console.error("Complete task error:", error);
-      }
+      },
     });
   };
 
@@ -175,7 +174,7 @@ export function MainSidebar({
     activeUnitId,
     activeLessonId,
     hasLessons,
-    interactiveCompleted: Array.from(interactiveLearningCompleted)
+    interactiveCompleted: Array.from(interactiveLearningCompleted),
   });
 
   const lessonList = hasLessons ? (
@@ -290,7 +289,9 @@ export function MainSidebar({
               interactiveLearningCompleted={interactiveLearningCompleted}
               onInteractiveLearningComplete={(contentId) => {
                 console.log("Marking interactive complete for:", contentId);
-                setInteractiveLearningCompleted(prev => new Set(prev).add(String(contentId)));
+                setInteractiveLearningCompleted((prev) =>
+                  new Set(prev).add(String(contentId))
+                );
               }}
             />
           ) : activeLesson ? (
@@ -308,6 +309,9 @@ export function MainSidebar({
         open={showPremiumDialog}
         onOpenChange={setShowPremiumDialog}
         contentType={premiumContentType}
+        courseId={courseData?.id}
+        courseName={courseData?.title}
+        price={courseData?.price}
       />
     </div>
   );
@@ -330,7 +334,7 @@ function ContentDetailPanel({
   onInteractiveLearningComplete?: (contentId: string) => void;
 }) {
   const [showLearningInterface, setShowLearningInterface] = useState(false);
-  console.log(content)
+  console.log(content);
 
   const ContentIcon =
     LESSON_CONTENT_ICONS[content.type as keyof typeof LESSON_CONTENT_ICONS] ||
@@ -348,27 +352,32 @@ function ContentDetailPanel({
   };
 
   // Check if content has interactive learning elements
-  const hasVocabularies = content.vocabularies && content.vocabularies.length > 0;
-  const hasItems = content.lessonContentItems && content.lessonContentItems.length > 0;
+  const hasVocabularies =
+    content.vocabularies && content.vocabularies.length > 0;
+  const hasItems =
+    content.lessonContentItems && content.lessonContentItems.length > 0;
   // Log content info for debugging
   console.log("ContentDetailPanel Info:", {
     id: content.id,
     type: content.type,
     hasVocab: hasVocabularies,
     hasItems: hasItems,
-    completed: interactiveLearningCompleted?.has(String(content.id))
+    completed: interactiveLearningCompleted?.has(String(content.id)),
   });
 
-  const isInteractiveContent = hasVocabularies || (hasItems && content.type === "quiz");
+  const isInteractiveContent =
+    hasVocabularies || (hasItems && content.type === "quiz");
   const isCompleted = content.studyTaskStatus === "completed";
 
   // Check if interactive learning has been completed for this content
   // Normalize to string to ensure matching works
-  const hasCompletedInteractiveLearning = interactiveLearningCompleted?.has(String(content.id)) || false;
+  const hasCompletedInteractiveLearning =
+    interactiveLearningCompleted?.has(String(content.id)) || false;
 
   // Determine if completion button should be shown
   // Show button if: (1) not interactive content, OR (2) interactive content AND user completed the learning
-  const shouldShowCompletionButton = !isInteractiveContent || hasCompletedInteractiveLearning;
+  const shouldShowCompletionButton =
+    !isInteractiveContent || hasCompletedInteractiveLearning;
 
   // Show learning interface if requested
   if (showLearningInterface && isInteractiveContent) {
@@ -487,17 +496,12 @@ function ContentDetailPanel({
               </h4>
             </div>
           ) : null}
-          {
-            content.type !== "video" &&
-            content.type !== "quiz" && (
-              <div
-                className="text-slate-700 "
-                dangerouslySetInnerHTML={{ __html: content.content }}
-              />
-            )
-          }
-
-
+          {content.type !== "video" && content.type !== "quiz" && (
+            <div
+              className="text-slate-700 "
+              dangerouslySetInnerHTML={{ __html: content.content }}
+            />
+          )}
 
           {/* Interactive Learning Button */}
           {isInteractiveContent && (
@@ -510,8 +514,10 @@ function ContentDetailPanel({
                   </span>
                 </div>
                 <p className="text-sm text-indigo-700 mb-3">
-                  {hasVocabularies && `${content.vocabularies.length} từ vựng để học`}
-                  {hasItems && `${content.lessonContentItems.length} bài tập để thực hành`}
+                  {hasVocabularies &&
+                    `${content.vocabularies.length} từ vựng để học`}
+                  {hasItems &&
+                    `${content.lessonContentItems.length} bài tập để thực hành`}
                 </p>
                 <Button
                   onClick={() => setShowLearningInterface(true)}
@@ -543,7 +549,7 @@ function ContentDetailPanel({
                 ) : (
                   <Button
                     onClick={() => {
-                      onCompleteTask(content.studyTaskId)
+                      onCompleteTask(content.studyTaskId);
                     }}
                     disabled={isCompleting}
                     className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"

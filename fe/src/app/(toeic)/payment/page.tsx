@@ -93,10 +93,10 @@ export default function PaymentPage() {
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Hoàn tất thanh toán
+              Nâng cấp khóa học
             </h1>
             <p className="text-gray-600">
-              Chỉ còn một bước nữa để bắt đầu hành trình học TOEIC của bạn
+              Hoàn tất thanh toán để mở khóa toàn bộ nội dung Premium
             </p>
           </div>
 
@@ -107,7 +107,7 @@ export default function PaymentPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BookOpen className="w-5 h-5 text-blue-600" />
-                    Thông tin khóa học
+                    Thông tin nâng cấp
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -121,15 +121,22 @@ export default function PaymentPage() {
                     <div className="flex-1 space-y-3">
                       <div>
                         <h3 className="font-semibold text-lg text-gray-900">
-                          {course?.title}
+                          {course?.title || "Gói Premium"}
                         </h3>
                         <p className="text-gray-600 text-sm mt-1">
-                          <div
-                            className="text-gray-700 text-sm leading-relaxed prose prose-sm max-w-none"
-                            dangerouslySetInnerHTML={{
-                              __html: course?.description || "",
-                            }}
-                          />
+                          {course?.description ? (
+                            <div
+                              className="text-gray-700 text-sm leading-relaxed prose prose-sm max-w-none"
+                              dangerouslySetInnerHTML={{
+                                __html: course?.description,
+                              }}
+                            />
+                          ) : (
+                            <p className="text-gray-600 text-sm">
+                              Nâng cấp để xem toàn bộ video, bài tập, giải thích
+                              chi tiết và theo dõi tiến độ nâng cao.
+                            </p>
+                          )}
                         </p>
                       </div>
 
@@ -285,7 +292,7 @@ export default function PaymentPage() {
                   {/* Payment Button */}
                   <PaymentButton
                     courseId={course?.id || ""}
-                    courseName={course?.title || ""}
+                    courseName={course?.title || "Gói Premium"}
                     amount={course?.price || 0}
                     className="mt-4"
                   />

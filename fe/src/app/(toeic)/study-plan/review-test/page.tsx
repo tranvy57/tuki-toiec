@@ -345,9 +345,7 @@ export default function ReviewTestPage({ onComplete }: ReviewTestPageProps) {
     // SCRIPT 1: 100% Correct Answers (Perfect Performance - all skills)
     // @ts-ignore
     window.demoFill80Percent = async (delay = 50) => {
-      console.log(
-        "📊 DEMO SCRIPT 1: 100% Performance - Perfect on all skills"
-      );
+      console.log("📊 DEMO SCRIPT 1: 100% Performance - Perfect on all skills");
 
       if (questions.length === 0) {
         console.warn("No questions loaded yet!");

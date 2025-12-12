@@ -22,6 +22,7 @@ import {
   Target,
 } from "lucide-react";
 import { StudyPlan } from "@/api/usePlan";
+import PaymentButton from "@/components/PaymentButton";
 
 interface UpgradeProSheetProps {
   open: boolean;
@@ -224,10 +225,22 @@ export function UpgradeProSheet({
             transition={{ duration: 0.25, delay: 0.96 }}
             className="space-y-3"
           >
-            <Button className="w-full rounded-xl bg-pink-500 hover:bg-pink-600 py-6 text-base font-semibold">
-              <Sparkles className="mr-2 h-5 w-5" />
-              Upgrade to Pro
-            </Button>
+            {studyPlan ? (
+              <PaymentButton
+                courseId={studyPlan.id}
+                courseName={studyPlan.title}
+                amount={studyPlan.price ?? 29000}
+                className="w-full rounded-xl bg-pink-500 hover:bg-pink-600 py-6 text-base font-semibold"
+              />
+            ) : (
+              <Button
+                className="w-full rounded-xl bg-pink-500 hover:bg-pink-600 py-6 text-base font-semibold"
+                disabled
+              >
+                <Sparkles className="mr-2 h-5 w-5" />
+                Upgrade to Pro
+              </Button>
+            )}
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}

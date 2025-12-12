@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -15,13 +16,20 @@ interface PremiumUpgradeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   contentType?: string;
+  courseId?: string;
+  courseName?: string;
+  price?: number;
 }
 
 export function PremiumUpgradeDialog({
   open,
   onOpenChange,
   contentType = "content",
+  courseId,
+  courseName,
+  price,
 }: PremiumUpgradeDialogProps) {
+  const router = useRouter();
   const getContentTypeLabel = (type: string) => {
     const labels = {
       strategy: "Chiến lược",
@@ -105,10 +113,11 @@ export function PremiumUpgradeDialog({
           <Button
             className="w-full sm:w-auto bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white"
             onClick={() => {
-              // TODO: Redirect to payment page
-              console.log("Redirect to premium upgrade");
+              if (!courseId) return;
+              router.push(`/payment?course=${courseId}`);
               onOpenChange(false);
             }}
+            disabled={!courseId}
           >
             <Zap className="w-4 h-4 mr-2" />
             Nâng cấp ngay
