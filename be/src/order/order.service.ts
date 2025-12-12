@@ -18,7 +18,7 @@ export class OrderService {
   }
 
   findAll() {
-    return `This action returns all order`;
+    return this.orderRepo.find();
   }
 
   async findOne(code: string) {
