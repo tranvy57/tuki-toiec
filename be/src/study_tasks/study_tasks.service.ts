@@ -189,12 +189,15 @@ export class StudyTasksService {
       progresses.every((p) => {
         if (!p.updatedAt) return true;
         if (!p.createdAt) return false;
-        // Consider first-run if updatedAt equals createdAt (or within 2 minutes)
+        // Consider first-run if updatedAt equals createdAt (or within 10 minutes)
         const created = new Date(p.createdAt).getTime();
         const updated = new Date(p.updatedAt).getTime();
         const DIFF_MS = Math.abs(updated - created);
-        return DIFF_MS <= 2 * 60 * 1000;
+        return DIFF_MS <= 10 * 60 * 1000;
       });
+    console.log(
+      `[Skip] isFirstReview=${isFirstReview} progresses=${progresses.length}`,
+    );
 
     // FIX 1: Bỏ điều kiện isActive, chỉ lấy tasks chưa completed
     const tasks = await studyTaskRepo.find({
@@ -226,7 +229,12 @@ export class StudyTasksService {
         where: { lesson: { id: task.lesson.id } },
         relations: ['skill'],
       });
-      if (!lessonSkills.length) continue;
+      if (!lessonSkills.length) {
+        console.log(
+          `[Skip] task ${task.id} lesson ${task.lesson.id} has no lessonSkills → cannot evaluate`,
+        );
+        continue;
+      }
 
       let weightedProfSum = 0;
       let weightedRecencySum = 0;
@@ -251,9 +259,12 @@ export class StudyTasksService {
 
       // First review fast-path: skip aggressively based on proficiency only
       if (isFirstReview) {
-        const COVERAGE_MIN_FIRST = 0.8; // require 80% of lesson skills above threshold
+        const COVERAGE_MIN_FIRST = 0.7; // require 70% of lesson skills above threshold (easier)
         const ALL_SKILLS_ABOVE = lessonSkills.every(
           (ls) => (profMap[ls.skill.id]?.prof ?? 0) >= PROF_THRESHOLD,
+        );
+        console.log(
+          `[Skip First] task=${task.id} lesson=${task.lesson.id} avgProf=${avgProf.toFixed(2)} coverage=${coverage.toFixed(2)} threshold=${PROF_THRESHOLD} allAbove=${ALL_SKILLS_ABOVE}`,
         );
         if (ALL_SKILLS_ABOVE || coverage >= COVERAGE_MIN_FIRST) {
           task.status = 'skipped';
@@ -276,6 +287,9 @@ export class StudyTasksService {
 
       const COVERAGE_MIN = 0.5;
       const PSKIP_MIN = 0.4;
+      console.log(
+        `[Skip Normal] task=${task.id} lesson=${task.lesson.id} avgProf=${avgProf.toFixed(2)} coverage=${coverage.toFixed(2)} pSkip=${pSkip.toFixed(2)}`,
+      );
 
       if (coverage >= COVERAGE_MIN && pSkip >= PSKIP_MIN) {
         task.status = 'skipped';
