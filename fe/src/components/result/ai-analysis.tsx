@@ -71,18 +71,7 @@ export function AIAnalysis({ analysis }: AIAnalysisProps) {
         )}
 
         {/* Kỹ năng yếu */}
-        {weakSkills?.length ? (
-          <div className="mb-6">
-            <h3 className="font-semibold text-lg text-primary mb-2">
-              Kỹ năng yếu
-            </h3>
-            <ul className="list-disc pl-6 text-gray-700 space-y-1">
-              {weakSkills.map((s, i) => (
-                <li key={i}>{s}</li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
+        
 
         {/* Mẫu lỗi thường gặp */}
         {mistakePatterns?.length ? (
