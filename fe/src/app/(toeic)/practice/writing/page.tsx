@@ -466,28 +466,6 @@ export default function WritingPage() {
         </motion.div>
 
         {/* Bottom CTA Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.7 }}
-          className="text-center mt-8"
-        >
-          <Card className="bg-gradient-to-r from-pink-50 via-blue-50 to-purple-50 border-pink-200 shadow-lg rounded-xl p-8 max-w-2xl mx-auto">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <Sparkles className="w-5 h-5 text-pink-500" />
-              <span className="text-lg font-semibold text-gray-800">
-                Mẹo học tập
-              </span>
-            </div>
-            <p className="text-gray-600 leading-relaxed">
-              Bắt đầu với <strong>Mô tả hình ảnh</strong> và{" "}
-              <strong>Sửa câu sai</strong> để làm quen. Sau đó thử thách bản
-              thân với <strong>Trả lời email</strong> và{" "}
-              <strong>Viết đoạn nêu quan điểm</strong>
-              để nâng cao kỹ năng viết học thuật và doanh nghiệp.
-            </p>
-          </Card>
-        </motion.div>
       </div>
     </div>
   );
